@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings</title>
+  <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+  <link rel="stylesheet" href="./dashboard.css">
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+        <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+        
+      <nav>
+        <a href="./dashboard.html">📊 Dashboard</a>
+        <a href="./generate_report.html">📄 Generate Report</a>
+        <a href="./tool_box.html">🛠️ Toolbox</a>
+        <a href="./inventory.html">📦 Inventory</a>
+        <a class="active">⚙️ Settings</a>
+        <a href="./profile.html">👤 Profile</a>
+        <a href="./index.html">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="header">
+        <h1>Settings</h1>
+      </header>
+      <div class="settings-container" id="settingsContainer">
+
+        <!-- Dark Mode -->
+        <div class="settings-section">
+          <h2>🌙 Dark Mode</h2>
+          <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        </div>
+
+        <!-- Help -->
+        <div class="settings-section">
+          <h2>❓ Help</h2>
+          <p>If you need help, contact the Electrical team or refer to the user manual provided with the system.</p>
+        </div>
+
+        <!-- About -->
+        <div class="settings-section">
+          <h2>ℹ️ About</h2>
+          <p>This Electrical Management System was developed to streamline reporting and operations. Version 1.0.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+
+
+  <script src="./dark-mode.js"></script>
+  
+
+      <script src="./script.js"></script>
+</body>
+</html>

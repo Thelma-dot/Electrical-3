@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+  <link rel="stylesheet" href="./dashboard.css">
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+        <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+        
+      <nav>
+        <a class="active">📊 Dashboard</a>
+        <a href="./generate_report.html">📄 Generate Report</a>
+        <a href="./tool_box.html">🛠️ Toolbox</a>
+        <a href="./inventory.html">📦 Inventory</a>
+        <a href="./settings.html">⚙️ Settings</a>
+        <a href="./profile.html">👤 Profile</a>
+        <a href="./index.html" onclick="logout()">🚪 Logout</a>
+
+
+
+
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="header">
+        <h1>Dashboard</h1>
+      </header>
+
+      <section class="stats">
+        <div class="card"><h3>Generate Report</h3><p>0</p></div>
+        <div class="card"><h3>Inventory</h3><p>0</p></div>
+        <div class="card"><h3>In Progress</h3><p>0</p></div>
+        <div class="card"><h3>Completed Tasks</h3><p>0</p></div>
+      </section>
+
+      <section class="charts">
+        <div class="chart" id="projectProgress">
+          <h3>Completed Task</h3>
+          <canvas id="progressChart"></canvas>
+        </div>
+        <div class="chart" id="revenueChart">
+          <h3>Reports</h3>
+          <canvas id="lineChart"></canvas>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h2>⏰ Set Deadline Reminder</h2>
+        <label for="deadlineInput">Select Deadline:</label>
+        <input type="datetime-local" id="deadlineInput">
+        <button onclick="saveDeadline()">Save Deadline</button>
+        <p id="deadlineDisplay"></p>
+
+        <audio id="beepSound" src="./alarm/beep-beep.mp3" preload="auto"></audio>
+        </section>
+      
+
+      <section class="lists">
+        <div class="list">
+          <h3>Recent Projects</h3>
+          
+        </div>
+        <div class="list">
+          <h3>Assigned Engineers</h3>
+          
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Check authentication
+    if (!localStorage.getItem('token')) {
+      window.location.href = 'index.html';
+      return;
+    }
+    
+    try {
+      // Load dashboard stats
+      const summaryResponse = await fetch('http://localhost:5000/api/reports/summary', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!summaryResponse.ok) throw new Error('Failed to load summary');
+      const summary = await summaryResponse.json();
+      
+      updateDashboardStats(summary);
+      
+      // Load chart data
+      const chartResponse = await fetch('http://localhost:5000/api/reports/chart-data', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!chartResponse.ok) throw new Error('Failed to load chart data');
+      const chartData = await chartResponse.json();
+      
+      initCharts(chartData);
+    } catch (err) {
+      console.error('Dashboard error:', err);
+    }
+    
+    // Initialize deadline reminder
+    initDeadlineReminder();
+  });
+  
+  function updateDashboardStats(summary) {
+    document.querySelector('.card:nth-child(1) p').textContent = summary.total || 0;
+    document.querySelector('.card:nth-child(2) p').textContent = '0'; // Placeholder for inventory
+    document.querySelector('.card:nth-child(3) p').textContent = summary.in_progress || 0;
+    document.querySelector('.card:nth-child(4) p').textContent = summary.completed || 0;
+  }
+  
+  function initCharts(chartData) {
+    // Process data for Chart.js
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                  
+    const counts = Array(12).fill(0);
+    chartData.forEach(item => {
+      const index = months.indexOf(item.month);
+      if (index !== -1) counts[index] = item.count;
+    });
+    
+    // Bar Chart - Project Progress
+    const progressChart = document.getElementById('progressChart');
+    if (progressChart) {
+      const ctxBar = progressChart.getContext('2d');
+      new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: ['Reports', 'Inventory', 'In Progress', 'Completed Task'],
+          datasets: [{
+            label: 'Progress',
+            data: [
+              chartData.reduce((sum, item) => sum + item.count, 0),
+              0, // Placeholder for inventory
+              chartData.reduce((sum, item) => sum + (item.status === 'In Progress' ? 1 : 0), 0),
+              chartData.reduce((sum, item) => sum + (item.status === 'Completed' ? 1 : 0), 0)
+            ],
+            backgroundColor: '#3498db'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    // Line Chart - Reports
+    const lineChart = document.getElementById('lineChart');
+    if (lineChart) {
+      const ctxLine = lineChart.getContext('2d');
+      new Chart(ctxLine, {
+        type: 'line',
+        data: {
+          labels: months,
+          datasets: [{
+            label: 'Reports',
+            data: counts,
+            borderColor: '#2980b9',
+            backgroundColor: 'rgba(41, 128, 185, 0.2)',
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+  }
+</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="./dark-mode.js"></script>
+  <script src="./script.js"></script>
+  </body>
+</html>

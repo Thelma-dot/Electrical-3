@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+  <link rel="stylesheet" href="./dashboard.css">
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+        <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+       
+      <nav>
+        <a href="./dashboard.html">📊 Dashboard</a>
+        <a href="./generate_report.html">📄 Generate Report</a>
+        <a class="active">🛠️ Toolbox</a>
+        <a href="./inventory.html">📦 Inventory</a>
+        <a href="./settings.html">⚙️ Settings</a>
+        <a href="./profile.html">👤 Profile</a>
+        <a href="./index.html">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="header">
+        <h1>TOOLBOX FORM</h1>
+        <h5>A Toolbox Form should be conducted prior to every task, whether it is routine or non-routine.</h5>
+      </header>
+
+        
+            
+                <form action="#" method="post">
+                    <h3>FACILITY:</h3>
+                    <label for="workActivity">Work Activity:</label>
+                    <input type="text" id="workActivity" name="workActivity" required>
+
+                    <h3>WORK LOCATION(S)</h3>
+                    <label for="date">Date:</label>
+                    <input type="date" id="date" name="date" required>
+                    
+                    <label for="workLocation">Work Location(s):</label>
+                    <input type="text" id="workLocation" name="workLocation" required>
+                    
+                    <h3>PERSONS ATTENDING BRIEFING</h3>
+                    <label for="name/company">NAME/COMPANY:</label>
+                    <input type="text" id="name/company" name="name/company" required>
+
+                    <label for="sign">Sign:</label>
+                    <input type="text" id="ppe" name="sign" required>
+
+                    <label for="ppe">PPE NO:</label>
+                    <input type="text" id="ppe" name="ppe" required>
+                    
+                    <label for="tools">Tools and Equipment to be Used:</label>
+                    <input type="text" id="toolsUsed" placeholder="Enter tools used" list="tool-list" required>
+            <datalist id="tool-list">
+                <option value="Set of Rachet">
+                <option value="Mallet">
+                <option value="Hammer">
+                <option value="Box Spanner Set">
+                <option value="Master Screw Driver Bit">
+                <option value="High Spped Steel Ground Flute Jobber Drill">
+                <option value="Precision Eye Loupe">
+                <option value="Spanners(10,11,12,13,14,15,16,17,18,19)">
+                <option value="Double Cut File Set">
+                <option value="Handy Knife for Engineers">
+                <option value="Hacksaw blades">
+                <option value="Scissors">
+                <option value="150mm (6'') Engineer Square">
+                <option value="Tape Measure 5m">
+                <option value="Tap Wrench Big Size">
+                <option value="Tap Wrench Small Size">
+                <option value="Tinsnips - General Purpose Straight">
+                <option value="Magnetic Telescope Pickup Tool">
+                <option value="Heavy Duty Hacksaw">
+                <option value="300mm (12'') Engineer Square">
+                <option value="Screwdriver Set">
+                <option value="Alan Keys Set">
+                <option value="Side Cutter">
+                <option value="Plier">
+                <option value="Long Nose">
+                <option value="Shifting Spanner">
+                <option value="(Ajustable Wrench) Groove Joint Plier ">
+                <option value="Needle File Set">
+                <option value="(Pipe Wrench) Locking Plier">
+                <option value="Wiring Sharp Blade">
+                <option value="Adjustable telescopic inspection mirror">
+                <option value="18 Blade Feeler Gauge">
+                <option value="Pocket Scriber">
+                <option value="Engineers Rule 150mm/6''">
+                <option value="Engineers Rule 150mm/12''">
+                <option value="Set of Screw Drivers">
+                <option value="Chisel">  
+                <option value="Meter">
+                <option value="Battery Tester">
+                <option value="Ladder">
+                    
+            </datalist>
+        
+                    
+                    <label for="hazards">Hazards Identified & Preventive Actions:</label>
+                    <textarea id="hazards" name="hazards" required></textarea>
+                    
+                    <label for="circulars">Any recent circulars or safety alert on similar issues to be highlighted:</label>
+                    <textarea id="circulars" name="circulars"></textarea>
+                    
+                    <label for="riskAssessment">Risk Assessment (if any) Ref No:</label>
+                    <input type="text" id="riskAssessment" name="riskAssessment">
+                    
+                    <label for="permit">Permit to Work (if any) Ref No:</label>
+                    <input type="text" id="permit" name="permit">
+                    
+                    <label for="remarks">Additional Remarks:</label>
+                    <textarea id="remarks" name="remarks"></textarea>
+                    
+                    <label for="preparedBy">Prepared By: <br> Name & Signature:</label>
+                    <input type="text" id="preparedBy" name="preparedBy" required>
+                    
+                    <label for="verifiedBy">Verified By: <br> Duty Officer:</label>
+                    <input type="text" id="verifiedBy" name="verifiedBy" required>
+                    
+                    <button type="submit">Submit</button>
+                </form>
+                
+            </div>
+        
+            
+
+
+         </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('toolboxForm');
+  if (!form) return;
+  
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+      workActivity: document.getElementById('workActivity').value,
+      date: document.getElementById('date').value,
+      workLocation: document.getElementById('workLocation').value,
+      nameCompany: document.getElementById('name/company').value,
+      sign: document.getElementById('sign').value,
+      ppeNo: document.getElementById('ppeNo').value,
+      toolsUsed: document.getElementById('toolsUsed').value,
+      hazards: document.getElementById('hazards').value,
+      circulars: document.getElementById('circulars').value,
+      riskAssessment: document.getElementById('riskAssessment').value,
+      permit: document.getElementById('permit').value,
+      remarks: document.getElementById('remarks').value,
+      preparedBy: document.getElementById('preparedBy').value,
+      verifiedBy: document.getElementById('verifiedBy').value
+    };
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/toolbox', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (!response.ok) throw new Error('Failed to submit form');
+      
+      // Get PDF blob
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create download link
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Toolbox_Form_${new Date().toISOString().slice(0,10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      alert("✅ Toolbox form submitted and PDF downloaded!");
+    } catch (err) {
+      console.error('Form submission error:', err);
+      alert("Failed to submit toolbox form");
+    }
+  });
+});
+</script>
+
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="./dark-mode.js"></script>
+    <script src="./script.js"></script>
+</body>
+</html>

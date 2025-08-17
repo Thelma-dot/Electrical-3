@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory</title>
+  <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+  <link rel="stylesheet" href="./dashboard.css">
+  <link rel="stylesheet" href="./inventory.css">
+
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+        <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+        
+      <nav>
+        <a href="./dashboard.html">📊 Dashboard</a>
+        <a href="./generate_report.html">📄 Generate Report</a>
+        <a href="./tool_box.html">🛠️ Toolbox</a>
+        <a class="active">📦 Inventory</a>
+        <a href="./settings.html">⚙️ Settings</a>
+        <a href="./profile.html">👤 Profile</a>
+        <a href="./index.html">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="header">
+        <h1>INVENTORY</h1>
+      </header>
+                <!-- Search Bar Section (Now Below the Title) -->
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search inventory...">
+        <button id="searchButton">Search</button>
+    </div>
+
+    <!-- Add New Inventory Button (Separate from Search) -->
+    <div class="add-container">
+        <button onclick="showAddModal()" class="add-button">Add New Inventory</button>
+    </div>
+
+            <!-- Inventory Table -->
+            <table id="inventoryTable" class="hidden">
+                <thead>
+                    <tr>
+                        <th>Product Type</th>
+                        <th>Status</th>
+                        <th>Size</th>
+                        <th>Serial Number</th>
+                        <th>Date</th>
+                        <th>Location</th>
+                        <th>Issued By</th>
+                        <th>Action</th> 
+                    </tr>
+                </thead>
+                <tbody id="inventoryBody"></tbody>
+            </table>
+
+            <!-- Add New Inventory Modal -->
+            <div id="addModal" class="modal">
+                <div class="modal-content">
+                    <div class="main-title">
+                        <h2>INVENTORY</h2>
+                        <button onclick="hideAddModal()" class="close-button">x</button>
+                    </div>
+
+                    <label for="type">Product Type (UPS or AVR)</label>
+                    <select id="type">
+                        <option value="UPS">UPS</option>
+                        <option value="AVR">AVR</option>
+                    </select>
+
+                    <label for="status">Status (New or Replaced)</label>
+                    <select id="status">
+                        <option value="New">New</option>
+                        <option value="Replaced">Replaced</option>
+                    </select>
+
+                    <label for="size">Size</label>
+                    <select id="size">
+                        <option value="1.5kva">1.5kva</option>
+                        <option value="3kva">3kva</option>
+                        <option value="6kva">6kva</option>
+                        <option value="10kva">10kva</option>
+                        <option value="20kva">20kva</option>
+                        <option value="30kva">30kva</option>
+                        <option value="40kva">40kva</option>
+                        <option value="60kva">60kva</option>
+                    </select>
+
+                    <label for="serial">Serial Number</label>
+                    <input type="text" id="serial" required>
+
+                    <label for="date">Date</label>
+                    <input type="date" id="date" required>
+
+                    <label for="location">Location</label>
+                    <input type="text" id="location" required>
+
+                    <label for="issued">Issued By</label>
+                    <input type="text" id="issued" required>
+
+                    <button id="addInventoryBtn" onclick="addInventory()">Add</button>
+                    <button onclick="hideAddModal()">Cancel</button>
+
+                    <button onclick="exportToExcel()">Export to Excel</button>
+                </div>
+            </div>
+
+            <!-- Update Form (for editing existing inventory) - Optional, can be removed if not needed -->
+            <div id="updateForm" class="hidden">
+                <h3>Update Inventory</h3>
+                <label for="type">Product Type (UPS or AVR)</label>
+                <select id="type">
+                    <option value="UPS">UPS</option>
+                    <option value="AVR">AVR</option>
+                </select>
+
+                <label for="status">Status (New or Replaced)</label>
+                <select id="status">
+                    <option value="New">New</option>
+                    <option value="Replaced">Replaced</option>
+                </select>
+
+                <label for="size">Size</label>
+                <select id="size">
+                    <option value="1.5kva">1.5kva</option>
+                    <option value="3kva">3kva</option>
+                    <option value="6kva">6kva</option>
+                    <option value="10kva">10kva</option>
+                    <option value="20kva">20kva</option>
+                    <option value="30kva">30kva</option>
+                    <option value="40kva">40kva</option>
+                    <option value="60kva">60kva</option>
+                </select>
+
+                <label for="serial">Serial Number</label>
+                <input type="text" id="serial" required>
+
+                <label for="date">Date</label>
+                <input type="date" id="date" required>
+
+                <label for="location">Location</label>
+                <input type="text" id="location" required>
+
+                <label for="issued">Issued By</label>
+                <input type="text" id="issued" required>
+
+                <button onclick="updateInventory()">Update</button>
+                <button onclick="hideUpdateForm()">Cancel</button>
+            </div>
+        </main>
+    </div>
+
+<script>
+    async function searchInventory() {
+  const query = document.getElementById('searchInput').value.trim();
+  const page = 1; // Start from first page
+  
+  if (!query || query.length < 2) {
+    showResults([]);
+    return;
+  }
+  
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`http://localhost:5000/api/inventory/search?query=${query}&page=${page}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Search failed');
+    
+    const { data } = await response.json();
+    showResults(data);
+  } catch (err) {
+    console.error('Search error:', err);
+    showResults([]);
+  }
+}
+
+function showResults(items) {
+  const inventoryBody = document.getElementById('inventoryBody');
+  inventoryBody.innerHTML = '';
+  
+  if (items.length === 0) {
+    inventoryBody.innerHTML = '<tr><td colspan="8">No results found</td></tr>';
+    return;
+  }
+  
+  items.forEach(item => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${item.product_type}</td>
+      <td>${item.status}</td>
+      <td>${item.size}</td>
+      <td>${item.serial_number}</td>
+      <td>${item.date}</td>
+      <td>${item.location}</td>
+      <td>${item.issued_by}</td>
+      <td>
+        <button class="edit-button" onclick="editInventory('${item.id}', this)">Edit</button>
+      </td>
+    `;
+    inventoryBody.appendChild(row);
+  });
+}
+
+// Add new inventory
+async function addInventory() {
+  const type = document.getElementById('type').value;
+  const status = document.getElementById('status').value;
+  const size = document.getElementById('size').value;
+  const serial = document.getElementById('serial').value;
+  const date = document.getElementById('date').value;
+  const location = document.getElementById('location').value;
+  const issued = document.getElementById('issued').value;
+
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch('http://localhost:5000/api/inventory', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        productType: type,
+        status,
+        size,
+        serialNumber: serial,
+        date,
+        location,
+        issuedBy: issued
+      })
+    });
+    
+    if (!response.ok) throw new Error('Failed to add inventory');
+    
+    const newItem = await response.json();
+    addInventoryToTable(newItem);
+    hideAddModal();
+  } catch (err) {
+    console.error('Add inventory error:', err);
+    alert('Failed to add inventory item');
+  }
+}
+
+function addInventoryToTable(item) {
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td>${item.product_type}</td>
+    <td>${item.status}</td>
+    <td>${item.size}</td>
+    <td>${item.serial_number}</td>
+    <td>${item.date}</td>
+    <td>${item.location}</td>
+    <td>${item.issued_by}</td>
+    <td><button class="edit-button" onclick="editInventory('${item.id}', this)">Edit</button></td>
+  `;
+
+  document.getElementById('inventoryBody').prepend(newRow);
+  document.getElementById('inventoryTable').classList.remove('hidden');
+}
+    </script>
+
+
+
+    <script src="./dark-mode.js"></script>
+    <script src="./script.js"></script>
+</body>
+</html>

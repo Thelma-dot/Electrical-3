@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+  <link rel="stylesheet" href="./dashboard.css">
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+        <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+        
+      <nav>
+        <a href="./dashboard.html">📊 Dashboard</a>
+        <a href="./generate_report.html">📄 Generate Report</a>
+        <a href="./tool_box.html">🛠️ Toolbox</a>
+        <a href="./inventory.html">📦 Inventory</a>
+        <a href="./settings.html">⚙️ Settings</a>
+        <a class="active">👤 Profile</a>
+        <a href="./index.html">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+          <h1>Profile</h1>
+        </header>
+            <div class="container">
+                <h1>System & Control Section</h1>
+                <h2>Electrical Engineering Department</h2>
+                <p><strong>Managed by:</strong> Ing. Nana Obimpeh</p>
+            
+                <div class="section">
+                    <h3>👥 Staff Members</h3>
+                    <ul class="staff-list">
+                        <li><strong>Officer:</strong> Ing. Precious Elorm Ansah</li>
+                        <li><strong>Supervisor:</strong> Collins Oduro</li>
+                        <li>Daniel Hackman</li>
+                        <li>David Okyere</li>
+                        <li>Evans Gyesi Arthur</li>
+                        <li>Calvin Odzor</li>
+                    </ul>
+                </div>
+            
+                <div class="section">
+                    <h3>⚡ Job Responsibilities</h3>
+                    <ul class="jobs-list">
+                        <li>🔹 Installation & Maintenance of UPS and AVR</li>
+                        <li>🔹 Monitoring UPS Remotely</li>
+                        <li>🔹 Monitoring Lift Units Remotely</li>
+                        <li>🔹 Solar Installations & Monitoring</li>
+                        <li>🔹 SCADA Diagram for:
+                            <ul>
+                                <li>Power Lines to Reefer Containers</li>
+                                <li>Genset Monitoring (In & Out of Port)</li>
+                            </ul>
+                        </li>
+                        <li>🔹 Fire Alarm Systems</li>
+                        <li>🔹 First Response to Weighbridge</li>
+                        <li>🔹 Boom Barrier Maintenance</li>
+                        <li>🔹 Electric Fencing</li>
+                        <li>🔹 Automation</li>
+                        <li>🔹 Traffic Light Maintenance</li>
+                    </ul>
+                </div>
+            
+                <p style="text-align:center; font-weight:bold;">📜 Working towards <strong>ISO 50001</strong> compliance</p>
+            </div>
+
+     <script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Load user profile
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+      window.location.href = 'index.html';
+      return;
+    }
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/profile', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to load profile');
+      
+      const profile = await response.json();
+      displayProfile(profile);
+    } catch (err) {
+      console.error('Profile load error:', err);
+      alert('Failed to load profile data');
+    }
+    
+    // Setup form submission
+    document.getElementById('profileForm').addEventListener('submit', updateProfile);
+  });
+  
+  function displayProfile(profile) {
+    document.getElementById('staffIdDisplay').textContent = profile.staff_id;
+    document.getElementById('emailInput').value = profile.email || '';
+  }
+  
+  async function updateProfile(e) {
+    e.preventDefault();
+    
+    const formData = {
+      email: document.getElementById('emailInput').value,
+      currentPassword: document.getElementById('currentPassword').value,
+      newPassword: document.getElementById('newPassword').value
+    };
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Update failed');
+      }
+      
+      alert('Profile updated successfully!');
+      // Clear password fields
+      document.getElementById('currentPassword').value = '';
+      document.getElementById('newPassword').value = '';
+    } catch (err) {
+      console.error('Update error:', err);
+      alert(err.message || 'Failed to update profile');
+    }
+  }
+</script>       
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.35.5/apexcharts.min.js"></script>
+    <script src="./dark-mode.js"></script>
+    <script src="./script.js"></script>
+</body>
+</html>

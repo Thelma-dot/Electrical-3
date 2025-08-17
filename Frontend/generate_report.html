@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+    <link rel="stylesheet" href="./dashboard.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+    
+          <nav>
+            <a href="./dashboard.html">📊 Dashboard</a>
+            <a class="active">📄 Generate Report</a>
+            <a href="./tool_box.html">🛠️ Toolbox</a>
+            <a href="./inventory.html">📦 Inventory</a>
+            <a href="./settings.html">⚙️ Settings</a>
+            <a href="./profile.html">👤 Profile</a>
+            <a href="./index.html">🚪 Logout</a>
+          </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+              <h1>Generate Report</h1>
+            </header>
+
+
+
+            <div class="report-container">
+                
+                <div class="left-section">
+                    
+                    <div class="form-group">
+                        <label for="reportTitle">Title:</label>
+                        <input type="text" id="reportTitle" placeholder="Enter report title">
+                    </div>
+            
+                    <div class="form-group">
+                        <label for="jobDescription">Job Description:</label>
+                        <textarea id="jobDescription" placeholder="Enter job description"></textarea>
+                    </div>
+            
+                    <div class="form-group">
+                        <label for="location">Location:</label>
+                        <input type="text" id="location" placeholder="Enter location">
+                    </div>
+            
+                    <div class="form-group">
+                        <label for="remarks">Remarks:</label>
+                        <textarea id="remarks" placeholder="Enter remarks"></textarea>
+                    </div>
+            
+                    
+                </div>
+            <hr>
+            <div id="generatedReport" class="hidden">
+                <h3>Report Preview</h3>
+                <p><strong>Title:</strong> <span id="displayTitle"></span></p>
+                <p><strong>Job Description:</strong> <span id="displayJobDescription"></span></p>
+                <p><strong>Location:</strong> <span id="displayLocation"></span></p>
+                <p><strong>Remarks:</strong> <span id="displayRemarks"></span></p>
+                <p><strong>Date:</strong> <span id="displayDate"></span></p>
+                <p><strong>Time:</strong> <span id="displayTime"></span></p>
+                <p><strong>Tools Used:</strong> <span id="displayTools Used"></span></p>
+                <p><strong>Status:</strong> <span id="displayStatus"></span></p>
+                
+                <button onclick="deleteReport()">Delete Report</button>
+            </div>
+            
+            <!-- Right side (New section) -->
+            <div class="right-section">
+        <h4>Additional Information</h4>
+        <div class="form-group">
+            <label for="reportDate"><strong>Date:</strong></label>
+        <input type="date" id="reportDate">
+
+        
+
+        
+
+        <label for="reportTime"><strong>Time:</strong></label>
+        <input type="time" id="reportTime">
+    </div>
+        
+        <div class="form-group">
+            <label for="toolsUsed">Tools Used:</label>
+            <input type="text" id="toolsUsed" placeholder="Enter tools used" list="tool-list">
+            <datalist id="tool-list">
+                <option value="Set of Rachet">
+                <option value="Mallet">
+                <option value="Hammer">
+                <option value="Box Spanner Set">
+                <option value="Master Screw Driver Bit">
+                <option value="High Spped Steel Ground Flute Jobber Drill">
+                <option value="Precision Eye Loupe">
+                <option value="Spanners(10,11,12,13,14,15,16,17,18,19)">
+                <option value="Double Cut File Set">
+                <option value="Handy Knife for Engineers">
+                <option value="Hacksaw blades">
+                <option value="Scissors">
+                <option value="150mm (6'') Engineer Square">
+                <option value="Tape Measure 5m">
+                <option value="Tap Wrench Big Size">
+                <option value="Tap Wrench Small Size">
+                <option value="Tinsnips - General Purpose Straight">
+                <option value="Magnetic Telescope Pickup Tool">
+                <option value="Heavy Duty Hacksaw">
+                <option value="300mm (12'') Engineer Square">
+                <option value="Screwdriver Set">
+                <option value="Alan Keys Set">
+                <option value="Side Cutter">
+                <option value="Plier">
+                <option value="Long Nose">
+                <option value="Shifting Spanner">
+                <option value="(Ajustable Wrench) Groove Joint Plier ">
+                <option value="Needle File Set">
+                <option value="(Pipe Wrench) Locking Plier">
+                <option value="Wiring Sharp Blade">
+                <option value="Adjustable telescopic inspection mirror">
+                <option value="18 Blade Feeler Gauge">
+                <option value="Pocket Scriber">
+                <option value="Engineers Rule 150mm/6''">
+                <option value="Engineers Rule 150mm/12''">
+                <option value="Set of Screw Drivers">
+                <option value="Chisel">  
+                <option value="Meter">
+                <option value="Battery Tester">
+                <option value="Ladder">
+            </datalist>
+        </div>
+
+        <!-- Selected tools display area -->
+<div id="selectedToolsContainer">
+    <ul id="selectedToolsList"></ul>
+</div>
+        
+        <p><strong>Status:</strong></p>
+
+        <!-- Status selection: In Progress or Completed -->
+        <div class="status-options">
+            <label>
+                <input type="radio" name="status" value="In Progress" id="statusInProgress">
+                In Progress
+            </label>
+            <label>
+                <input type="radio" name="status" value="Completed" id="statusCompleted">
+                Completed
+            </label>
+        </div>
+        <button class="generate-btn" onclick="generateReport()">Generate Report</button>
+            </div>
+
+            <div id="generatedReport" class="hidden">
+                <h2 id="displayTitle"></h2>
+                <p id="displayJobDescription"></p>
+                <p id="displayLocation"></p>
+                <p id="displayRemarks"></p>
+                <p id="displayDate"></p>
+                <p id="displayTime"></p>
+                <p id="displayToolsUsed"></p>
+                <p id="displayStatus"></p>
+             </div>
+             
+             
+        </div>
+        <table id="reportTable" class="hidden">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Job Description</th>
+                        <th>Location</th>
+                        <th>Remarks</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Tools Used</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                        
+                    </tr>
+                </thead>
+                <tbody id="reportTableBody"></tbody>
+            </table>
+            
+            
+</main>
+<script src="./dark-mode.js"></script>
+    <script src="./script.js"></script>
+</body>
+</html>
