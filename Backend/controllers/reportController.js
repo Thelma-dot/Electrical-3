@@ -17,6 +17,11 @@ exports.createReport = async (req, res) => {
       status
     });
 
+    // Emit real-time update to admin panels
+    if (req.app.locals.io) {
+      req.app.locals.io.emit('report:created', { reportId, userId });
+    }
+
     res.status(201).json({ message: 'Report created', reportId });
   } catch (err) {
     console.error(err);
@@ -60,6 +65,11 @@ exports.updateReport = async (req, res) => {
       status
     });
 
+    // Emit real-time update to admin panels
+    if (req.app.locals.io) {
+      req.app.locals.io.emit('report:updated', { reportId: id, userId });
+    }
+
     res.json({ message: 'Report updated' });
   } catch (err) {
     console.error(err);
@@ -81,6 +91,12 @@ exports.deleteReport = async (req, res) => {
     }
 
     await Report.delete(id);
+    
+    // Emit real-time update to admin panels
+    if (req.app.locals.io) {
+      req.app.locals.io.emit('report:deleted', { reportId: id, userId });
+    }
+    
     res.json({ message: 'Report deleted' });
   } catch (err) {
     console.error(err);

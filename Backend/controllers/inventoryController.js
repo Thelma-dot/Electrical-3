@@ -16,6 +16,11 @@ exports.createInventory = async (req, res) => {
       issuedBy
     });
 
+    // Emit real-time update to admin panels
+    if (req.app.locals.io) {
+      req.app.locals.io.emit('inventory:created', { inventoryId, userId });
+    }
+
     res.status(201).json({ message: 'Inventory item created', inventoryId });
   } catch (err) {
     console.error(err);
@@ -58,6 +63,11 @@ exports.updateInventory = async (req, res) => {
       issuedBy
     });
 
+    // Emit real-time update to admin panels
+    if (req.app.locals.io) {
+      req.app.locals.io.emit('inventory:updated', { inventoryId: id, userId });
+    }
+
     res.json({ message: 'Inventory item updated' });
   } catch (err) {
     console.error(err);
@@ -79,6 +89,12 @@ exports.deleteInventory = async (req, res) => {
     }
 
     await Inventory.delete(id);
+    
+    // Emit real-time update to admin panels
+    if (req.app.locals.io) {
+      req.app.locals.io.emit('inventory:deleted', { inventoryId: id, userId });
+    }
+    
     res.json({ message: 'Inventory item deleted' });
   } catch (err) {
     console.error(err);

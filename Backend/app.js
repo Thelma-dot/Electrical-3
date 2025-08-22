@@ -2,7 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "config.env") });
 
 const app = express();
 
@@ -31,6 +32,8 @@ app.use("/api/reports", require("./routes/reports"));
 app.use("/api/inventory", require("./routes/inventory"));
 app.use("/api/toolbox", require("./routes/toolbox"));
 app.use("/api/settings", require("./routes/settings"));
+app.use("/api/tasks", require("./routes/tasks"));
+app.use("/api/admin", require("./routes/admin"));
 
 // ====================== Health Check ======================
 app.get("/health", (req, res) => {

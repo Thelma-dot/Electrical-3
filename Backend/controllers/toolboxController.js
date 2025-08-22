@@ -2,23 +2,23 @@ const Toolbox = require('../models/Toolbox');
 
 exports.createToolbox = async (req, res) => {
   try {
-    const { 
-      workActivity, 
-      date, 
-      workLocation, 
-      nameCompany, 
-      sign, 
-      ppeNo, 
-      toolsUsed, 
-      hazards, 
-      circulars, 
-      riskAssessment, 
-      permit, 
-      remarks, 
-      preparedBy, 
-      verifiedBy 
+    const {
+      workActivity,
+      date,
+      workLocation,
+      nameCompany,
+      sign,
+      ppeNo,
+      toolsUsed,
+      hazards,
+      circulars,
+      riskAssessment,
+      permit,
+      remarks,
+      preparedBy,
+      verifiedBy
     } = req.body;
-    
+
     const userId = req.user.id;
 
     const toolboxId = await Toolbox.create({
@@ -38,6 +38,11 @@ exports.createToolbox = async (req, res) => {
       preparedBy,
       verifiedBy
     });
+
+    // Emit real-time update to admin panels
+    if (req.app.locals.io) {
+      req.app.locals.io.emit('tool:created', { toolboxId, userId });
+    }
 
     res.status(201).json({ message: 'Toolbox form created', toolboxId });
   } catch (err) {
@@ -59,23 +64,23 @@ exports.getUserToolboxes = async (req, res) => {
 
 exports.createToolbox = async (req, res) => {
   try {
-    const { 
-      workActivity, 
-      date, 
-      workLocation, 
-      nameCompany, 
-      sign, 
-      ppeNo, 
-      toolsUsed, 
-      hazards, 
-      circulars, 
-      riskAssessment, 
-      permit, 
-      remarks, 
-      preparedBy, 
-      verifiedBy 
+    const {
+      workActivity,
+      date,
+      workLocation,
+      nameCompany,
+      sign,
+      ppeNo,
+      toolsUsed,
+      hazards,
+      circulars,
+      riskAssessment,
+      permit,
+      remarks,
+      preparedBy,
+      verifiedBy
     } = req.body;
-    
+
     const userId = req.user.id;
 
     const [result] = await pool.query(
@@ -100,18 +105,18 @@ exports.createToolbox = async (req, res) => {
         verifiedBy
       ]
     );
-    
+
     const toolboxId = result.insertId;
-    
+
     // Generate PDF
     const pdfBuffer = await generateToolboxPDF(req.body);
-    
+
     // Save PDF to database (optional)
     await pool.query(
       'UPDATE toolbox SET pdf = ? WHERE id = ?',
       [pdfBuffer, toolboxId]
     );
-    
+
     // Return PDF for download
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=Toolbox_${toolboxId}.pdf`);
@@ -124,9 +129,9 @@ exports.createToolbox = async (req, res) => {
 async function generateToolboxPDF(formData) {
   const { jsPDF } = require('jspdf');
   const doc = new jsPDF();
-  
+
   // Add content to PDF
   // ... (similar to your frontend PDF generation code)
-  
+
   return doc.output();
 }

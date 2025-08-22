@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Reports Management</title>
+    <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+    <link rel="stylesheet" href="./adminDashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="./images/logo_gpha.png" alt="GPHA Logo" class="logo">
+                <h2>Reports Management <span id="liveBadgeAdmin" class="live-badge"
+                        style="margin-left:8px;font-size:12px;padding:2px 8px;border-radius:12px;background:#e74c3c;color:#fff"><span
+                            class="live-dot"
+                            style="width:8px;height:8px;border-radius:50%;background:#fff;margin-right:6px;display:inline-block;animation:blink 1s infinite"></span><span
+                            class="status">OFFLINE</span></span></h2>
+            </div>
+            <div class="nav-menu">
+                <a href="./admin-dashboard.html" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="./admin-users.html" class="nav-link">
+                    <i class="fas fa-users"></i> User Management
+                </a>
+                <a href="./admin-reports.html" class="nav-link active">
+                    <i class="fas fa-chart-bar"></i> Reports Management
+                </a>
+                <a href="./admin-inventory.html" class="nav-link">
+                    <i class="fas fa-chart-bar"></i> Inventory Management
+                </a>
+                <a href="./admin-toolbox.html" class="nav-link">
+                    <i class="fas fa-boxes"></i> Toolbox Management
+                </a>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Reports Management</h1>
+            <div class="header-actions">
+                <button class="btn secondary" onclick="exportReports()">
+                    <i class="fas fa-download"></i> Export All
+                </button>
+                <button class="btn primary" onclick="refreshReports()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+        </div>
+        
+        <!-- Report Statistics -->
+        <div class="stats-section">
+            <h3>Report Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Total Reports</h4>
+                    <p id="totalReports">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Pending</h4>
+                    <p id="pendingReports">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>In Progress</h4>
+                    <p id="inProgressReports">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Completed</h4>
+                    <p id="completedReports">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="search-filter">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search reports by title, location, or user..."
+                    onkeyup="searchReports()">
+            </div>
+            <div class="filter-box">
+                <select id="statusFilter" onchange="filterReports()" aria-label="Filter reports by status">
+                    <option value="">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+            <div class="filter-box">
+                <select id="userFilter" onchange="filterReports()" aria-label="Filter reports by user">
+                    <option value="">All Users</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Reports Table -->
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Job Description</th>
+                        <th>Location</th>
+                        <th>User</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Tools Used</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="reportsTableBody">
+                    <!-- Reports will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <button id="prevPage" onclick="changePage(-1)">Previous</button>
+            <span id="pageInfo">Page 1</span>
+            <button id="nextPage" onclick="changePage(1)">Next</button>
+        </div>
+
+        
+    </main>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Delete Report</h2>
+                <span class="close" onclick="closeDeleteModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this report?</p>
+                <p><strong id="deleteReportTitle"></strong></p>
+                <p>This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn danger" onclick="confirmDeleteReport()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Details Modal -->
+    <div id="reportDetailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Report Details</h2>
+                <span class="close" onclick="closeReportDetailsModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="reportDetailsContent">
+                <!-- Report details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" onclick="closeReportDetailsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="http://localhost:5000/socket.io/socket.io.js"></script>
+    <script>
+        // Connect to realtime to update admin reports table instantly
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
+                const badge = document.getElementById('liveBadgeAdmin');
+                const setLive = (on) => { if (!badge) return; badge.style.background = on ? '#27ae60' : '#e74c3c'; badge.querySelector('.status').textContent = on ? 'LIVE' : 'OFFLINE'; };
+                socket.on('connect', () => setLive(true));
+                socket.on('disconnect', () => setLive(false));
+
+                // Listen for real-time updates
+                socket.on('report:created', () => loadReports());
+                socket.on('report:updated', () => loadReports());
+
+                // Initialize page
+                loadReports();
+                loadUsers();
+            } catch (e) { /* ignore */ }
+        });
+    </script>
+    <script src="./script.js"></script>
+    <script src="./admin-reports.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Reports</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+    <link rel="stylesheet" href="./dashboard.css">
+    <link rel="stylesheet" href="./user-greeting.css">
+    <style>
+        .search-container {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .search-btn:hover {
+            background: #2980b9;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        .back-btn:hover {
+            background: #34495e;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+            <nav>
+                <a href="./dashboard.html">📊 Dashboard</a>
+                <a href="./generate_report.html">📄 Generate Report</a>
+                <a class="active">📋 View Reports</a>
+                <a href="./tool_box.html">🛠️ Toolbox</a>
+                <a href="./inventory.html">📦 Inventory</a>
+                <a href="./settings.html">⚙️ Settings</a>
+                <a href="./profile.html">👤 Profile</a>
+                <a href="./index.html" onclick="logout()">🚪 Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <h1>View Reports</h1>
+            </header>
+
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-input"
+                    placeholder="Search reports by title, location, status...">
+                <button class="search-btn" onclick="searchReports()">Search</button>
+            </div>
+
+            <div class="report-actions">
+                <a href="./generate_report.html" class="back-btn">← Generate New Report</a>
+            </div>
+
+            <table id="reportsTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Job Description</th>
+                        <th>Location</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Tools Used</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="reportsTableBody">
+                    <!-- Reports will be populated here -->
+                </tbody>
+            </table>
+            <div id="noResultsMessage" style="display: none; text-align: center; color: #666; margin: 20px;">
+                No reports found matching your search criteria.
+            </div>
+        </main>
+    </div>
+
+    <script src="./dark-mode.js"></script>
+    <script src="./script.js"></script>
+    <script>
+        // Reports page specific functionality
+        let allReports = [];
+
+        // Load reports when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            loadReports();
+        });
+
+        async function loadReports() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = './index.html';
+                    return;
+                }
+
+                const response = await fetch('http://localhost:5000/api/reports', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    allReports = await response.json();
+                    displayReports(allReports);
+                } else {
+                    console.error('Failed to load reports');
+                    displayReports([]);
+                }
+            } catch (error) {
+                console.error('Error loading reports:', error);
+                displayReports([]);
+            }
+        }
+
+        function displayReports(reports) {
+            const tbody = document.getElementById('reportsTableBody');
+            tbody.innerHTML = '';
+
+            if (reports.length === 0) {
+                document.getElementById('noResultsMessage').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('noResultsMessage').style.display = 'none';
+
+            reports.forEach((report) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${report.title || 'N/A'}</td>
+                    <td>${report.job_description || report.jobDescription || 'N/A'}</td>
+                    <td>${report.location || 'N/A'}</td>
+                    <td>${report.report_date || report.reportDate || 'N/A'}</td>
+                    <td>${report.report_time || report.reportTime || 'N/A'}</td>
+                    <td><span class="status ${(report.status || '').toLowerCase().replace(' ', '-')}">${report.status || 'N/A'}</span></td>
+                        <td>${Array.isArray(report.tools_used || report.toolsUsed) ?
+                        (report.tools_used || report.toolsUsed).join(', ') :
+                        (report.tools_used || report.toolsUsed || 'N/A')}</td>
+                    <td>
+                        <button onclick="viewReport(${report.id})" class="view-btn">View</button>
+                        <button onclick="deleteReport(${report.id})" class="delete-btn">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function searchReports() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredReports = allReports.filter(report =>
+                (report.title || '').toLowerCase().includes(searchTerm) ||
+                (report.job_description || report.jobDescription || '').toLowerCase().includes(searchTerm) ||
+                (report.location || '').toLowerCase().includes(searchTerm) ||
+                (report.status || '').toLowerCase().includes(searchTerm) ||
+                (report.tools_used || report.toolsUsed || '').toLowerCase().includes(searchTerm)
+            );
+            displayReports(filteredReports);
+        }
+
+        async function viewReport(reportId) {
+            const report = allReports.find(r => r.id === reportId);
+            if (!report) return;
+
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
+            `;
+
+            modal.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 8px; max-width: 500px; max-height: 80vh; overflow-y: auto;">
+                    <h2>Report Details</h2>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Title:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.title}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Description:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.job_description || report.jobDescription}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Location:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.location}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Date:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.report_date || report.reportDate}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Time:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.report_time || report.reportTime}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Status:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.status}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Tools Used:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${Array.isArray(report.tools_used || report.toolsUsed) ? (report.tools_used || report.toolsUsed).join(', ') : (report.tools_used || report.toolsUsed || 'N/A')}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Remarks:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.remarks || 'N/A'}</td></tr>
+                    </table>
+                    <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                        <button onclick="printReport(${report.id})" style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer;">🖨️ Print</button>
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">❌ Close</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        async function deleteReport(reportId) {
+            if (!confirm('Are you sure you want to delete this report?')) return;
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`http://localhost:5000/api/reports/${reportId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    loadReports();
+                } else {
+                    alert('Failed to delete report');
+                }
+            } catch (error) {
+                console.error('Error deleting report:', error);
+                alert('Error deleting report');
+            }
+        }
+
+        function printReport(reportId) {
+            const report = allReports.find(r => r.id === reportId);
+            if (!report) return;
+
+            // Create a new window for printing
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Report - ${report.title}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+                        .report-details { margin-bottom: 30px; }
+                        .report-details table { width: 100%; border-collapse: collapse; }
+                        .report-details td { padding: 8px; border-bottom: 1px solid #ddd; }
+                        .report-details td:first-child { font-weight: bold; width: 30%; }
+                        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #666; }
+                        @media print { body { margin: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Electrical Management System</h1>
+                        <h2>${report.title}</h2>
+                    </div>
+                    
+                    <div class="report-details">
+                        <table>
+                            <tr><td>Job Description:</td><td>${report.job_description || report.jobDescription || 'N/A'}</td></tr>
+                            <tr><td>Location:</td><td>${report.location || 'N/A'}</td></tr>
+                            <tr><td>Date:</td><td>${report.report_date || report.reportDate || 'N/A'}</td></tr>
+                            <tr><td>Time:</td><td>${report.report_time || report.reportTime || 'N/A'}</td></tr>
+                            <tr><td>Status:</td><td>${report.status || 'N/A'}</td></tr>
+                            <tr><td>Tools Used:</td><td>${Array.isArray(report.tools_used || report.toolsUsed) ? (report.tools_used || report.toolsUsed).join(', ') : (report.tools_used || report.toolsUsed || 'N/A')}</td></tr>
+                            <tr><td>Remarks:</td><td>${report.remarks || 'N/A'}</td></tr>
+                        </table>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                    </div>
+                </body>
+                </html>
+            `);
+
+            printWindow.document.close();
+            printWindow.focus();
+
+            // Wait for content to load then print
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
+        }
+
+        // CSS for status badges and table styling
+        const style = document.createElement('style');
+        style.textContent = `
+            #reportsTable {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            
+            #reportsTable th {
+                background: #f8f9fa;
+                padding: 12px;
+                text-align: left;
+                font-weight: 600;
+                border-bottom: 2px solid #dee2e6;
+            }
+            
+            #reportsTable td {
+                padding: 12px;
+                border-bottom: 1px solid #dee2e6;
+            }
+            
+            #reportsTable tr:hover {
+                background-color: #f8f9fa;
+            }
+            
+            .status.completed { 
+                background: #d4edda; 
+                color: #155724; 
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            
+            .status.in-progress { 
+                background: #fff3cd; 
+                color: #856404; 
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            
+            .status.pending { 
+                background: #cce5ff; 
+                color: #004085; 
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            
+            .view-btn, .delete-btn {
+                padding: 6px 12px;
+                margin: 0 2px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: background-color 0.3s;
+            }
+            
+            .view-btn { 
+                background: #3498db; 
+                color: white; 
+            }
+            
+            .view-btn:hover {
+                background: #2980b9;
+            }
+            
+            .delete-btn { 
+                background: #e74c3c; 
+                color: white; 
+            }
+            
+            .delete-btn:hover {
+                background: #c0392b;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+
+</html>

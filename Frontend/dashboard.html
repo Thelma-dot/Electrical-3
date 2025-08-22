@@ -1,17 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard</title>
   <link rel="icon" type="image/png" href="./images/logo_gpha.png">
   <link rel="stylesheet" href="./dashboard.css">
+  <link rel="stylesheet" href="./user-greeting.css">
+  <style>
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 8px;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: #e74c3c;
+      color: #fff
+    }
+
+    .live-badge.on {
+      background: #27ae60
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fff;
+      margin-right: 6px;
+      animation: blink 1s infinite
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: .35
+      }
+
+      50% {
+        opacity: 1
+      }
+    }
+
+    .live-flash {
+      animation: flash 600ms ease
+    }
+
+    @keyframes flash {
+      0% {
+        box-shadow: 0 0 0 6px rgba(46, 204, 113, .22)
+      }
+
+      100% {
+        box-shadow: none
+      }
+    }
+
+    .chart-update-indicator {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #27ae60;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .chart-update-indicator.active {
+      opacity: 1;
+      animation: pulse 1s ease-in-out;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.2);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .chart {
+      position: relative;
+    }
+
+    .performance-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .performance-arrow {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .performance-arrow.up {
+      color: #27ae60;
+    }
+
+    .performance-arrow.down {
+      color: #e74c3c;
+    }
+
+    .performance-arrow.neutral {
+      color: #95a5a6;
+    }
+  </style>
 </head>
+
 <body>
   <div class="container">
     <aside class="sidebar">
-        <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
-        
+      <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+
       <nav>
         <a class="active">📊 Dashboard</a>
         <a href="./generate_report.html">📄 Generate Report</a>
@@ -20,175 +134,465 @@
         <a href="./settings.html">⚙️ Settings</a>
         <a href="./profile.html">👤 Profile</a>
         <a href="./index.html" onclick="logout()">🚪 Logout</a>
-
-
-
-
       </nav>
     </aside>
 
     <main class="main-content">
       <header class="header">
         <h1>Dashboard</h1>
+        <span id="liveBadge" class="live-badge" aria-live="polite"><span class="live-dot"></span><span
+            class="status">OFFLINE</span></span>
       </header>
 
       <section class="stats">
-        <div class="card"><h3>Generate Report</h3><p>0</p></div>
-        <div class="card"><h3>Inventory</h3><p>0</p></div>
-        <div class="card"><h3>In Progress</h3><p>0</p></div>
-        <div class="card"><h3>Completed Tasks</h3><p>0</p></div>
+        <div class="card">
+          <h3>Generate Report</h3>
+          <p id="reportsCount">0</p>
+        </div>
+        <div class="card">
+          <h3>Inventory</h3>
+          <p id="inventoryCount">0</p>
+        </div>
+        <div class="card">
+          <h3>In Progress</h3>
+          <p id="inProgressCount">0</p>
+        </div>
+        <div class="card">
+          <h3>Completed Tasks</h3>
+          <p id="completedCount">0</p>
+        </div>
       </section>
 
       <section class="charts">
         <div class="chart" id="projectProgress">
           <h3>Completed Task</h3>
+          <div class="chart-update-indicator" id="barChartIndicator"></div>
           <canvas id="progressChart"></canvas>
         </div>
         <div class="chart" id="revenueChart">
-          <h3>Reports</h3>
+          <h3>Reports Performance</h3>
+          <div class="chart-update-indicator" id="lineChartIndicator"></div>
           <canvas id="lineChart"></canvas>
+          <div class="performance-indicator">
+            <span>Performance:</span>
+            <span class="performance-arrow" id="performanceArrow">➡️</span>
+            <span id="performanceText">Stable</span>
+          </div>
         </div>
       </section>
 
       <section class="settings-section">
-        <h2>⏰ Set Deadline Reminder</h2>
-        <label for="deadlineInput">Select Deadline:</label>
-        <input type="datetime-local" id="deadlineInput">
-        <button onclick="saveDeadline()">Save Deadline</button>
-        <p id="deadlineDisplay"></p>
+        <h2>⏰ Task Deadline Reminders</h2>
+        <div id="upcomingDeadlines">
+          <p>Loading upcoming deadlines...</p>
+        </div>
+        <div id="noDeadlines" style="display: none; color: gray;">
+          <p>No upcoming task deadlines.</p>
+        </div>
+        <div id="deadlineReminders"></div>
+
+        <div style="margin-top: 15px; text-align: center;">
+          <button id="testAlarmBtn" onclick="testAlarmSound()"
+            style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 10px;">
+            🔊 Test Alarm
+          </button>
+          <button id="resetAlarmsBtn" onclick="resetAllTaskAlarms()"
+            style="padding: 8px 16px; background: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+            🔄 Reset All Alarms
+          </button>
+          <small style="display: block; margin-top: 5px; color: #666;">Test the alarm sound or reset alarm states for
+            testing</small>
+        </div>
 
         <audio id="beepSound" src="./alarm/beep-beep.mp3" preload="auto"></audio>
-        </section>
-      
+      </section>
 
-      <section class="lists">
-        <div class="list">
-          <h3>Recent Projects</h3>
-          
+      <section class="tasks-section">
+        <h2>🗒️ My Task Assignments</h2>
+        <div class="task-controls" style="margin: 8px 0; display: flex; gap: 8px; align-items: center;">
+          <label for="myTaskStatusFilter">Filter:</label>
+          <select id="myTaskStatusFilter">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button id="myTasksRefreshBtn">Refresh</button>
         </div>
-        <div class="list">
-          <h3>Assigned Engineers</h3>
-          
+        <div id="myTasksEmpty" style="display:none; color: gray;">No tasks assigned yet.</div>
+        <div class="table-container">
+          <table class="data-table" id="myTasksTable">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Due Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
       </section>
     </main>
   </div>
 
-  <script>
-  document.addEventListener('DOMContentLoaded', async () => {
-    // Check authentication
-    if (!localStorage.getItem('token')) {
-      window.location.href = 'index.html';
-      return;
-    }
-    
-    try {
-      // Load dashboard stats
-      const summaryResponse = await fetch('http://localhost:5000/api/reports/summary', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!summaryResponse.ok) throw new Error('Failed to load summary');
-      const summary = await summaryResponse.json();
-      
-      updateDashboardStats(summary);
-      
-      // Load chart data
-      const chartResponse = await fetch('http://localhost:5000/api/reports/chart-data', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!chartResponse.ok) throw new Error('Failed to load chart data');
-      const chartData = await chartResponse.json();
-      
-      initCharts(chartData);
-    } catch (err) {
-      console.error('Dashboard error:', err);
-    }
-    
-    // Initialize deadline reminder
-    initDeadlineReminder();
-  });
-  
-  function updateDashboardStats(summary) {
-    document.querySelector('.card:nth-child(1) p').textContent = summary.total || 0;
-    document.querySelector('.card:nth-child(2) p').textContent = '0'; // Placeholder for inventory
-    document.querySelector('.card:nth-child(3) p').textContent = summary.in_progress || 0;
-    document.querySelector('.card:nth-child(4) p').textContent = summary.completed || 0;
-  }
-  
-  function initCharts(chartData) {
-    // Process data for Chart.js
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                  
-    const counts = Array(12).fill(0);
-    chartData.forEach(item => {
-      const index = months.indexOf(item.month);
-      if (index !== -1) counts[index] = item.count;
-    });
-    
-    // Bar Chart - Project Progress
-    const progressChart = document.getElementById('progressChart');
-    if (progressChart) {
-      const ctxBar = progressChart.getContext('2d');
-      new Chart(ctxBar, {
-        type: 'bar',
-        data: {
-          labels: ['Reports', 'Inventory', 'In Progress', 'Completed Task'],
-          datasets: [{
-            label: 'Progress',
-            data: [
-              chartData.reduce((sum, item) => sum + item.count, 0),
-              0, // Placeholder for inventory
-              chartData.reduce((sum, item) => sum + (item.status === 'In Progress' ? 1 : 0), 0),
-              chartData.reduce((sum, item) => sum + (item.status === 'Completed' ? 1 : 0), 0)
-            ],
-            backgroundColor: '#3498db'
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false }
-          }
-        }
-      });
-    }
-
-    // Line Chart - Reports
-    const lineChart = document.getElementById('lineChart');
-    if (lineChart) {
-      const ctxLine = lineChart.getContext('2d');
-      new Chart(ctxLine, {
-        type: 'line',
-        data: {
-          labels: months,
-          datasets: [{
-            label: 'Reports',
-            data: counts,
-            borderColor: '#2980b9',
-            backgroundColor: 'rgba(41, 128, 185, 0.2)',
-            tension: 0.3
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false }
-          }
-        }
-      });
-    }
-  }
-</script>
-
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="http://localhost:5000/socket.io/socket.io.js"></script>
+  <script>
+    let barChartInstance = null;
+    let lineChartInstance = null;
+    let socket = null;
+    let previousData = {
+      reports: 0,
+      inventory: 0,
+      inProgress: 0,
+      completed: 0,
+      monthlyData: []
+    };
+    let updateTimeout = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!localStorage.getItem('token')) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      await refreshDashboard();
+      initializeSocketConnection();
+
+      // Periodically refresh as backup
+      setInterval(refreshDashboard, 30000);
+
+      // Initialize deadline reminder
+      initDeadlineReminder();
+
+      // Also refresh deadline reminders periodically
+      setInterval(() => {
+        if (typeof updateTaskDeadlineReminders === 'function') {
+          updateTaskDeadlineReminders();
+        }
+      }, 60000);
+    });
+
+    function initializeSocketConnection() {
+      try {
+        socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
+        const live = document.getElementById('liveBadge');
+
+        const setLive = (on) => {
+          if (!live) return;
+          live.classList.toggle('on', !!on);
+          live.querySelector('.status').textContent = on ? 'LIVE' : 'OFFLINE';
+        };
+
+        const flash = () => {
+          document.querySelectorAll('.stats .card').forEach(c => {
+            c.classList.add('live-flash');
+            setTimeout(() => c.classList.remove('live-flash'), 600);
+          });
+        };
+
+        socket.on('connect', () => {
+          setLive(true);
+          console.log('🔌 Connected to real-time updates');
+        });
+
+        socket.on('disconnect', () => {
+          setLive(false);
+          console.log('🔌 Disconnected from real-time updates');
+        });
+
+        // Listen for real-time events and update charts immediately
+        socket.on('report:created', () => {
+          console.log('📊 Report created - updating charts');
+          flash();
+          updateChartsInRealTime();
+        });
+
+        socket.on('report:updated', () => {
+          console.log('📊 Report updated - updating charts');
+          flash();
+          updateChartsInRealTime();
+        });
+
+        socket.on('report:deleted', () => {
+          console.log('📊 Report deleted - updating charts');
+          flash();
+          updateChartsInRealTime();
+        });
+
+        socket.on('inventory:created', () => {
+          console.log('📦 Inventory created - updating charts');
+          flash();
+          updateChartsInRealTime();
+        });
+
+        socket.on('inventory:updated', () => {
+          console.log('📦 Inventory updated - updating charts');
+          flash();
+          updateChartsInRealTime();
+        });
+
+        socket.on('task:created', () => {
+          console.log('✅ Task created - updating charts');
+          flash();
+          updateChartsInRealTime();
+        });
+
+        socket.on('task:updated', () => {
+          console.log('✅ Task updated - updating charts');
+          flash();
+          updateChartsInRealTime();
+        });
+
+      } catch (e) {
+        console.warn('Realtime unavailable', e);
+      }
+    }
+
+    async function updateChartsInRealTime() {
+      // Debounce rapid updates
+      if (updateTimeout) {
+        clearTimeout(updateTimeout);
+      }
+
+      updateTimeout = setTimeout(async () => {
+        try {
+          await refreshDashboard();
+          showChartUpdateIndicators();
+        } catch (err) {
+          console.error('Real-time update error:', err);
+        }
+      }, 500);
+    }
+
+    function showChartUpdateIndicators() {
+      // Show update indicators for both charts
+      const barIndicator = document.getElementById('barChartIndicator');
+      const lineIndicator = document.getElementById('lineChartIndicator');
+
+      if (barIndicator) {
+        barIndicator.classList.add('active');
+        setTimeout(() => barIndicator.classList.remove('active'), 2000);
+      }
+
+      if (lineIndicator) {
+        lineIndicator.classList.add('active');
+        setTimeout(() => lineIndicator.classList.remove('active'), 2000);
+      }
+    }
+
+    async function refreshDashboard() {
+      try {
+        const [summary, inventoryList, myTasks, chartData] = await Promise.all([
+          fetch('http://localhost:5000/api/reports/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()),
+          fetch('http://localhost:5000/api/inventory', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []),
+          fetch('http://localhost:5000/api/tasks/my', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []),
+          fetch('http://localhost:5000/api/reports/chart-data', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json())
+        ]);
+
+        // Compute inventory stats
+        const inventoryTotal = Array.isArray(inventoryList) ? inventoryList.length : 0;
+        const tasksInProgress = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'in_progress' || (t.status || '').toLowerCase() === 'in progress').length;
+        const tasksCompleted = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'completed').length;
+
+        const currentData = {
+          reports: summary.total || 0,
+          inventory: inventoryTotal,
+          inProgress: tasksInProgress,
+          completed: tasksCompleted,
+          monthlyData: chartData || []
+        };
+
+        updateDashboardStats(currentData);
+        initOrUpdateCharts(currentData);
+        updatePerformanceIndicator(currentData);
+
+        // Store current data for comparison
+        previousData = currentData;
+
+        // Refresh deadline reminders when dashboard is refreshed
+        if (typeof updateTaskDeadlineReminders === 'function') {
+          updateTaskDeadlineReminders();
+        }
+      } catch (err) {
+        console.error('Dashboard refresh error:', err);
+      }
+    }
+
+    function updateDashboardStats(data) {
+      document.getElementById('reportsCount').textContent = data.reports;
+      document.getElementById('inventoryCount').textContent = data.inventory;
+      document.getElementById('inProgressCount').textContent = data.inProgress;
+      document.getElementById('completedCount').textContent = data.completed;
+    }
+
+    function updatePerformanceIndicator(currentData) {
+      const performanceArrow = document.getElementById('performanceArrow');
+      const performanceText = document.getElementById('performanceText');
+
+      if (!performanceArrow || !performanceText) return;
+
+      // Calculate performance based on completed tasks vs total tasks
+      const totalTasks = currentData.inProgress + currentData.completed;
+      const completionRate = totalTasks > 0 ? (currentData.completed / totalTasks) * 100 : 0;
+
+      // Compare with previous data
+      const previousTotalTasks = previousData.inProgress + previousData.completed;
+      const previousCompletionRate = previousTotalTasks > 0 ? (previousData.completed / previousTotalTasks) * 100 : 0;
+
+      if (completionRate > previousCompletionRate) {
+        performanceArrow.textContent = '↗️';
+        performanceArrow.className = 'performance-arrow up';
+        performanceText.textContent = `Improving (${completionRate.toFixed(1)}%)`;
+      } else if (completionRate < previousCompletionRate) {
+        performanceArrow.textContent = '↘️';
+        performanceArrow.className = 'performance-arrow down';
+        performanceText.textContent = `Declining (${completionRate.toFixed(1)}%)`;
+      } else {
+        performanceArrow.textContent = '➡️';
+        performanceArrow.className = 'performance-arrow neutral';
+        performanceText.textContent = `Stable (${completionRate.toFixed(1)}%)`;
+      }
+    }
+
+    function initOrUpdateCharts(data) {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      // Aggregate report counts per month
+      const monthlyCounts = Array(12).fill(0);
+      (data.monthlyData || []).forEach(item => {
+        const monthIndex = Math.max(0, Math.min(11, parseInt(item.month, 10) - 1));
+        monthlyCounts[monthIndex] += Number(item.count) || 0;
+      });
+
+      // Update Bar Chart
+      const barData = {
+        labels: ['Reports', 'Inventory', 'In Progress', 'Completed Task'],
+        datasets: [{
+          label: 'Progress',
+          data: [
+            data.reports,
+            data.inventory,
+            data.inProgress,
+            data.completed
+          ],
+          backgroundColor: [
+            '#3498db',  // Reports - Blue
+            '#e67e22',  // Inventory - Orange
+            '#f39c12',  // In Progress - Yellow
+            '#27ae60'   // Completed - Green
+          ],
+          borderColor: [
+            '#2980b9',
+            '#d35400',
+            '#e67e22',
+            '#229954'
+          ],
+          borderWidth: 2
+        }]
+      };
+
+      const barCtx = document.getElementById('progressChart')?.getContext('2d');
+      if (barCtx) {
+        if (barChartInstance) {
+          barChartInstance.data = barData;
+          barChartInstance.update('active');
+        } else {
+          barChartInstance = new Chart(barCtx, {
+            type: 'bar',
+            data: barData,
+            options: {
+              responsive: true,
+              plugins: { legend: { display: false } },
+              animation: {
+                duration: 750,
+                easing: 'easeInOutQuart'
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: {
+                    color: 'rgba(0,0,0,0.1)'
+                  }
+                },
+                x: {
+                  grid: {
+                    display: false
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+
+      // Update Line Chart (Revenue/Performance Chart)
+      const lineCtx = document.getElementById('lineChart')?.getContext('2d');
+      const lineData = {
+        labels: months,
+        datasets: [{
+          label: 'Reports',
+          data: monthlyCounts,
+          borderColor: '#2980b9',
+          backgroundColor: 'rgba(41, 128, 185, 0.2)',
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: '#2980b9',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 6,
+          pointHoverRadius: 8
+        }]
+      };
+
+      if (lineCtx) {
+        if (lineChartInstance) {
+          lineChartInstance.data = lineData;
+          lineChartInstance.update('active');
+        } else {
+          lineChartInstance = new Chart(lineCtx, {
+            type: 'line',
+            data: lineData,
+            options: {
+              responsive: true,
+              plugins: { legend: { display: false } },
+              animation: {
+                duration: 750,
+                easing: 'easeInOutQuart'
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: {
+                    color: 'rgba(0,0,0,0.1)'
+                  }
+                },
+                x: {
+                  grid: {
+                    display: false
+                  }
+                }
+              },
+              elements: {
+                point: {
+                  hoverBackgroundColor: '#3498db'
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+  </script>
+
   <script src="./dark-mode.js"></script>
   <script src="./script.js"></script>
-  </body>
+  <script src="./dashboard-tasks.js"></script>
+  <script src="./user-greeting.js"></script>
+</body>
+
 </html>

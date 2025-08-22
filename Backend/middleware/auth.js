@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+require("dotenv").config({ path: require("path").join(__dirname, "..", "config.env") });
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -21,6 +22,15 @@ function authenticateToken(req, res, next) {
   );
 }
 
+// Admin-only guard
+function requireAdmin(req, res, next) {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin privileges required' });
+  }
+  next();
+}
+
 module.exports = {
   authenticateToken,
+  requireAdmin,
 };
