@@ -53,12 +53,6 @@
                 <button class="btn secondary" onclick="exportInventory()">
                     <i class="fas fa-download"></i> Export All
                 </button>
-                <button class="btn primary" onclick="refreshInventory()">
-                    <i class="fas fa-sync"></i> Refresh
-                </button>
-                <button class="btn success" onclick="showAddInventoryModal()">
-                    <i class="fas fa-plus"></i> Add New Item
-                </button>
             </div>
         </div>
 
@@ -143,6 +137,7 @@
                         <th>Date Added</th>
                         <th>Location</th>
                         <th>Issued By</th>
+                        <th>User</th>
                         <th>Last Updated</th>
                         <th>Actions</th>
                     </tr>
@@ -160,78 +155,8 @@
             <button id="nextPage" onclick="changePage(1)">Next</button>
         </div>
 
-        
-    </main>
 
-    <!-- Add/Edit Inventory Modal -->
-    <div id="inventoryModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalTitle">Add New Inventory Item</h2>
-                <span class="close" onclick="closeInventoryModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="inventoryForm">
-                    <div class="form-group">
-                        <label for="productType">Product Type *</label>
-                        <select id="productType" required>
-                            <option value="">Select Type</option>
-                            <option value="UPS">UPS</option>
-                            <option value="AVR">AVR</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="status">Status *</label>
-                        <select id="status" required>
-                            <option value="">Select Status</option>
-                            <option value="New">New</option>
-                            <option value="Replaced">Replaced</option>
-                            <option value="In Use">In Use</option>
-                            <option value="Maintenance">Maintenance</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="size">Size *</label>
-                        <select id="size" required>
-                            <option value="">Select Size</option>
-                            <option value="1.5kva">1.5kva</option>
-                            <option value="3kva">3kva</option>
-                            <option value="6kva">6kva</option>
-                            <option value="10kva">10kva</option>
-                            <option value="20kva">20kva</option>
-                            <option value="30kva">30kva</option>
-                            <option value="40kva">40kva</option>
-                            <option value="60kva">60kva</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="serialNumber">Serial Number *</label>
-                        <input type="text" id="serialNumber" required placeholder="Enter serial number">
-                    </div>
-                    <div class="form-group">
-                        <label for="dateAdded">Date Added *</label>
-                        <input type="date" id="dateAdded" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="location">Location *</label>
-                        <input type="text" id="location" required placeholder="Enter location">
-                    </div>
-                    <div class="form-group">
-                        <label for="issuedBy">Issued By</label>
-                        <input type="text" id="issuedBy" placeholder="Enter name of person who issued">
-                    </div>
-                    <div class="form-group">
-                        <label for="notes">Notes</label>
-                        <textarea id="notes" rows="3" placeholder="Additional notes or comments"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn secondary" onclick="closeInventoryModal()">Cancel</button>
-                <button class="btn primary" onclick="saveInventoryItem()">Save Item</button>
-            </div>
-        </div>
-    </div>
+    </main>
 
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="modal">
@@ -285,16 +210,9 @@
                 socket.on('inventory:updated', () => loadInventory());
                 socket.on('inventory:deleted', () => loadInventory());
 
-                // Initialize page
                 loadInventory();
-                setCurrentDate();
             } catch (e) { /* ignore */ }
         });
-
-        function setCurrentDate() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('dateAdded').value = today;
-        }
     </script>
     <script src="./script.js"></script>
     <script src="./admin-inventory.js"></script>

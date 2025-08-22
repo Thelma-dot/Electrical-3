@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Settings</title>
+    <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+    <link rel="stylesheet" href="./adminDashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="./images/logo_gpha.png" alt="GPHA Logo" class="logo">
+                <h2>Admin Settings <span id="liveBadgeAdmin" class="live-badge"
+                        style="margin-left:8px;font-size:12px;padding:2px 8px;border-radius:12px;background:#e74c3c;color:#fff"><span
+                            class="live-dot"
+                            style="width:8px;height:8px;border-radius:50%;background:#fff;margin-right:6px;display:inline-block;animation:blink 1s infinite"></span><span
+                            class="status">OFFLINE</span></span></h2>
+            </div>
+            <div class="nav-menu">
+                <a href="./admin-dashboard.html" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="./admin-users.html" class="nav-link">
+                    <i class="fas fa-users"></i> User Management
+                </a>
+                <a href="./admin-reports.html" class="nav-link">
+                    <i class="fas fa-chart-bar"></i> Reports Management
+                </a>
+                <a href="./admin-inventory.html" class="nav-link">
+                    <i class="fas fa-boxes"></i> Inventory Management
+                </a>
+                <a href="./admin-toolbox.html" class="nav-link">
+                    <i class="fas fa-tools"></i> Toolbox Management
+                </a>
+                <a href="./admin-settings.html" class="nav-link active">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Admin Settings</h1>
+        </div>
+
+        <div class="settings-container">
+            <!-- System Configuration -->
+            <div class="settings-section">
+                <h2><i class="fas fa-server"></i> System Configuration</h2>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label for="systemName">System Name</label>
+                        <input type="text" id="systemName" value="Electrical Management System" readonly>
+                        <small>System name cannot be changed</small>
+                    </div>
+                    <div class="setting-item">
+                        <label for="systemVersion">System Version</label>
+                        <input type="text" id="systemVersion" value="1.0.0" readonly>
+                        <small>Current system version</small>
+                    </div>
+                    <div class="setting-item">
+                        <label for="databaseStatus">Database Status</label>
+                        <div class="status-indicator">
+                            <span class="status-dot online"></span>
+                            <span>Connected</span>
+                        </div>
+                        <small>SQLite database connection status</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management Settings -->
+            <div class="settings-section">
+                <h2><i class="fas fa-users-cog"></i> User Management Settings</h2>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label for="maxUsers">Maximum Users</label>
+                        <input type="number" id="maxUsers" value="100" min="1" max="1000">
+                        <small>Maximum number of users allowed in the system</small>
+                    </div>
+                    <div class="setting-item">
+                        <label for="sessionTimeout">Session Timeout (minutes)</label>
+                        <input type="number" id="sessionTimeout" value="1440" min="15" max="10080">
+                        <small>How long before users are automatically logged out</small>
+                    </div>
+                    <div class="setting-item">
+                        <label for="passwordPolicy">Password Policy</label>
+                        <select id="passwordPolicy">
+                            <option value="low">Low (6+ characters)</option>
+                            <option value="medium" selected>Medium (8+ characters, mixed case)</option>
+                            <option value="high">High (10+ characters, special chars)</option>
+                        </select>
+                        <small>Password strength requirements for new users</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Settings -->
+            <div class="settings-section">
+                <h2><i class="fas fa-shield-alt"></i> Security Settings</h2>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label for="jwtSecret">JWT Secret Key</label>
+                        <div class="secret-input">
+                            <input type="password" id="jwtSecret" value="••••••••••••••••••••••••••••••••">
+                            <button type="button" onclick="togglePasswordVisibility('jwtSecret')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <small>Secret key for JWT token generation</small>
+                    </div>
+                    <div class="setting-item">
+                        <label for="bcryptRounds">BCrypt Rounds</label>
+                        <input type="number" id="bcryptRounds" value="10" min="8" max="14">
+                        <small>Number of rounds for password hashing (higher = more secure but slower)</small>
+                    </div>
+                    <div class="setting-item">
+                        <label for="rateLimit">Rate Limiting</label>
+                        <select id="rateLimit">
+                            <option value="disabled">Disabled</option>
+                            <option value="low">Low (100 requests/hour)</option>
+                            <option value="medium" selected>Medium (50 requests/hour)</option>
+                            <option value="high">High (25 requests/hour)</option>
+                        </select>
+                        <small>API rate limiting to prevent abuse</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="settings-section">
+                <h2><i class="fas fa-bell"></i> Notification Settings</h2>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label for="emailNotifications">Email Notifications</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="emailNotifications" checked>
+                            <label for="emailNotifications"></label>
+                        </div>
+                        <small>Send email notifications for system events</small>
+                    </div>
+                    <div class="setting-item">
+                        <label for="realTimeUpdates">Real-time Updates</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="realTimeUpdates" checked>
+                            <label for="realTimeUpdates"></label>
+                        </div>
+                        <small>Enable WebSocket real-time updates</small>
+                    </div>
+                    <div class="setting-item">
+                        <label for="auditLogging">Audit Logging</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="auditLogging" checked>
+                            <label for="auditLogging"></label>
+                        </div>
+                        <small>Log all admin actions for security auditing</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backup & Maintenance -->
+            <div class="settings-section">
+                <h2><i class="fas fa-database"></i> Backup & Maintenance</h2>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label for="autoBackup">Automatic Backups</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="autoBackup" checked>
+                            <label for="autoBackup"></label>
+                        </div>
+                        <small>Automatically backup database daily</small>
+                    </div>
+                    <div class="setting-item">
+                        <label for="backupRetention">Backup Retention (days)</label>
+                        <input type="number" id="backupRetention" value="30" min="1" max="365">
+                        <small>How long to keep backup files</small>
+                    </div>
+                    <div class="setting-item">
+                        <label for="maintenanceMode">Maintenance Mode</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="maintenanceMode">
+                            <label for="maintenanceMode"></label>
+                        </div>
+                        <small>Enable maintenance mode (restricts user access)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appearance Settings -->
+            <div class="settings-section">
+                <h2><i class="fas fa-palette"></i> Appearance Settings</h2>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label for="theme">Theme</label>
+                        <select id="theme">
+                            <option value="light" selected>Light</option>
+                            <option value="dark">Dark</option>
+                            <option value="auto">Auto (System)</option>
+                        </select>
+                        <small>Choose your preferred color theme</small>
+                    </div>
+                    <div class="setting-item">
+                        <label for="language">Language</label>
+                        <select id="language">
+                            <option value="en" selected>English</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Français</option>
+                        </select>
+                        <small>System language preference</small>
+                    </div>
+                    <div class="setting-item">
+                        <label for="timezone">Timezone</label>
+                        <select id="timezone">
+                            <option value="UTC" selected>UTC</option>
+                            <option value="GMT">GMT</option>
+                            <option value="EST">Eastern Time</option>
+                            <option value="PST">Pacific Time</option>
+                        </select>
+                        <small>System timezone for date/time display</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="settings-actions">
+                <button class="btn primary" onclick="saveSettings()">
+                    <i class="fas fa-save"></i> Save Settings
+                </button>
+                <button class="btn secondary" onclick="resetSettings()">
+                    <i class="fas fa-undo"></i> Reset to Defaults
+                </button>
+                <button class="btn danger" onclick="exportSettings()">
+                    <i class="fas fa-download"></i> Export Settings
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Saved Notification -->
+    <div id="settingsNotification" class="settings-notification" style="display: none;">
+        <i class="fas fa-check-circle"></i>
+        <span>Settings saved successfully!</span>
+    </div>
+
+    <script src="./script.js"></script>
+    <script src="./admin-settings.js"></script>
+</body>
+
+</html>

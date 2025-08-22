@@ -16,8 +16,18 @@ const pool = {
           return [result];
         }
       },
-      release: () => {},
+      release: () => { },
     };
+  },
+  // Add direct query method for easier usage
+  query: async (sql, params = []) => {
+    if (sql.trim().toLowerCase().startsWith("select")) {
+      const rows = await sqliteDb.all(sql, params);
+      return [rows];
+    } else {
+      const result = await sqliteDb.run(sql, params);
+      return [result];
+    }
   },
   end: () => {
     sqliteDb.db.close();

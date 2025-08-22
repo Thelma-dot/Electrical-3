@@ -28,13 +28,22 @@ class DashboardTasksManager {
             refreshBtn.addEventListener('click', () => this.loadMyTasks());
         }
 
+        // Show completed tasks toggle
+        const showCompletedToggle = document.getElementById('showCompletedTasks');
+        if (showCompletedToggle) {
+            showCompletedToggle.addEventListener('change', () => this.toggleCompletedTasks());
+        }
+
         // Setup real-time updates
         this.setupRealtimeUpdates();
     }
 
     async loadMyTasks() {
         try {
-            const response = await fetch(this.apiEndpoints.myTasks, {
+            const showCompleted = document.getElementById('showCompletedTasks')?.checked || false;
+            const endpoint = showCompleted ? `${this.apiEndpoints.myTasks}/completed` : this.apiEndpoints.myTasks;
+
+            const response = await fetch(endpoint, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -44,7 +53,7 @@ class DashboardTasksManager {
                 const tasks = await response.json();
                 this.displayTasks(tasks);
                 this.updateTaskCounts(tasks);
-                
+
                 // Update deadline reminders when tasks are loaded
                 if (typeof updateTaskDeadlineReminders === 'function') {
                     updateTaskDeadlineReminders();
@@ -77,7 +86,7 @@ class DashboardTasksManager {
     displayTasks(tasks) {
         const tableBody = document.querySelector('#myTasksTable tbody');
         const emptyMessage = document.getElementById('myTasksEmpty');
-        
+
         if (!tableBody) return;
 
         if (tasks.length === 0) {
@@ -135,25 +144,31 @@ class DashboardTasksManager {
             });
 
             if (response.ok) {
-                // Update the row styling based on new status
-                this.updateTaskRowStatus(taskId, newStatus);
+                // If task is completed, remove it from the display immediately
+                if (newStatus === 'completed') {
+                    this.removeCompletedTask(taskId);
+                } else {
+                    // Update the row styling based on new status
+                    this.updateTaskRowStatus(taskId, newStatus);
+                }
+
                 // Refresh task counts
                 this.loadTaskCounts();
-                
+
                 // Reset alarm if task is completed or cancelled
                 if (newStatus === 'completed' || newStatus === 'cancelled') {
                     if (typeof resetTaskAlarm === 'function') {
                         resetTaskAlarm(taskId);
                     }
                 }
-                
+
                 // Refresh deadline reminders when task status changes
                 if (typeof updateTaskDeadlineReminders === 'function') {
                     updateTaskDeadlineReminders();
                 }
-                
+
                 // Show success message
-                this.showNotification('Task status updated successfully!', 'success');
+                this.showNotification('Task completed successfully! It has been removed from your dashboard.', 'success');
             } else {
                 this.showNotification('Failed to update task status', 'error');
             }
@@ -173,6 +188,39 @@ class DashboardTasksManager {
         }
     }
 
+    removeCompletedTask(taskId) {
+        const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
+        if (row) {
+            // Add fade-out animation
+            row.style.transition = 'opacity 0.5s ease-out';
+            row.style.opacity = '0';
+
+            // Remove the row after animation
+            setTimeout(() => {
+                row.remove();
+
+                // Check if table is empty and show empty message
+                const tbody = document.querySelector('#myTasksTable tbody');
+                const emptyMessage = document.getElementById('myTasksEmpty');
+                if (tbody && tbody.children.length === 0 && emptyMessage) {
+                    emptyMessage.style.display = 'block';
+                }
+            }, 500);
+        }
+    }
+
+    toggleCompletedTasks() {
+        this.loadMyTasks();
+        
+        // After loading tasks, update the dashboard charts to reflect the new display
+        setTimeout(() => {
+            // Force a refresh of the main dashboard to update charts
+            if (window.refreshDashboard) {
+                window.refreshDashboard();
+            }
+        }, 100);
+    }
+
     filterTasks() {
         const statusFilter = document.getElementById('myTaskStatusFilter');
         const filterValue = statusFilter.value;
@@ -181,7 +229,7 @@ class DashboardTasksManager {
         rows.forEach(row => {
             const statusSelect = row.querySelector('.task-status-select');
             const taskStatus = statusSelect ? statusSelect.value : '';
-            
+
             if (!filterValue || taskStatus === filterValue) {
                 row.style.display = '';
             } else {
@@ -200,6 +248,9 @@ class DashboardTasksManager {
         };
 
         this.updateDashboardStats(counts);
+
+        // Also update the main dashboard charts to reflect the current task display
+        this.updateDashboardCharts(counts);
     }
 
     updateDashboardStats(counts) {
@@ -214,6 +265,65 @@ class DashboardTasksManager {
         if (completedCard) {
             completedCard.textContent = counts.completed || 0;
         }
+
+        // Also update the main dashboard stats if they exist
+        const mainInProgressCount = document.getElementById('inProgressCount');
+        const mainCompletedCount = document.getElementById('completedCount');
+        
+        if (mainInProgressCount) {
+            mainInProgressCount.textContent = counts.in_progress || 0;
+        }
+        
+        if (mainCompletedCount) {
+            mainCompletedCount.textContent = counts.completed || 0;
+        }
+    }
+
+    updateDashboardCharts(counts) {
+        // Update the main dashboard charts to reflect current task counts
+        if (window.refreshDashboard) {
+            // Call the main dashboard refresh function to update charts
+            window.refreshDashboard();
+        } else {
+            // Fallback: manually update the chart data if refreshDashboard is not available
+            this.updateChartsManually(counts);
+        }
+    }
+
+    updateChartsManually(counts) {
+        // Manually update the bar chart data to reflect current task counts
+        const barChart = window.barChartInstance;
+        if (barChart && barChart.data && barChart.data.datasets && barChart.data.datasets[0]) {
+            // Update the completed task count in the bar chart
+            barChart.data.datasets[0].data[3] = counts.completed; // Index 3 is "Completed Task"
+            barChart.data.datasets[0].data[2] = counts.in_progress; // Index 2 is "In Progress"
+            barChart.update('active');
+        }
+
+        // Update the performance indicator
+        this.updatePerformanceIndicator(counts);
+    }
+
+    updatePerformanceIndicator(counts) {
+        const performanceArrow = document.getElementById('performanceArrow');
+        const performanceText = document.getElementById('performanceText');
+
+        if (!performanceArrow || !performanceText) return;
+
+        // Calculate performance based on completed tasks vs total visible tasks
+        const totalVisibleTasks = counts.in_progress + counts.completed;
+        const completionRate = totalVisibleTasks > 0 ? (counts.completed / totalVisibleTasks) * 100 : 0;
+
+        // Update the performance display
+        if (completionRate > 0) {
+            performanceArrow.textContent = '↗️';
+            performanceArrow.className = 'performance-arrow up';
+            performanceText.textContent = `Performance: ${completionRate.toFixed(1)}%`;
+        } else {
+            performanceArrow.textContent = '➡️';
+            performanceArrow.className = 'performance-arrow neutral';
+            performanceText.textContent = `No tasks to measure`;
+        }
     }
 
     viewTaskDetails(taskId) {
@@ -225,7 +335,7 @@ class DashboardTasksManager {
             const description = row.querySelector('.task-title small')?.textContent || 'No description';
             const priority = row.querySelector('.priority-badge').textContent;
             const status = row.querySelector('.task-status-select').value;
-            
+
             alert(`Task Details:\n\nTitle: ${title}\nDescription: ${description}\nPriority: ${priority}\nStatus: ${status}`);
         }
     }
@@ -234,17 +344,17 @@ class DashboardTasksManager {
         // Listen for real-time task updates
         if (window.io) {
             const socket = io('http://localhost:5000');
-            
+
             socket.on('task:created', (data) => {
                 if (data.assigned_to === this.getCurrentUserId()) {
                     this.loadMyTasks();
                     this.showNotification('New task assigned to you!', 'info');
-                    
+
                     // Reset alarm for new task so it can play when deadline is reached
                     if (typeof resetTaskAlarm === 'function') {
                         resetTaskAlarm(data.id);
                     }
-                    
+
                     // Update deadline reminders for new tasks
                     if (typeof updateTaskDeadlineReminders === 'function') {
                         updateTaskDeadlineReminders();
@@ -255,12 +365,12 @@ class DashboardTasksManager {
             socket.on('task:updated', (data) => {
                 this.loadMyTasks();
                 this.loadTaskCounts();
-                
+
                 // Reset alarm for updated task in case due date changed
                 if (typeof resetTaskAlarm === 'function') {
                     resetTaskAlarm(data.id);
                 }
-                
+
                 // Update deadline reminders when tasks are updated
                 if (typeof updateTaskDeadlineReminders === 'function') {
                     updateTaskDeadlineReminders();

@@ -70,12 +70,20 @@ async function initializeDatabase() {
       `CREATE TABLE IF NOT EXISTS toolbox (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
-        tool_name TEXT NOT NULL,
-        tool_type TEXT,
-        status TEXT DEFAULT 'Available',
-        location TEXT,
-        assigned_to TEXT,
-        notes TEXT,
+        work_activity TEXT NOT NULL,
+        date TEXT NOT NULL,
+        work_location TEXT NOT NULL,
+        name_company TEXT NOT NULL,
+        sign TEXT NOT NULL,
+        ppe_no TEXT NOT NULL,
+        tools_used TEXT NOT NULL,
+        hazards TEXT,
+        circulars TEXT,
+        risk_assessment TEXT,
+        permit TEXT,
+        remarks TEXT,
+        prepared_by TEXT,
+        verified_by TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )`,
@@ -102,6 +110,7 @@ async function initializeDatabase() {
         priority TEXT DEFAULT 'medium',
         due_date DATETIME,
         status TEXT DEFAULT 'pending',
+        hidden_from_user BOOLEAN DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE CASCADE,
@@ -139,6 +148,7 @@ async function initializeDatabase() {
             ensureUserRoleColumn()
               .then(() => ensureUserLastLoginColumn())
               .then(() => ensureUserNamePhoneColumns())
+              .then(() => ensureTaskHiddenColumn())
               .then(() => insertDemoUsers())
               .then(resolve)
               .catch(reject);
@@ -207,6 +217,23 @@ function ensureUserNamePhoneColumns() {
       if (!hasName) tasks.push(new Promise((res, rej) => db.run("ALTER TABLE users ADD COLUMN name TEXT", [], (e) => e ? rej(e) : res())));
       if (!hasPhone) tasks.push(new Promise((res, rej) => db.run("ALTER TABLE users ADD COLUMN phone TEXT", [], (e) => e ? rej(e) : res())));
       Promise.all(tasks).then(() => resolve()).catch(reject);
+    });
+  });
+}
+
+// Ensure 'hidden_from_user' column exists on tasks table
+function ensureTaskHiddenColumn() {
+  return new Promise((resolve, reject) => {
+    db.all("PRAGMA table_info(tasks)", [], (err, rows) => {
+      if (err) return reject(err);
+      const hasHiddenColumn = rows.some(col => col.name === 'hidden_from_user');
+      if (hasHiddenColumn) return resolve();
+
+      db.run("ALTER TABLE tasks ADD COLUMN hidden_from_user BOOLEAN DEFAULT 0", [], (alterErr) => {
+        if (alterErr) return reject(alterErr);
+        console.log("🛠️ Added 'hidden_from_user' column to tasks table");
+        resolve();
+      });
     });
   });
 }

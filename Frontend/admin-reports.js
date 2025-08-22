@@ -209,6 +209,9 @@ async function viewReportDetails(reportId) {
         const modal = document.getElementById('reportDetailsModal');
         const content = document.getElementById('reportDetailsContent');
 
+        // Store report data for printing
+        window.currentReportForPrint = { report, user };
+
         content.innerHTML = `
             <div class="report-details">
                 <div class="detail-row">
@@ -249,6 +252,115 @@ async function viewReportDetails(reportId) {
         console.error('Error viewing report details:', error);
         showAlert('Failed to load report details');
     }
+}
+
+// Print report details
+function printReportDetails() {
+    if (!window.currentReportForPrint) {
+        showAlert('No report data available for printing');
+        return;
+    }
+
+    const { report, user } = window.currentReportForPrint;
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Report - ${report.title || 'Untitled'}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .report-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+                .report-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+                .report-subtitle { font-size: 16px; color: #666; }
+                .detail-section { margin-bottom: 20px; }
+                .detail-row { margin: 10px 0; }
+                .detail-label { font-weight: bold; display: inline-block; width: 150px; }
+                .detail-value { display: inline-block; }
+                .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+                .status-pending { background: #f39c12; color: white; }
+                .status-in-progress { background: #3498db; color: white; }
+                .status-completed { background: #27ae60; color: white; }
+                @media print { body { margin: 0; } }
+            </style>
+        </head>
+        <body>
+            <div class="report-header">
+                <div class="report-title">${report.title || 'Untitled Report'}</div>
+                <div class="report-subtitle">Electrical Management System</div>
+            </div>
+            
+            <div class="detail-section">
+                <div class="detail-row">
+                    <span class="detail-label">Title:</span>
+                    <span class="detail-value">${report.title || 'N/A'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Job Description:</span>
+                    <span class="detail-value">${report.job_description || 'N/A'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Location:</span>
+                    <span class="detail-value">${report.location || 'N/A'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">User:</span>
+                    <span class="detail-value">${user ? user.staff_id : 'Unknown'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">
+                        <span class="status-badge status-${(report.status || 'pending').toLowerCase().replace(' ', '-')}">
+                            ${report.status || 'Pending'}
+                        </span>
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-value">${formatDate(report.report_date || report.created_at)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Time:</span>
+                    <span class="detail-value">${report.report_time || 'N/A'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Tools Used:</span>
+                    <span class="detail-value">${report.tools_used || 'N/A'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Remarks:</span>
+                    <span class="detail-value">${report.remarks || 'N/A'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Created:</span>
+                    <span class="detail-value">${formatDate(report.created_at)}</span>
+                </div>
+            </div>
+            
+            <div style="margin-top: 40px; text-align: center; font-size: 12px; color: #666;">
+                <p>Generated on: ${new Date().toLocaleString()}</p>
+            </div>
+        </body>
+        </html>
+    `);
+
+    printWindow.document.close();
+
+    // Wait for content to load then print
+    printWindow.onload = function () {
+        printWindow.print();
+        printWindow.close();
+    };
+
+    // Fallback if onload doesn't fire
+    setTimeout(() => {
+        if (printWindow && !printWindow.closed) {
+            printWindow.print();
+            printWindow.close();
+        }
+    }, 1000);
 }
 
 // Edit report status
@@ -326,11 +438,6 @@ function closeDeleteModal() {
 // Close report details modal
 function closeReportDetailsModal() {
     document.getElementById('reportDetailsModal').style.display = 'none';
-}
-
-// Refresh reports
-function refreshReports() {
-    loadReports();
 }
 
 // Export reports

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toolbox Reports</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+    <link rel="stylesheet" href="./dashboard.css">
+    <link rel="stylesheet" href="./user-greeting.css">
+    <style>
+        .search-container {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .search-btn:hover {
+            background: #2980b9;
+        }
+
+        .toolbox-actions {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        .back-btn:hover {
+            background: #34495e;
+        }
+
+        /* Toolbox Reports Table Styling */
+        #toolboxTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        #toolboxTable th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        #toolboxTable td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        #toolboxTable tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .view-btn, .edit-btn, .delete-btn {
+            padding: 6px 12px;
+            margin: 0 2px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+            min-width: 60px;
+            height: 32px;
+        }
+        
+        .view-btn { 
+            background: #3498db; 
+            color: white; 
+        }
+        
+        .view-btn:hover {
+            background: #2980b9;
+        }
+        
+        .edit-btn { 
+            background: #2c3e50; 
+            color: white; 
+        }
+        
+        .edit-btn:hover {
+            background: #34495e;
+        }
+        
+        .delete-btn { 
+            background: #e74c3c; 
+            color: white; 
+        }
+        
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .detail-row {
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-row strong {
+            display: inline-block;
+            width: 200px;
+            color: #2c3e50;
+        }
+
+        /* Real-time notification animations */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+            <nav>
+                <a href="./dashboard.html">📊 Dashboard</a>
+                <a href="./generate_report.html">📄 Generate Report</a>
+                <a href="./tool_box.html">🛠️ Toolbox</a>
+                <a class="active">📋 Toolbox Reports</a>
+                <a href="./inventory.html">📦 Inventory</a>
+                <a href="./settings.html">⚙️ Settings</a>
+                <a href="./profile.html">👤 Profile</a>
+                <a href="./index.html" onclick="logout()">🚪 Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <h1>Toolbox Reports</h1>
+            </header>
+
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-input"
+                    placeholder="Search toolbox forms by work activity, location, company...">
+                <button class="search-btn" onclick="searchToolboxForms()">Search</button>
+            </div>
+
+            <div class="toolbox-actions">
+                <a href="./tool_box.html" class="back-btn">Submit New Toolbox Form</a>
+            </div>
+
+            <table id="toolboxTable">
+                <thead>
+                    <tr>
+                        <th>Work Activity</th>
+                        <th>Date</th>
+                        <th>Work Location</th>
+                        <th>Name/Company</th>
+                        <th>Tools Used</th>
+                        <th>Prepared By</th>
+                        <th>Verified By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="toolboxTableBody">
+                    <!-- Toolbox forms will be populated here -->
+                </tbody>
+            </table>
+            <div id="noResultsMessage" style="display: none; text-align: center; color: #666; margin: 20px;">
+                No toolbox forms found matching your search criteria.
+            </div>
+        </main>
+    </div>
+
+    <!-- Toolbox Details Modal -->
+    <div id="toolboxDetailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeToolboxDetailsModal()">&times;</span>
+            <h2>Toolbox Form Details</h2>
+            <div id="toolboxDetailsContent">
+                <!-- Toolbox details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="./dark-mode.js"></script>
+    <script src="./script.js"></script>
+    <script src="http://localhost:5000/socket.io/socket.io.js"></script>
+    <script>
+        // Toolbox Reports page specific functionality
+        let allToolboxForms = [];
+        let socket = null;
+
+        // Initialize Socket.IO connection for real-time updates
+        function initializeSocketConnection() {
+            try {
+                socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
+                
+                // Listen for real-time toolbox events
+                socket.on('connect', () => {
+                    console.log('🔌 Connected to real-time toolbox updates');
+                });
+
+                socket.on('disconnect', () => {
+                    console.log('🔌 Disconnected from real-time toolbox updates');
+                });
+
+                // Toolbox created event
+                socket.on('tool:created', (data) => {
+                    console.log('🛠️ Toolbox created - updating reports page');
+                    loadToolboxForms(); // Reload data
+                    showRealTimeNotification('New toolbox form submitted!', 'success');
+                });
+
+                // Toolbox updated event
+                socket.on('tool:updated', (data) => {
+                    console.log('🛠️ Toolbox updated - updating reports page');
+                    loadToolboxForms(); // Reload data
+                    showRealTimeNotification('Toolbox form updated!', 'info');
+                });
+
+                // Toolbox deleted event
+                socket.on('tool:deleted', (data) => {
+                    console.log('🛠️ Toolbox deleted - updating reports page');
+                    loadToolboxForms(); // Reload data
+                    showRealTimeNotification('Toolbox form deleted!', 'warning');
+                });
+
+            } catch (e) {
+                console.warn('Real-time updates unavailable', e);
+            }
+        }
+
+        // Show real-time notification
+        function showRealTimeNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 6px;
+                color: white;
+                font-weight: 600;
+                z-index: 10000;
+                animation: slideInRight 0.3s ease;
+                max-width: 300px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            
+            // Set background color based on type
+            switch(type) {
+                case 'success':
+                    notification.style.background = '#27ae60';
+                    break;
+                case 'warning':
+                    notification.style.background = '#f39c12';
+                    break;
+                case 'error':
+                    notification.style.background = '#e74c3c';
+                    break;
+                default:
+                    notification.style.background = '#3498db';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Load toolbox forms when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            loadToolboxForms();
+            initializeSocketConnection(); // Initialize real-time updates
+        });
+
+        async function loadToolboxForms() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = './index.html';
+                    return;
+                }
+
+                const response = await fetch('http://localhost:5000/api/toolbox', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    allToolboxForms = await response.json();
+                    displayToolboxForms(allToolboxForms);
+                } else {
+                    console.error('Failed to load toolbox forms');
+                    displayToolboxForms([]);
+                }
+            } catch (error) {
+                console.error('Error loading toolbox forms:', error);
+                displayToolboxForms([]);
+            }
+        }
+
+        function displayToolboxForms(forms) {
+            const tbody = document.getElementById('toolboxTableBody');
+            tbody.innerHTML = '';
+
+            if (forms.length === 0) {
+                document.getElementById('noResultsMessage').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('noResultsMessage').style.display = 'none';
+
+            forms.forEach((form) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${form.work_activity || form.workActivity || 'N/A'}</td>
+                    <td>${form.date || 'N/A'}</td>
+                    <td>${form.work_location || form.workLocation || 'N/A'}</td>
+                    <td>${form.name_company || form.nameCompany || 'N/A'}</td>
+                    <td>${form.tools_used || form.toolsUsed || 'N/A'}</td>
+                    <td>${form.prepared_by || form.preparedBy || 'N/A'}</td>
+                    <td>${form.verified_by || form.verifiedBy || 'N/A'}</td>
+                    <td>
+                        <button onclick="viewToolboxDetails(${form.id})" class="view-btn">View</button>
+                        <button onclick="editToolboxForm(${form.id})" class="edit-btn">Edit</button>
+                        <button onclick="deleteToolboxForm(${form.id})" class="delete-btn">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function searchToolboxForms() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredForms = allToolboxForms.filter(form =>
+                (form.work_activity || form.workActivity || '').toLowerCase().includes(searchTerm) ||
+                (form.work_location || form.workLocation || '').toLowerCase().includes(searchTerm) ||
+                (form.name_company || form.nameCompany || '').toLowerCase().includes(searchTerm) ||
+                (form.tools_used || form.toolsUsed || '').toLowerCase().includes(searchTerm) ||
+                (form.prepared_by || form.preparedBy || '').toLowerCase().includes(searchTerm) ||
+                (form.verified_by || form.verifiedBy || '').toLowerCase().includes(searchTerm)
+            );
+            displayToolboxForms(filteredForms);
+        }
+
+        async function viewToolboxDetails(formId) {
+            const form = allToolboxForms.find(f => f.id === formId);
+            if (!form) return;
+
+            const content = document.getElementById('toolboxDetailsContent');
+            content.innerHTML = `
+                <div class="detail-row">
+                    <strong>Work Activity:</strong> ${form.work_activity || form.workActivity || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Date:</strong> ${form.date || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Work Location:</strong> ${form.work_location || form.workLocation || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Name/Company:</strong> ${form.name_company || form.nameCompany || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Sign:</strong> ${form.sign || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>PPE No:</strong> ${form.ppe_no || form.ppeNo || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Tools Used:</strong> ${form.tools_used || form.toolsUsed || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Hazards:</strong> ${form.hazards || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Circulars:</strong> ${form.circulars || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Risk Assessment:</strong> ${form.risk_assessment || form.riskAssessment || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Permit:</strong> ${form.permit || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Remarks:</strong> ${form.remarks || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Prepared By:</strong> ${form.prepared_by || form.preparedBy || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Verified By:</strong> ${form.verified_by || form.verifiedBy || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Created At:</strong> ${formatDate(form.created_at || form.createdAt)}
+                </div>
+            `;
+
+            document.getElementById('toolboxDetailsModal').style.display = 'block';
+        }
+
+        function editToolboxForm(formId) {
+            // Redirect to toolbox form with edit mode
+            window.location.href = `./tool_box.html?edit=${formId}`;
+        }
+
+        async function deleteToolboxForm(formId) {
+            if (!confirm('Are you sure you want to delete this toolbox form?')) return;
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`http://localhost:5000/api/toolbox/${formId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    loadToolboxForms();
+                    alert('Toolbox form deleted successfully!');
+                } else {
+                    alert('Failed to delete toolbox form');
+                }
+            } catch (error) {
+                console.error('Error deleting toolbox form:', error);
+                alert('Error deleting toolbox form');
+            }
+        }
+
+        function closeToolboxDetailsModal() {
+            document.getElementById('toolboxDetailsModal').style.display = 'none';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            return new Date(dateString).toLocaleDateString();
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('toolboxDetailsModal');
+            if (event.target === modal) {
+                closeToolboxDetailsModal();
+            }
+        }
+    </script>
+</body>
+
+</html>

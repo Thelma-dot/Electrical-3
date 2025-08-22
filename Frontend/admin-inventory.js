@@ -4,7 +4,83 @@ let currentPage = 1;
 let itemsPerPage = 10;
 let allInventory = [];
 let filteredInventory = [];
-let editingItemId = null;
+let editingInventoryId = null;
+let socket = null;
+
+// Initialize Socket.IO connection for real-time updates
+function initializeSocketConnection() {
+    try {
+        socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
+        
+        // Update live badge
+        const liveBadge = document.getElementById('liveBadgeAdmin');
+        if (liveBadge) {
+            const statusSpan = liveBadge.querySelector('.status');
+            if (statusSpan) {
+                statusSpan.textContent = 'LIVE';
+                liveBadge.style.background = '#27ae60';
+            }
+        }
+
+        // Listen for real-time inventory events
+        socket.on('connect', () => {
+            console.log('🔌 Connected to real-time inventory updates');
+            if (liveBadge) {
+                const statusSpan = liveBadge.querySelector('.status');
+                if (statusSpan) {
+                    statusSpan.textContent = 'LIVE';
+                    liveBadge.style.background = '#27ae60';
+                }
+            }
+        });
+
+        socket.on('disconnect', () => {
+            console.log('🔌 Disconnected from real-time inventory updates');
+            if (liveBadge) {
+                const statusSpan = liveBadge.querySelector('.status');
+                if (statusSpan) {
+                    statusSpan.textContent = 'OFFLINE';
+                    liveBadge.style.background = '#e74c3c';
+                }
+            }
+        });
+
+        // Inventory created event
+        socket.on('inventory:created', (data) => {
+            console.log('📦 Inventory created - updating admin panel');
+            flashStats();
+            loadInventory(); // Reload data
+        });
+
+        // Inventory updated event
+        socket.on('inventory:updated', (data) => {
+            console.log('📦 Inventory updated - updating admin panel');
+            flashStats();
+            loadInventory(); // Reload data
+        });
+
+        // Inventory deleted event
+        socket.on('inventory:deleted', (data) => {
+            console.log('📦 Inventory deleted - updating admin panel');
+            flashStats();
+            loadInventory(); // Reload data
+        });
+
+    } catch (e) {
+        console.warn('Real-time updates unavailable', e);
+    }
+}
+
+// Flash effect for stats when real-time updates occur
+function flashStats() {
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach(card => {
+        card.style.animation = 'flash 600ms ease';
+        setTimeout(() => {
+            card.style.animation = '';
+        }, 600);
+    });
+}
 
 // Load inventory data
 async function loadInventory() {
@@ -14,7 +90,7 @@ async function loadInventory() {
                 'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
             }
         });
-        
+
         if (response.ok) {
             allInventory = await response.json();
             filteredInventory = [...allInventory];
@@ -34,9 +110,9 @@ function updateInventoryTable() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const pageItems = filteredInventory.slice(startIndex, endIndex);
-    
+
     tbody.innerHTML = '';
-    
+
     pageItems.forEach(item => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -47,6 +123,7 @@ function updateInventoryTable() {
             <td>${formatDate(item.dateAdded)}</td>
             <td>${item.location || 'N/A'}</td>
             <td>${item.issuedBy || 'N/A'}</td>
+            <td>${item.staffName || item.staffId || 'N/A'}</td>
             <td>${formatDate(item.lastUpdated)}</td>
             <td>
                 <button class="btn btn-sm primary" onclick="viewItemDetails('${item._id}')">
@@ -62,7 +139,7 @@ function updateInventoryTable() {
         `;
         tbody.appendChild(row);
     });
-    
+
     updatePagination();
 }
 
@@ -76,7 +153,7 @@ function updateInventoryStats() {
         inUse: allInventory.filter(item => item.status === 'In Use').length,
         maintenance: allInventory.filter(item => item.status === 'Maintenance').length
     };
-    
+
     document.getElementById('totalItems').textContent = stats.total;
     document.getElementById('upsCount').textContent = stats.ups;
     document.getElementById('avrCount').textContent = stats.avr;
@@ -88,7 +165,7 @@ function updateInventoryStats() {
 // Search inventory
 function searchInventory() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    filteredInventory = allInventory.filter(item => 
+    filteredInventory = allInventory.filter(item =>
         (item.productType && item.productType.toLowerCase().includes(searchTerm)) ||
         (item.serialNumber && item.serialNumber.toLowerCase().includes(searchTerm)) ||
         (item.location && item.location.toLowerCase().includes(searchTerm))
@@ -102,36 +179,27 @@ function filterInventory() {
     const typeFilter = document.getElementById('typeFilter').value;
     const statusFilter = document.getElementById('statusFilter').value;
     const sizeFilter = document.getElementById('sizeFilter').value;
-    
+
     filteredInventory = allInventory.filter(item => {
         const typeMatch = !typeFilter || item.productType === typeFilter;
         const statusMatch = !statusFilter || item.status === statusFilter;
         const sizeMatch = !sizeFilter || item.size === sizeFilter;
-        
+
         return typeMatch && statusMatch && sizeMatch;
     });
-    
+
     currentPage = 1;
     updateInventoryTable();
-}
-
-// Show add inventory modal
-function showAddInventoryModal() {
-    editingItemId = null;
-    document.getElementById('modalTitle').textContent = 'Add New Inventory Item';
-    document.getElementById('inventoryForm').reset();
-    setCurrentDate();
-    document.getElementById('inventoryModal').style.display = 'block';
 }
 
 // Show edit inventory modal
 function editItem(itemId) {
     const item = allInventory.find(i => i._id === itemId);
     if (!item) return;
-    
-    editingItemId = itemId;
+
+    editingInventoryId = itemId;
     document.getElementById('modalTitle').textContent = 'Edit Inventory Item';
-    
+
     // Populate form fields
     document.getElementById('productType').value = item.productType || '';
     document.getElementById('status').value = item.status || '';
@@ -141,57 +209,15 @@ function editItem(itemId) {
     document.getElementById('location').value = item.location || '';
     document.getElementById('issuedBy').value = item.issuedBy || '';
     document.getElementById('notes').value = item.notes || '';
-    
-    document.getElementById('inventoryModal').style.display = 'block';
-}
 
-// Save inventory item
-async function saveInventoryItem() {
-    const formData = {
-        productType: document.getElementById('productType').value,
-        status: document.getElementById('status').value,
-        size: document.getElementById('size').value,
-        serialNumber: document.getElementById('serialNumber').value,
-        dateAdded: document.getElementById('dateAdded').value,
-        location: document.getElementById('location').value,
-        issuedBy: document.getElementById('issuedBy').value,
-        notes: document.getElementById('notes').value
-    };
-    
-    try {
-        const url = editingItemId 
-            ? `http://localhost:5000/api/admin/inventory/${editingItemId}`
-            : 'http://localhost:5000/api/admin/inventory';
-        
-        const method = editingItemId ? 'PUT' : 'POST';
-        
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        if (response.ok) {
-            closeInventoryModal();
-            loadInventory();
-            showNotification(editingItemId ? 'Item updated successfully!' : 'Item added successfully!', 'success');
-        } else {
-            showNotification('Failed to save item', 'error');
-        }
-    } catch (error) {
-        console.error('Error saving item:', error);
-        showNotification('Error saving item', 'error');
-    }
+    document.getElementById('inventoryModal').style.display = 'block';
 }
 
 // View item details
 async function viewItemDetails(itemId) {
     const item = allInventory.find(i => i._id === itemId);
     if (!item) return;
-    
+
     const content = document.getElementById('itemDetailsContent');
     content.innerHTML = `
         <div class="item-details">
@@ -217,6 +243,9 @@ async function viewItemDetails(itemId) {
                 <strong>Issued By:</strong> ${item.issuedBy || 'N/A'}
             </div>
             <div class="detail-row">
+                <strong>User:</strong> ${item.staffName || item.staffId || 'N/A'}
+            </div>
+            <div class="detail-row">
                 <strong>Last Updated:</strong> ${formatDate(item.lastUpdated)}
             </div>
             <div class="detail-row">
@@ -224,7 +253,7 @@ async function viewItemDetails(itemId) {
             </div>
         </div>
     `;
-    
+
     document.getElementById('itemDetailsModal').style.display = 'block';
 }
 
@@ -238,7 +267,7 @@ function deleteItem(itemId, itemInfo) {
 // Confirm delete item
 async function confirmDeleteItem() {
     if (!window.deleteItemId) return;
-    
+
     try {
         const response = await fetch(`http://localhost:5000/api/admin/inventory/${window.deleteItemId}`, {
             method: 'DELETE',
@@ -246,7 +275,7 @@ async function confirmDeleteItem() {
                 'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
             }
         });
-        
+
         if (response.ok) {
             closeDeleteModal();
             loadInventory();
@@ -261,11 +290,6 @@ async function confirmDeleteItem() {
 }
 
 // Close modals
-function closeInventoryModal() {
-    document.getElementById('inventoryModal').style.display = 'none';
-    editingItemId = null;
-}
-
 function closeDeleteModal() {
     document.getElementById('deleteModal').style.display = 'none';
     window.deleteItemId = null;
@@ -286,13 +310,13 @@ function editCurrentItem() {
 // Pagination functions
 function changePage(direction) {
     const maxPage = Math.ceil(filteredInventory.length / itemsPerPage);
-    
+
     if (direction === -1 && currentPage > 1) {
         currentPage--;
     } else if (direction === 1 && currentPage < maxPage) {
         currentPage++;
     }
-    
+
     updateInventoryTable();
 }
 
@@ -301,7 +325,7 @@ function updatePagination() {
     const pageInfo = document.getElementById('pageInfo');
     const prevBtn = document.getElementById('prevPage');
     const nextBtn = document.getElementById('nextPage');
-    
+
     pageInfo.textContent = `Page ${currentPage} of ${maxPage}`;
     prevBtn.disabled = currentPage === 1;
     nextBtn.disabled = currentPage === maxPage;
@@ -323,11 +347,6 @@ function getStatusClass(status) {
     return statusClasses[status] || 'status-default';
 }
 
-function setCurrentDate() {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('dateAdded').value = today;
-}
-
 // Export inventory
 function exportInventory() {
     const csvContent = generateCSV(filteredInventory);
@@ -335,7 +354,7 @@ function exportInventory() {
 }
 
 function generateCSV(data) {
-    const headers = ['Product Type', 'Status', 'Size', 'Serial Number', 'Date Added', 'Location', 'Issued By', 'Last Updated', 'Notes'];
+    const headers = ['Product Type', 'Status', 'Size', 'Serial Number', 'Date Added', 'Location', 'Issued By', 'User', 'Last Updated', 'Notes'];
     const rows = data.map(item => [
         item.productType || '',
         item.status || '',
@@ -344,10 +363,11 @@ function generateCSV(data) {
         formatDate(item.dateAdded),
         item.location || '',
         item.issuedBy || '',
+        item.staffName || item.staffId || '',
         formatDate(item.lastUpdated),
         item.notes || ''
     ]);
-    
+
     return [headers, ...rows].map(row => row.map(field => `"${field}"`).join(',')).join('\n');
 }
 
@@ -361,22 +381,16 @@ function downloadCSV(content, filename) {
     window.URL.revokeObjectURL(url);
 }
 
-// Refresh inventory
-function refreshInventory() {
-    loadInventory();
-    showNotification('Inventory refreshed!', 'success');
-}
-
 // Show notification
 function showNotification(message, type = 'info') {
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
-    
+
     // Add to page
     document.body.appendChild(notification);
-    
+
     // Remove after 3 seconds
     setTimeout(() => {
         notification.remove();
@@ -385,6 +399,6 @@ function showNotification(message, type = 'info') {
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
-    loadInventory();
-    setCurrentDate();
+    // Socket.IO is already initialized in the HTML file
+    initializeSocketConnection();
 });

@@ -20,7 +20,7 @@
       <nav>
         <a href="./dashboard.html">📊 Dashboard</a>
         <a href="./generate_report.html">📄 Generate Report</a>
-        
+
         <a href="./tool_box.html">🛠️ Toolbox</a>
         <a class="active">📦 Inventory</a>
         <a href="./settings.html">⚙️ Settings</a>
@@ -276,6 +276,47 @@
   <script src="./script.js"></script>
   <script src="./inventory.js"></script>
   <script src="./user-greeting.js"></script>
+  <script src="http://localhost:5000/socket.io/socket.io.js"></script>
+  <script>
+    // Initialize Socket.IO connection for real-time updates
+    function initializeSocketConnection() {
+      try {
+        const socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
+
+        // Listen for real-time inventory events
+        socket.on('connect', () => {
+          console.log('🔌 Connected to real-time inventory updates');
+        });
+
+        socket.on('disconnect', () => {
+          console.log('🔌 Disconnected from real-time inventory updates');
+        });
+
+        // Inventory created event (for confirmation)
+        socket.on('inventory:created', (data) => {
+          console.log('📦 Inventory created successfully');
+        });
+
+        // Inventory updated event (for confirmation)
+        socket.on('inventory:updated', (data) => {
+          console.log('📦 Inventory updated successfully');
+        });
+
+        // Inventory deleted event (for confirmation)
+        socket.on('inventory:deleted', (data) => {
+          console.log('📦 Inventory deleted successfully');
+        });
+
+      } catch (e) {
+        console.warn('Real-time updates unavailable', e);
+      }
+    }
+
+    // Initialize Socket.IO when page loads
+    document.addEventListener('DOMContentLoaded', function () {
+      initializeSocketConnection();
+    });
+  </script>
 </body>
 
 </html>

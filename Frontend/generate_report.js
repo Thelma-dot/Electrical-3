@@ -93,9 +93,8 @@ async function generateReport() {
         jobDescription,
         location,
         remarks,
-        remarks,
-        date,
-        time,
+        reportDate: date,
+        reportTime: time,
         toolsUsed: selectedTools.join(', '),
         status
     };
@@ -167,8 +166,8 @@ async function updateReport() {
         jobDescription,
         location,
         remarks,
-        date,
-        time,
+        reportDate: date,
+        reportTime: time,
         toolsUsed: selectedTools.join(', '),
         status
     };
@@ -225,9 +224,11 @@ function addReportToTable(report) {
     allReports.unshift(report); // Add new report at the beginning
     filteredReports = [...allReports]; // Update filtered reports
 
-    // Show table and update display
+    // Show reports section and table
+    const reportsSection = document.getElementById('reportsSection');
     const table = document.getElementById('reportTable');
-    if (table) {
+    if (reportsSection && table) {
+        reportsSection.classList.remove('hidden');
         table.classList.remove('hidden');
     }
 
@@ -244,8 +245,8 @@ function showReportPreview(report) {
     document.getElementById('displayJobDescription').textContent = report.job_description;
     document.getElementById('displayLocation').textContent = report.location;
     document.getElementById('displayRemarks').textContent = report.remarks || '-';
-    document.getElementById('displayDate').textContent = report.date;
-    document.getElementById('displayTime').textContent = report.time;
+    document.getElementById('displayDate').textContent = report.report_date || report.reportDate || 'N/A';
+    document.getElementById('displayTime').textContent = report.report_time || report.reportTime || 'N/A';
     document.getElementById('displayToolsUsed').textContent = report.tools_used;
     document.getElementById('displayStatus').textContent = report.status;
 
@@ -305,8 +306,10 @@ async function loadExistingReports() {
             filteredReports = [...allReports];
 
             if (allReports.length > 0) {
+                const reportsSection = document.getElementById('reportsSection');
                 const table = document.getElementById('reportTable');
-                if (table) {
+                if (reportsSection && table) {
+                    reportsSection.classList.remove('hidden');
                     table.classList.remove('hidden');
                 }
                 displayReportsForCurrentPage();
@@ -424,8 +427,8 @@ function displayReportsForCurrentPage() {
             <td>${report.job_description}</td>
             <td>${report.location}</td>
             <td>${report.remarks || '-'}</td>
-            <td>${report.date}</td>
-            <td>${report.time}</td>
+            <td>${report.report_date || report.reportDate || 'N/A'}</td>
+            <td>${report.report_time || report.reportTime || 'N/A'}</td>
             <td>${report.tools_used}</td>
             <td>${report.status}</td>
             <td>

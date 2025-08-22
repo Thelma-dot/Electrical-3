@@ -89,7 +89,7 @@
             </div>
 
             <div class="report-actions">
-                <a href="./generate_report.html" class="back-btn">← Generate New Report</a>
+                <a href="./generate_report.html" class="back-btn">Generate New Report</a>
             </div>
 
             <table id="reportsTable">
@@ -120,6 +120,27 @@
     <script>
         // Reports page specific functionality
         let allReports = [];
+
+        // Helper function to format date for input field
+        function formatDateForInput(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '';
+            return date.toISOString().split('T')[0];
+        }
+
+        // Helper function to format time for input field
+        function formatTimeForInput(timeString) {
+            if (!timeString) return '';
+            // If time is in HH:MM:SS format, extract HH:MM
+            if (timeString.includes(':')) {
+                const parts = timeString.split(':');
+                if (parts.length >= 2) {
+                    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+                }
+            }
+            return timeString;
+        }
 
         // Load reports when page loads
         document.addEventListener('DOMContentLoaded', function () {
@@ -177,6 +198,7 @@
                         (report.tools_used || report.toolsUsed).join(', ') :
                         (report.tools_used || report.toolsUsed || 'N/A')}</td>
                     <td>
+                        <button onclick="editReport(${report.id})" class="edit-btn">Edit</button>
                         <button onclick="viewReport(${report.id})" class="view-btn">View</button>
                         <button onclick="deleteReport(${report.id})" class="delete-btn">Delete</button>
                     </td>
@@ -227,6 +249,164 @@
                 </div>
             `;
             document.body.appendChild(modal);
+        }
+
+        async function editReport(reportId) {
+            const report = allReports.find(r => r.id === reportId);
+            if (!report) return;
+
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
+            `;
+
+            modal.innerHTML = `
+                <div class="edit-modal" style="background: white; padding: 30px; border-radius: 8px; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                    <h2>Edit Report</h2>
+                    <form id="editReportForm">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Title:</label>
+                            <input type="text" id="editTitle" value="${report.title}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Job Description:</label>
+                            <textarea id="editJobDescription" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 80px;">${report.job_description || report.jobDescription || ''}</textarea>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Location:</label>
+                            <input type="text" id="editLocation" value="${report.location || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Date:</label>
+                            <input type="date" id="editDate" value="${formatDateForInput(report.report_date || report.reportDate)}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Time:</label>
+                            <input type="time" id="editTime" value="${formatTimeForInput(report.report_time || report.reportTime)}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Status:</label>
+                            <select id="editStatus" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="Pending" ${(report.status || '').toLowerCase() === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="In Progress" ${(report.status || '').toLowerCase().includes('progress') ? 'selected' : ''}>In Progress</option>
+                                <option value="Completed" ${(report.status || '').toLowerCase() === 'completed' ? 'selected' : ''}>Completed</option>
+                                <option value="Cancelled" ${(report.status || '').toLowerCase() === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Tools Used:</label>
+                            <input type="text" id="editToolsUsed" value="${Array.isArray(report.tools_used || report.toolsUsed) ? (report.tools_used || report.toolsUsed).join(', ') : (report.tools_used || report.toolsUsed || '')}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Remarks:</label>
+                            <textarea id="editRemarks" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 80px;">${report.remarks || ''}</textarea>
+                        </div>
+                        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center; align-items: center;">
+                            <button type="submit" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; min-width: 120px; height: 40px; font-size: 14px; font-weight: 500;">💾 Save Changes</button>
+                            <button type="button" onclick="this.parentElement.parentElement.parentElement.remove()" style="padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; min-width: 120px; height: 40px; font-size: 14px; font-weight: 500;">❌ Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // Handle form submission
+            document.getElementById('editReportForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                await saveReportChanges(reportId, modal);
+            });
+
+            // Handle Escape key to close modal
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    modal.remove();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+
+            // Handle clicking outside modal to close
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            });
+        }
+
+        async function saveReportChanges(reportId, modal) {
+            try {
+                const title = document.getElementById('editTitle').value.trim();
+                const jobDescription = document.getElementById('editJobDescription').value.trim();
+                const location = document.getElementById('editLocation').value.trim();
+                const date = document.getElementById('editDate').value;
+                const time = document.getElementById('editTime').value;
+                const status = document.getElementById('editStatus').value;
+                const toolsUsed = document.getElementById('editToolsUsed').value.trim();
+                const remarks = document.getElementById('editRemarks').value.trim();
+
+                if (!title || !jobDescription || !location || !date || !status) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+
+                // Show loading state
+                const submitBtn = modal.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = '⏳ Saving...';
+                submitBtn.disabled = true;
+
+                const reportData = {
+                    title,
+                    jobDescription,
+                    location,
+                    remarks,
+                    reportDate: date,
+                    reportTime: time,
+                    toolsUsed,
+                    status
+                };
+
+                const token = localStorage.getItem('token');
+                const response = await fetch(`http://localhost:5000/api/reports/${reportId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(reportData)
+                });
+
+                if (response.ok) {
+                    const updatedReport = await response.json();
+
+                    // Update the report in the local array
+                    const index = allReports.findIndex(r => r.id === reportId);
+                    if (index !== -1) {
+                        allReports[index] = updatedReport;
+                    }
+
+                    // Refresh the display
+                    displayReports(allReports);
+
+                    // Close modal
+                    modal.remove();
+
+                    alert('✅ Report updated successfully!');
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Failed to update report');
+                }
+            } catch (error) {
+                console.error('Error updating report:', error);
+                alert(`Failed to update report: ${error.message}`);
+
+                // Reset button state
+                const submitBtn = modal.querySelector('button[type="submit"]');
+                submitBtn.textContent = '💾 Save Changes';
+                submitBtn.disabled = false;
+            }
         }
 
         async function deleteReport(reportId) {
@@ -363,7 +543,7 @@
                 font-weight: bold;
             }
             
-            .view-btn, .delete-btn {
+            .view-btn, .edit-btn, .delete-btn {
                 padding: 6px 12px;
                 margin: 0 2px;
                 border: none;
@@ -371,6 +551,8 @@
                 cursor: pointer;
                 font-size: 12px;
                 transition: background-color 0.3s;
+                min-width: 60px;
+                height: 32px;
             }
             
             .view-btn { 
@@ -382,6 +564,15 @@
                 background: #2980b9;
             }
             
+            .edit-btn { 
+                background: #2c3e50; 
+                color: white; 
+            }
+            
+            .edit-btn:hover {
+                background: #34495e;
+            }
+            
             .delete-btn { 
                 background: #e74c3c; 
                 color: white; 
@@ -389,6 +580,47 @@
             
             .delete-btn:hover {
                 background: #c0392b;
+            }
+            
+            /* Edit modal styling */
+            .edit-modal input, .edit-modal textarea, .edit-modal select {
+                font-family: inherit;
+                font-size: 14px;
+            }
+            
+            .edit-modal input:focus, .edit-modal textarea:focus, .edit-modal select:focus {
+                outline: none;
+                border-color: #3498db;
+                box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+            }
+            
+            .edit-modal button[type="submit"]:hover {
+                background: #2c3e50 !important;
+            }
+            
+            .edit-modal button[type="button"]:hover {
+                background: #7f8c8d !important;
+            }
+            
+            .edit-modal h2 {
+                color: #2c3e50;
+                margin-bottom: 20px;
+                text-align: center;
+                border-bottom: 2px solid #ecf0f1;
+                padding-bottom: 10px;
+            }
+            
+            .edit-modal label {
+                color: #34495e;
+                font-weight: 600;
+            }
+            
+            .edit-modal input, .edit-modal textarea, .edit-modal select {
+                transition: all 0.3s ease;
+            }
+            
+            .edit-modal input:hover, .edit-modal textarea:hover, .edit-modal select:hover {
+                border-color: #bdc3c7;
             }
         `;
         document.head.appendChild(style);

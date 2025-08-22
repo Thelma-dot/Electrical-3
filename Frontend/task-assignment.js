@@ -55,16 +55,6 @@ class TaskAssignmentManager {
                     </div>
                     
                     <div class="form-group">
-                        <label for="taskPriority">Priority</label>
-                        <select id="taskPriority" name="priority">
-                            <option value="low">Low</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="high">High</option>
-                            <option value="urgent">Urgent</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
                         <label for="taskDueDate">Due Date</label>
                         <input type="datetime-local" id="taskDueDate" name="due_date">
                     </div>
@@ -85,14 +75,13 @@ class TaskAssignmentManager {
 
     async handleTaskAssignment(event, userId) {
         event.preventDefault();
-        
+
         const formData = new FormData(event.target);
         const taskData = {
             title: formData.get('title'),
             description: formData.get('description'),
             assigned_to: userId,
             assigned_by: this.getCurrentUserId(),
-            priority: formData.get('priority'),
             due_date: formData.get('due_date') || null,
             status: 'pending'
         };
@@ -108,7 +97,7 @@ class TaskAssignmentManager {
             });
 
             const result = await response.json();
-            
+
             if (response.ok) {
                 alert('Task assigned successfully!');
                 event.target.parentElement.parentElement.remove();

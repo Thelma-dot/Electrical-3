@@ -52,6 +52,17 @@ router.get("/my", authenticateToken, async (req, res) => {
     }
 });
 
+// List completed tasks for current user (including hidden ones)
+router.get("/my/completed", authenticateToken, async (req, res) => {
+    try {
+        const tasks = await Task.findCompletedByUser(req.user.userId);
+        res.json(tasks);
+    } catch (err) {
+        console.error('List completed tasks error:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 // List tasks for a user (admin UI uses this for counts)
 router.get("/user/:userId", authenticateToken, async (req, res) => {
     try {
@@ -117,17 +128,28 @@ router.get("/counts", authenticateToken, async (req, res) => {
     }
 });
 
-module.exports = router;
-
 // List all tasks (admin only)
 router.get('/', authenticateToken, requireAdmin, async (req, res) => {
     try {
-        const tasks = await Task.findAll();
+        const tasks = await Task.findAllForAdmin();
         res.json(tasks);
     } catch (err) {
         console.error('List all tasks error:', err);
         res.status(500).json({ error: 'Server error' });
     }
 });
+
+// List all tasks including completed ones (admin only)
+router.get('/admin/all', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const tasks = await Task.findAllForAdmin();
+        res.json(tasks);
+    } catch (err) {
+        console.error('List all admin tasks error:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+module.exports = router;
 
 

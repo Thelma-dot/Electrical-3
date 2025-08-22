@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Updates Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .success {
+            background: #28a745;
+            color: white;
+        }
+
+        .info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .warning {
+            background: #ffc107;
+            color: black;
+        }
+
+        .danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .log {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🧪 Real-Time Updates Test</h1>
+
+    <div class="test-section">
+        <h2>Connection Status</h2>
+        <div id="connectionStatus" class="status offline">Disconnected</div>
+        <p>This page tests the real-time connection to the backend server.</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Events</h2>
+        <p>Click these buttons to test if the admin pages receive real-time updates:</p>
+
+        <h3>Inventory Events</h3>
+        <button class="success" onclick="testInventoryCreated()">Test Inventory Created</button>
+        <button class="info" onclick="testInventoryUpdated()">Test Inventory Updated</button>
+        <button class="warning" onclick="testInventoryDeleted()">Test Inventory Deleted</button>
+
+        <h3>Toolbox Events</h3>
+        <button class="success" onclick="testToolCreated()">Test Tool Created</button>
+        <button class="info" onclick="testToolUpdated()">Test Tool Updated</button>
+        <button class="warning" onclick="testToolDeleted()">Test Tool Deleted</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Event Log</h2>
+        <div id="eventLog" class="log">Waiting for events...</div>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <script src="http://localhost:5000/socket.io/socket.io.js"></script>
+    <script>
+        let socket;
+        let eventCount = 0;
+
+        // Initialize Socket.IO connection
+        function initializeSocket() {
+            try {
+                socket = io('http://localhost:5000');
+
+                socket.on('connect', () => {
+                    updateConnectionStatus('Connected to server', 'online');
+                    logEvent('✅ Connected to server');
+                });
+
+                socket.on('disconnect', () => {
+                    updateConnectionStatus('Disconnected from server', 'offline');
+                    logEvent('❌ Disconnected from server');
+                });
+
+                socket.on('connect_error', (error) => {
+                    updateConnectionStatus('Connection error: ' + error.message, 'offline');
+                    logEvent('❌ Connection error: ' + error.message);
+                });
+
+                // Listen for all events to verify they're being emitted
+                socket.onAny((eventName, ...args) => {
+                    logEvent(`📡 Received event: ${eventName}`, args);
+                });
+
+            } catch (error) {
+                updateConnectionStatus('Failed to initialize: ' + error.message, 'offline');
+                logEvent('❌ Failed to initialize: ' + error.message);
+            }
+        }
+
+        // Update connection status
+        function updateConnectionStatus(message, className) {
+            const status = document.getElementById('connectionStatus');
+            status.textContent = message;
+            status.className = 'status ' + className;
+        }
+
+        // Log events
+        function logEvent(message, data = null) {
+            const log = document.getElementById('eventLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            if (data) {
+                logEntry.innerHTML += `<br><small>Data: ${JSON.stringify(data)}</small>`;
+            }
+            log.appendChild(logEntry);
+            log.scrollTop = log.scrollHeight;
+            eventCount++;
+        }
+
+        // Clear log
+        function clearLog() {
+            document.getElementById('eventLog').innerHTML = 'Log cleared...';
+            eventCount = 0;
+        }
+
+        // Test functions
+        function testInventoryCreated() {
+            logEvent('🧪 Testing inventory:created event...');
+            // This would normally be triggered by the backend when an inventory item is created
+        }
+
+        function testInventoryUpdated() {
+            logEvent('🧪 Testing inventory:updated event...');
+            // This would normally be triggered by the backend when an inventory item is updated
+        }
+
+        function testInventoryDeleted() {
+            logEvent('🧪 Testing inventory:deleted event...');
+            // This would normally be triggered by the backend when an inventory item is deleted
+        }
+
+        function testToolCreated() {
+            logEvent('🧪 Testing tool:created event...');
+            // This would normally be triggered by the backend when a toolbox item is created
+        }
+
+        function testToolUpdated() {
+            logEvent('🧪 Testing tool:updated event...');
+            // This would normally be triggered by the backend when a toolbox item is updated
+        }
+
+        function testToolDeleted() {
+            logEvent('🧪 Testing tool:deleted event...');
+            // This would normally be triggered by the backend when a toolbox item is deleted
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            logEvent('🚀 Page loaded, initializing Socket.IO...');
+            initializeSocket();
+        });
+    </script>
+</body>
+
+</html>

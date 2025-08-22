@@ -38,8 +38,11 @@
                     <i class="fas fa-chart-bar"></i> Inventory Management
                 </a>
                 <a href="./admin-toolbox.html" class="nav-link">
-                    <i class="fas fa-boxes"></i> Toolbox Management
+                    <i class="fas fa-tools"></i> Toolbox Management
                 </a>
+                <button id="returnToAdminBtn" class="btn secondary" onclick="returnToAdmin()" style="display: none;">
+                    <i class="fas fa-user-shield"></i> Return to Admin
+                </button>
                 <button class="logout-btn" onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
@@ -117,6 +120,10 @@
             <h3>Completed</h3>
             <p id="completedTasks">0</p>
         </div>
+        <div class="stat-card">
+            <h3>Hidden from Users</h3>
+            <p id="hiddenTasks">0</p>
+        </div>
     </div>
 
     <div class="search-filter">
@@ -147,8 +154,10 @@
                     <th>Title</th>
                     <th>Description</th>
                     <th>Assigned To</th>
+                    <th>Priority</th>
                     <th>Status</th>
                     <th>Due Date</th>
+                    <th>Visibility</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -263,17 +272,27 @@
         document.addEventListener('DOMContentLoaded', () => {
             try {
                 const socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
+
+                // Make socket available globally
+                window.socket = socket;
+
                 const refresh = () => { if (typeof loadUsers === 'function') loadUsers(); if (typeof loadAllTasks === 'function') loadAllTasks(); };
                 const badge = document.getElementById('liveBadgeAdmin');
                 const setLive = (on) => { if (!badge) return; badge.style.background = on ? '#27ae60' : '#e74c3c'; badge.querySelector('.status').textContent = on ? 'LIVE' : 'OFFLINE'; };
+
                 socket.on('connect', () => setLive(true));
                 socket.on('disconnect', () => setLive(false));
+
+                // Listen for realtime updates
                 socket.on('task:created', refresh);
                 socket.on('task:updated', refresh);
                 socket.on('report:created', refresh);
                 socket.on('report:updated', refresh);
                 socket.on('inventory:created', refresh);
                 socket.on('inventory:updated', refresh);
+                socket.on('user:created', refresh);
+                socket.on('user:updated', refresh);
+                socket.on('user:deleted', refresh);
             } catch (e) { /* ignore */ }
         });
     </script>

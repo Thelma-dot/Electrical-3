@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUsers();
     loadAllTasks();
 
+    // Check if we should show the return to admin button
+    checkReturnToAdminButton();
+
     // Periodically refresh admin task overview so user updates reflect here
     setInterval(() => {
         loadAllTasks();
@@ -66,7 +69,7 @@ async function loadUsers() {
 
     } catch (error) {
         console.error('Error loading users:', error);
-        showAlert('Failed to load users');
+        showAlert('Failed to load users', 'error');
     }
 }
 
@@ -160,9 +163,18 @@ async function saveInlineUser(userId) {
         allUsers = allUsers.map(u => u.id === userId ? { ...u, staff_id, email, role } : u);
         renderUsersTable();
         showAlert('User saved', 'success');
+
+        // Emit realtime event for other connected clients
+        try {
+            if (window.socket) {
+                window.socket.emit('user:updated', { id: userId, staff_id, email, role });
+            }
+        } catch (e) {
+            console.log('Socket not available');
+        }
     } catch (e) {
         console.error(e);
-        showAlert(e.message || 'Update failed');
+        showAlert(e.message || 'Update failed', 'error');
     }
 }
 
@@ -215,11 +227,12 @@ function assignTask(userId) {
                     <textarea id="taskDescription" rows="3"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="taskPriority">Priority *</label>
-                    <select id="taskPriority" required>
+                    <label for="taskPriority">Priority</label>
+                    <select id="taskPriority">
                         <option value="low">Low</option>
                         <option value="medium" selected>Medium</option>
                         <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -270,11 +283,11 @@ async function handleTaskAssignment(event, userId) {
             closeTaskAssignmentModal();
             loadUsers(); // Refresh the table
         } else {
-            showAlert(result.error || 'Failed to assign task');
+            showAlert(result.error || 'Failed to assign task', 'error');
         }
     } catch (error) {
         console.error('Error assigning task:', error);
-        showAlert('Failed to assign task');
+        showAlert('Failed to assign task', 'error');
     }
 }
 
@@ -334,7 +347,7 @@ function formatDate(iso) {
 async function loadAllTasks() {
     try {
         const token = localStorage.getItem('token');
-        const resp = await fetch('http://localhost:5000/api/tasks', {
+        const resp = await fetch('http://localhost:5000/api/tasks/admin/all', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!resp.ok) return;
@@ -344,6 +357,7 @@ async function loadAllTasks() {
         renderTasksTable();
     } catch (e) {
         console.error('Failed to load tasks', e);
+        showAlert('Failed to load tasks', 'error');
     }
 }
 
@@ -352,11 +366,18 @@ function updateTaskStats() {
     const pending = allTasks.filter(t => t.status === 'pending').length;
     const inProgress = allTasks.filter(t => t.status === 'in_progress').length;
     const completed = allTasks.filter(t => t.status === 'completed').length;
+    const hidden = allTasks.filter(t => t.hidden_from_user === 1).length;
     const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     setText('totalTasks', total);
     setText('pendingTasks', pending);
     setText('inProgressTasks', inProgress);
     setText('completedTasks', completed);
+
+    // Update hidden tasks count if element exists
+    const hiddenElement = document.getElementById('hiddenTasks');
+    if (hiddenElement) {
+        hiddenElement.textContent = hidden;
+    }
 }
 
 function populateTaskUserFilter() {
@@ -386,12 +407,19 @@ function renderTasksTable() {
     const tasks = getFilteredTasks();
     tasks.forEach(t => {
         const tr = document.createElement('tr');
+        tr.className = t.hidden_from_user === 1 ? 'hidden-task' : '';
         tr.innerHTML = `
           <td>${t.title}</td>
           <td>${t.description || ''}</td>
           <td>${lookupStaffId(t.assigned_to)}</td>
+          <td><span class="task-priority-badge ${t.priority || 'medium'}">${toPriorityLabel(t.priority || 'medium')}</span></td>
           <td><span class="task-status-badge ${t.status}">${toTaskLabel(t.status)}</span></td>
           <td>${formatDue(t.due_date)}</td>
+          <td>
+            <span class="hidden-indicator ${t.hidden_from_user === 1 ? 'hidden' : ''}" title="${t.hidden_from_user === 1 ? 'Hidden from user' : 'Visible to user'}">
+              <i class="fas ${t.hidden_from_user === 1 ? 'fa-eye-slash' : 'fa-eye'}"></i>
+            </span>
+          </td>
           <td class="task-actions">
             <button class="btn small" onclick="editTask(${t.id})" title="Edit"><i class="fas fa-edit"></i></button>
             <button class="btn small warning" onclick="markTask(${t.id}, 'in_progress')" title="Mark In Progress"><i class="fas fa-hourglass-half"></i></button>
@@ -404,6 +432,10 @@ function renderTasksTable() {
 
 function toTaskLabel(s) {
     return (s || '').replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function toPriorityLabel(p) {
+    return (p || 'medium').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function formatDue(iso) {
@@ -430,7 +462,114 @@ async function markTask(id, status) {
             body: JSON.stringify({ status })
         });
         await loadAllTasks();
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error(e);
+        showAlert('Failed to update task status', 'error');
+    }
+}
+
+// Edit task function
+async function editTask(id) {
+    const task = allTasks.find(t => t.id === id);
+    if (!task) return;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'editTaskModal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Task</h2>
+                <span class="close" onclick="closeEditTaskModal()">&times;</span>
+            </div>
+            <form id="editTaskForm" onsubmit="handleEditTask(event, ${id})">
+                <div class="form-group">
+                    <label for="editTaskTitle">Task Title *</label>
+                    <input type="text" id="editTaskTitle" value="${task.title}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTaskDescription">Description</label>
+                    <textarea id="editTaskDescription" rows="3">${task.description || ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editTaskPriority">Priority</label>
+                    <select id="editTaskPriority">
+                        <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Low</option>
+                        <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Medium</option>
+                        <option value="high" ${task.priority === 'high' ? 'selected' : ''}>High</option>
+                        <option value="urgent" ${task.priority === 'urgent' ? 'selected' : ''}>Urgent</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editTaskStatus">Status</label>
+                    <select id="editTaskStatus">
+                        <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>Pending</option>
+                        <option value="in_progress" ${task.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                        <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>Completed</option>
+                        <option value="cancelled" ${task.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editTaskDueDate">Due Date</label>
+                    <input type="datetime-local" id="editTaskDueDate" value="${task.due_date ? task.due_date.slice(0, 16) : ''}">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn secondary" onclick="closeEditTaskModal()">Cancel</button>
+                    <button type="submit" class="btn primary">Update Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.style.display = 'flex';
+}
+
+// Handle task editing
+async function handleEditTask(event, taskId) {
+    event.preventDefault();
+
+    const taskData = {
+        title: document.getElementById('editTaskTitle').value,
+        description: document.getElementById('editTaskDescription').value,
+        priority: document.getElementById('editTaskPriority').value,
+        status: document.getElementById('editTaskStatus').value,
+        due_date: document.getElementById('editTaskDueDate').value || null
+    };
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(taskData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            showAlert('Task updated successfully!', 'success');
+            closeEditTaskModal();
+            loadAllTasks(); // Refresh the tasks table
+        } else {
+            showAlert(result.error || 'Failed to update task', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating task:', error);
+        showAlert('Failed to update task', 'error');
+    }
+}
+
+// Close edit task modal
+function closeEditTaskModal() {
+    const modal = document.getElementById('editTaskModal');
+    if (modal) {
+        modal.remove();
+    }
 }
 
 async function deleteTask(id) {
@@ -442,7 +581,10 @@ async function deleteTask(id) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         await loadAllTasks();
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error(e);
+        showAlert('Failed to delete task', 'error');
+    }
 }
 
 function updatePagination(totalUsers) {
@@ -504,6 +646,9 @@ async function addUser(event) {
 
                 showAlert(`User created successfully! You are now logged in as ${result.user.staff_id} (${result.user.role}).`, 'success');
 
+                // Show return to admin button
+                checkReturnToAdminButton();
+
                 // Redirect to dashboard as new user
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
@@ -511,22 +656,44 @@ async function addUser(event) {
             } else {
                 showAlert('User added successfully', 'success');
                 closeAddUserModal();
-                // Optimistically prepend new user to the list without refetch
+
+                // Add the new user to the table immediately
                 if (result && result.id) {
-                    allUsers = [result, ...allUsers];
+                    // Create a user object with the response data
+                    const newUser = {
+                        id: result.id,
+                        staff_id: result.staff_id,
+                        email: result.email,
+                        role: result.role,
+                        created_at: new Date().toISOString()
+                    };
+
+                    // Add to the beginning of the users array
+                    allUsers.unshift(newUser);
+
+                    // Reset to first page and refresh the table
                     currentPage = 1;
                     renderUsersTable();
+
+                    // Emit realtime event for other connected clients
+                    try {
+                        if (window.socket) {
+                            window.socket.emit('user:created', newUser);
+                        }
+                    } catch (e) {
+                        console.log('Socket not available');
+                    }
                 } else {
-                    // Fallback to reload if shape unexpected
+                    // Fallback to reload if response shape is unexpected
                     loadUsers();
                 }
             }
         } else {
-            showAlert(result.error || 'Failed to add user');
+            showAlert(result.error || 'Failed to add user', 'error');
         }
     } catch (error) {
         console.error('Error adding user:', error);
-        showAlert('Failed to add user');
+        showAlert('Failed to add user', 'error');
     }
 }
 
@@ -541,7 +708,20 @@ function returnToAdmin() {
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminUser');
 
+        // Hide the return to admin button
+        const returnBtn = document.getElementById('returnToAdminBtn');
+        if (returnBtn) returnBtn.style.display = 'none';
+
         window.location.href = 'admin-users.html';
+    }
+}
+
+// Check if we should show the return to admin button
+function checkReturnToAdminButton() {
+    const returnBtn = document.getElementById('returnToAdminBtn');
+    if (returnBtn) {
+        const hasAdminCredentials = localStorage.getItem('adminToken') && localStorage.getItem('adminUser');
+        returnBtn.style.display = hasAdminCredentials ? 'inline-block' : 'none';
     }
 }
 
@@ -589,13 +769,25 @@ async function updateUser(event) {
         if (response.ok) {
             showAlert('User updated successfully', 'success');
             closeEditUserModal();
-            loadUsers();
+
+            // Update local cache and re-render immediately
+            allUsers = allUsers.map(u => u.id === parseInt(userId) ? { ...u, ...userData } : u);
+            renderUsersTable();
+
+            // Emit realtime event for other connected clients
+            try {
+                if (window.socket) {
+                    window.socket.emit('user:updated', { id: parseInt(userId), ...userData });
+                }
+            } catch (e) {
+                console.log('Socket not available');
+            }
         } else {
-            showAlert(result.error || 'Failed to update user');
+            showAlert(result.error || 'Failed to update user', 'error');
         }
     } catch (error) {
         console.error('Error updating user:', error);
-        showAlert('Failed to update user');
+        showAlert('Failed to update user', 'error');
     }
 }
 
@@ -619,7 +811,7 @@ async function resetUserPassword(event) {
     const confirmPassword = document.getElementById('confirmPassword').value;
 
     if (newPassword !== confirmPassword) {
-        showAlert('Passwords do not match');
+        showAlert('Passwords do not match', 'error');
         return;
     }
 
@@ -640,11 +832,11 @@ async function resetUserPassword(event) {
             showAlert('Password reset successfully', 'success');
             closeResetPasswordModal();
         } else {
-            showAlert(result.error || 'Failed to reset password');
+            showAlert(result.error || 'Failed to reset password', 'error');
         }
     } catch (error) {
         console.error('Error resetting password:', error);
-        showAlert('Failed to reset password');
+        showAlert('Failed to reset password', 'error');
     }
 }
 
@@ -667,19 +859,87 @@ async function deleteUser(userId) {
 
         if (response.ok) {
             showAlert('User deleted successfully', 'success');
-            loadUsers();
+
+            // Remove user from local cache and re-render immediately
+            allUsers = allUsers.filter(u => u.id !== userId);
+            renderUsersTable();
+
+            // Emit realtime event for other connected clients
+            try {
+                if (window.socket) {
+                    window.socket.emit('user:deleted', { id: userId });
+                }
+            } catch (e) {
+                console.log('Socket not available');
+            }
         } else {
-            showAlert(result.error || 'Failed to delete user');
+            showAlert(result.error || 'Failed to delete user', 'error');
         }
     } catch (error) {
         console.error('Error deleting user:', error);
-        showAlert('Failed to delete user');
+        showAlert('Failed to delete user', 'error');
     }
 }
 
 // Show alert
-function showAlert(message, type = 'error') {
-    alert(message);
+function showAlert(message, type = 'success') {
+    // Remove any existing notifications
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => notification.remove());
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 4px;
+        color: white;
+        font-weight: 500;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+        background-color: ${type === 'success' ? '#28a745' : '#dc3545'};
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        max-width: 300px;
+        word-wrap: break-word;
+    `;
+
+    notification.textContent = message;
+
+    // Add slideIn animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Add to page
+    document.body.appendChild(notification);
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOut 0.3s ease';
+            notification.style.transform = 'translateX(100%)';
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 300);
+        }
+    }, 3000);
 }
 
 // Close modals when clicking outside

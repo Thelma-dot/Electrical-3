@@ -32,6 +32,14 @@ router.post("/users", authenticateToken, requireAdmin, async (req, res) => {
             [staff_id, email || null, hashed, role]
         );
         const user = await get("SELECT id, staff_id, email, role, created_at FROM users WHERE id = ?", [result.id]);
+
+        // Emit realtime event for user creation
+        try {
+            req.app.locals.io.emit('user:created', user);
+        } catch (e) {
+            console.log('Socket not available for user:created event');
+        }
+
         res.status(201).json(user);
     } catch (err) {
         console.error("Admin create user error:", err);
@@ -63,6 +71,14 @@ router.post("/users/create-and-login", authenticateToken, requireAdmin, async (r
             { expiresIn: process.env.TOKEN_EXPIRY || "24h" }
         );
         const { password: _, reset_token, token_expiry, ...safeUser } = user;
+
+        // Emit realtime event for user creation
+        try {
+            req.app.locals.io.emit('user:created', safeUser);
+        } catch (e) {
+            console.log('Socket not available for user:created event');
+        }
+
         res.status(201).json({ token, user: safeUser });
     } catch (err) {
         console.error("Admin create+login user error:", err);
@@ -85,6 +101,14 @@ router.put("/users/:id", authenticateToken, requireAdmin, async (req, res) => {
             "UPDATE users SET staff_id = ?, email = ?, role = ? WHERE id = ?",
             [staff_id, email || null, role, id]
         );
+
+        // Emit realtime event for user update
+        try {
+            req.app.locals.io.emit('user:updated', { id, staff_id, email, role });
+        } catch (e) {
+            console.log('Socket not available for user:updated event');
+        }
+
         res.json({ message: "User updated successfully" });
     } catch (err) {
         console.error("Admin update user error:", err);
@@ -113,6 +137,14 @@ router.delete("/users/:id", authenticateToken, requireAdmin, async (req, res) =>
     try {
         const { id } = req.params;
         await run("DELETE FROM users WHERE id = ?", [id]);
+
+        // Emit realtime event for user deletion
+        try {
+            req.app.locals.io.emit('user:deleted', { id });
+        } catch (e) {
+            console.log('Socket not available for user:deleted event');
+        }
+
         res.json({ message: "User deleted successfully" });
     } catch (err) {
         console.error("Admin delete user error:", err);
@@ -321,6 +353,88 @@ router.get("/login-stats", authenticateToken, requireAdmin, async (req, res) => 
     } catch (err) {
         console.error("Admin login stats error:", err);
         res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Admin Inventory Management Routes
+router.get("/inventory", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log("Admin inventory request received");
+        const inventory = await all(`
+            SELECT 
+                i.id,
+                i.product_type as productType,
+                i.status,
+                i.size,
+                i.serial_number as serialNumber,
+                i.date as dateAdded,
+                i.location,
+                i.issued_by as issuedBy,
+                i.created_at as lastUpdated,
+                u.staff_id as staffId,
+                u.name as staffName
+            FROM inventory i
+            LEFT JOIN users u ON i.user_id = u.id
+            ORDER BY i.created_at DESC
+        `);
+        console.log(`Found ${inventory.length} inventory items`);
+        res.json(inventory);
+    } catch (err) {
+        console.error("Admin inventory error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Admin Toolbox Management Routes
+router.get("/toolbox", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log("Admin toolbox request received");
+        const toolboxController = require('../controllers/toolboxController');
+        await toolboxController.getAllToolboxes(req, res);
+    } catch (err) {
+        console.error("Admin toolbox error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Admin Toolbox Management Routes - Get all toolboxes
+router.get("/toolbox/all", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log("Admin get all toolboxes request received");
+        const toolboxController = require('../controllers/toolboxController');
+        await toolboxController.getAllToolboxes(req, res);
+    } catch (err) {
+        console.error("Admin get all toolboxes error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Health check endpoint for admin settings
+router.get("/health", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        // Test database connection
+        const result = await get("SELECT 1 as test");
+        if (result && result.test === 1) {
+            res.json({
+                status: 'healthy',
+                database: 'connected',
+                timestamp: new Date().toISOString()
+            });
+        } else {
+            res.status(503).json({
+                status: 'unhealthy',
+                database: 'disconnected',
+                timestamp: new Date().toISOString()
+            });
+        }
+    } catch (err) {
+        console.error("Health check error:", err);
+        res.status(503).json({
+            status: 'unhealthy',
+            database: 'error',
+            error: err.message,
+            timestamp: new Date().toISOString()
+        });
     }
 });
 

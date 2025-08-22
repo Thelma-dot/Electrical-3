@@ -150,6 +150,10 @@
           <p id="reportsCount">0</p>
         </div>
         <div class="card">
+          <h3>Toolbox Forms</h3>
+          <p id="toolboxCount">0</p>
+        </div>
+        <div class="card">
           <h3>Inventory</h3>
           <p id="inventoryCount">0</p>
         </div>
@@ -209,7 +213,8 @@
 
       <section class="tasks-section">
         <h2>🗒️ My Task Assignments</h2>
-        <div class="task-controls" style="margin: 8px 0; display: flex; gap: 8px; align-items: center;">
+        <div class="task-controls"
+          style="margin: 8px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
           <label for="myTaskStatusFilter">Filter:</label>
           <select id="myTaskStatusFilter">
             <option value="">All</option>
@@ -218,6 +223,10 @@
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
           </select>
+          <label style="margin-left: 16px; display: flex; align-items: center; gap: 4px;">
+            <input type="checkbox" id="showCompletedTasks" style="margin: 0;">
+            Show Completed Tasks
+          </label>
           <button id="myTasksRefreshBtn">Refresh</button>
         </div>
         <div id="myTasksEmpty" style="display:none; color: gray;">No tasks assigned yet.</div>
@@ -275,6 +284,17 @@
           updateTaskDeadlineReminders();
         }
       }, 60000);
+
+      // Add event listener for "Show Completed Tasks" toggle
+      const showCompletedToggle = document.getElementById('showCompletedTasks');
+      if (showCompletedToggle) {
+        showCompletedToggle.addEventListener('change', () => {
+          // Refresh dashboard when toggle changes to update charts
+          setTimeout(() => {
+            refreshDashboard();
+          }, 100);
+        });
+      }
     });
 
     function initializeSocketConnection() {
@@ -336,6 +356,12 @@
           updateChartsInRealTime();
         });
 
+        socket.on('inventory:deleted', () => {
+          console.log('📦 Inventory deleted - updating charts');
+          flash();
+          updateChartsInRealTime();
+        });
+
         socket.on('task:created', () => {
           console.log('✅ Task created - updating charts');
           flash();
@@ -344,6 +370,25 @@
 
         socket.on('task:updated', () => {
           console.log('✅ Task updated - updating charts');
+          flash();
+          updateChartsInRealTime();
+        });
+
+        // Listen for toolbox events
+        socket.on('tool:created', () => {
+          console.log('🛠️ Toolbox created - updating charts');
+          flash();
+          updateChartsInRealTime();
+        });
+
+        socket.on('tool:updated', () => {
+          console.log('🛠️ Toolbox updated - updating charts');
+          flash();
+          updateChartsInRealTime();
+        });
+
+        socket.on('tool:deleted', () => {
+          console.log('🛠️ Toolbox deleted - updating charts');
           flash();
           updateChartsInRealTime();
         });
@@ -387,20 +432,30 @@
 
     async function refreshDashboard() {
       try {
-        const [summary, inventoryList, myTasks, chartData] = await Promise.all([
+        // Check if "Show Completed Tasks" toggle is enabled
+        const showCompletedToggle = document.getElementById('showCompletedTasks');
+        const showCompleted = showCompletedToggle ? showCompletedToggle.checked : false;
+
+        // Choose the appropriate endpoint based on toggle state
+        const tasksEndpoint = showCompleted ? 'http://localhost:5000/api/tasks/my/completed' : 'http://localhost:5000/api/tasks/my';
+
+        const [summary, inventoryList, myTasks, chartData, toolboxList] = await Promise.all([
           fetch('http://localhost:5000/api/reports/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()),
           fetch('http://localhost:5000/api/inventory', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []),
-          fetch('http://localhost:5000/api/tasks/my', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []),
-          fetch('http://localhost:5000/api/reports/chart-data', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json())
+          fetch(tasksEndpoint, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []),
+          fetch('http://localhost:5000/api/reports/chart-data', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()),
+          fetch('http://localhost:5000/api/toolbox', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : [])
         ]);
 
         // Compute inventory stats
         const inventoryTotal = Array.isArray(inventoryList) ? inventoryList.length : 0;
+        const toolboxTotal = Array.isArray(toolboxList) ? toolboxList.length : 0;
         const tasksInProgress = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'in_progress' || (t.status || '').toLowerCase() === 'in progress').length;
         const tasksCompleted = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'completed').length;
 
         const currentData = {
           reports: summary.total || 0,
+          toolbox: toolboxTotal,
           inventory: inventoryTotal,
           inProgress: tasksInProgress,
           completed: tasksCompleted,
@@ -423,11 +478,15 @@
       }
     }
 
+    // Make refreshDashboard globally accessible
+    window.refreshDashboard = refreshDashboard;
+
     function updateDashboardStats(data) {
       document.getElementById('reportsCount').textContent = data.reports;
       document.getElementById('inventoryCount').textContent = data.inventory;
       document.getElementById('inProgressCount').textContent = data.inProgress;
       document.getElementById('completedCount').textContent = data.completed;
+      document.getElementById('toolboxCount').textContent = data.toolbox;
     }
 
     function updatePerformanceIndicator(currentData) {
@@ -436,15 +495,19 @@
 
       if (!performanceArrow || !performanceText) return;
 
-      // Calculate performance based on completed tasks vs total tasks
-      const totalTasks = currentData.inProgress + currentData.completed;
-      const completionRate = totalTasks > 0 ? (currentData.completed / totalTasks) * 100 : 0;
+      // Calculate performance based on completed tasks vs total visible tasks
+      const totalVisibleTasks = currentData.inProgress + currentData.completed;
+      const completionRate = totalVisibleTasks > 0 ? (currentData.completed / totalVisibleTasks) * 100 : 0;
 
-      // Compare with previous data
+      // Compare with previous data for trend indication
       const previousTotalTasks = previousData.inProgress + previousData.completed;
       const previousCompletionRate = previousTotalTasks > 0 ? (previousData.completed / previousTotalTasks) * 100 : 0;
 
-      if (completionRate > previousCompletionRate) {
+      if (totalVisibleTasks === 0) {
+        performanceArrow.textContent = '➡️';
+        performanceArrow.className = 'performance-arrow neutral';
+        performanceText.textContent = `No tasks to measure`;
+      } else if (completionRate > previousCompletionRate) {
         performanceArrow.textContent = '↗️';
         performanceArrow.className = 'performance-arrow up';
         performanceText.textContent = `Improving (${completionRate.toFixed(1)}%)`;
@@ -471,23 +534,26 @@
 
       // Update Bar Chart
       const barData = {
-        labels: ['Reports', 'Inventory', 'In Progress', 'Completed Task'],
+        labels: ['Reports', 'Toolbox Forms', 'Inventory', 'In Progress', 'Completed Task'],
         datasets: [{
           label: 'Progress',
           data: [
             data.reports,
+            data.toolbox,
             data.inventory,
             data.inProgress,
             data.completed
           ],
           backgroundColor: [
             '#3498db',  // Reports - Blue
+            '#9b59b6',  // Toolbox - Purple
             '#e67e22',  // Inventory - Orange
             '#f39c12',  // In Progress - Yellow
             '#27ae60'   // Completed - Green
           ],
           borderColor: [
             '#2980b9',
+            '#8e44ad',
             '#d35400',
             '#e67e22',
             '#229954'
@@ -527,6 +593,8 @@
               }
             }
           });
+          // Make barChartInstance globally accessible
+          window.barChartInstance = barChartInstance;
         }
       }
 
@@ -584,6 +652,8 @@
               }
             }
           });
+          // Make lineChartInstance globally accessible
+          window.lineChartInstance = lineChartInstance;
         }
       }
     }
