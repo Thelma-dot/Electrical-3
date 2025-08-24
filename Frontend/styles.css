@@ -92,8 +92,75 @@ a:hover {
     text-decoration: underline;
 }
 
+/* Mobile Responsive Design */
+@media (max-width: 768px) {
+    .login-box {
+        width: 90%;
+        max-width: 350px;
+        padding: 25px 20px;
+        margin: 20px;
+    }
 
+    .avatar {
+        width: 70px;
+        height: 70px;
+    }
 
+    h2 {
+        font-size: 20px;
+        margin-bottom: 12px;
+    }
 
+    input {
+        padding: 12px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
 
+    .login-btn {
+        padding: 12px;
+        font-size: 16px;
+    }
+}
 
+@media (max-width: 480px) {
+    .login-box {
+        width: 95%;
+        padding: 20px 15px;
+        margin: 10px;
+    }
+
+    .avatar {
+        width: 60px;
+        height: 60px;
+    }
+
+    h2 {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    input {
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .login-btn {
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .forgot-password {
+        font-size: 14px;
+    }
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+    .login-btn:active {
+        transform: scale(0.98);
+    }
+
+    input:focus {
+        outline: 2px solid #007bff;
+    }
+}

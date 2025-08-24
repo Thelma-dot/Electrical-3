@@ -1,5 +1,18 @@
 // Admin User Management JavaScript
 
+// Navbar functionality
+function setActiveNavLink() {
+    const currentPage = window.location.pathname.split('/').pop();
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === currentPage) {
+            link.classList.add('active');
+        }
+    });
+}
+
 let allUsers = [];
 let allTasks = [];
 let currentPage = 1;
@@ -14,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadUsers();
     loadAllTasks();
+    setActiveNavLink();
 
     // Check if we should show the return to admin button
     checkReturnToAdminButton();

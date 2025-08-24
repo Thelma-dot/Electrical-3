@@ -1,11 +1,24 @@
 // Admin Dashboard JavaScript
 
+// Navbar functionality
+function setActiveNavLink() {
+    const currentPage = window.location.pathname.split('/').pop();
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === currentPage) {
+            link.classList.add('active');
+        }
+    });
+}
+
 // Global chart instances
 let userRolesChartInstance = null;
 let userTrendChartInstance = null;
 let adminBarChartInstance = null;
 let adminRevenueChartInstance = null;
-let socket = null;
+let socket = null; // Socket.IO connection
 let previousAdminData = {
     reports: 0,
     inventory: 0,
@@ -27,7 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     loadDashboardData();
+    setActiveNavLink();
+
+    // Initialize Socket.IO connection for real-time updates
     initializeSocketConnection();
+
+    // Real-time updates enabled
 
     // Periodically refresh as backup
     setInterval(loadDashboardData, 30000);
@@ -47,6 +65,95 @@ function isAdmin() {
     }
 }
 
+// Initialize Socket.IO connection for real-time updates
+function initializeSocketConnection() {
+    try {
+        socket = io('http://localhost:5000');
+
+        socket.on('connect', () => {
+            console.log('🔌 Admin dashboard connected to server for real-time updates');
+            // Notify server that admin is connected
+            socket.emit('admin:connected', { type: 'dashboard', timestamp: new Date().toISOString() });
+        });
+
+        socket.on('disconnect', () => {
+            console.log('🔌 Admin dashboard disconnected from server');
+        });
+
+        // Listen for inventory updates
+        socket.on('admin:inventory:created', (data) => {
+            console.log('📦 Admin: Inventory created:', data);
+            refreshInventoryStats();
+        });
+
+        socket.on('admin:inventory:updated', (data) => {
+            console.log('📦 Admin: Inventory updated:', data);
+            refreshInventoryStats();
+        });
+
+        socket.on('admin:inventory:deleted', (data) => {
+            console.log('📦 Admin: Inventory deleted:', data);
+            refreshInventoryStats();
+        });
+
+        // Listen for toolbox updates
+        socket.on('admin:toolbox:created', (data) => {
+            console.log('🛠️ Admin: Toolbox created:', data);
+            refreshToolboxStats();
+        });
+
+        socket.on('admin:toolbox:updated', (data) => {
+            console.log('🛠️ Admin: Toolbox updated:', data);
+            refreshToolboxStats();
+        });
+
+        socket.on('admin:toolbox:deleted', (data) => {
+            console.log('🛠️ Admin: Toolbox deleted:', data);
+            refreshToolboxStats();
+        });
+
+    } catch (error) {
+        console.error('❌ Error initializing Socket.IO in admin dashboard:', error);
+    }
+}
+
+// Refresh inventory statistics
+async function refreshInventoryStats() {
+    try {
+        const response = await fetch('http://localhost:5000/api/admin/inventory', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        if (response.ok) {
+            const inventoryData = await response.json();
+            // Update inventory stats if on inventory page
+            if (typeof updateInventoryStats === 'function') {
+                updateInventoryStats(inventoryData);
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error refreshing inventory stats:', error);
+    }
+}
+
+// Refresh toolbox statistics
+async function refreshToolboxStats() {
+    try {
+        const response = await fetch('http://localhost:5000/api/admin/toolbox', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        if (response.ok) {
+            const toolboxData = await response.json();
+            // Update toolbox stats if on toolbox page
+            if (typeof updateToolboxStats === 'function') {
+                updateToolboxStats(toolboxData);
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error refreshing toolbox stats:', error);
+    }
+}
 
 
 // Load dashboard statistics
@@ -404,6 +511,7 @@ async function loadAdminCharts() {
         previousAdminData = {
             reports: data.reports,
             inventory: data.inventory,
+            toolbox: data.toolbox || 0,
             inProgress: data.inProgress,
             completed: data.completed,
             totalUsers: data.totalUsers // Assuming totalUsers is also returned
@@ -441,11 +549,11 @@ function updateAdminCharts(data) {
             adminBarChartInstance = new Chart(barCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Reports', 'Inventory', 'In Progress', 'Completed', 'Total Users'],
+                    labels: ['Reports', 'Inventory', 'Toolbox', 'In Progress', 'Completed'],
                     datasets: [{
                         label: 'Count',
-                        data: [data.reports, data.inventory, data.inProgress, data.completed, data.totalUsers],
-                        backgroundColor: ['#e74c3c', '#3498db', '#f39c12', '#2ecc71', '#9b59b6'],
+                        data: [data.reports, data.inventory, data.toolbox, data.inProgress, data.completed],
+                        backgroundColor: ['#e74c3c', '#3498db', '#9b59b6', '#f39c12', '#2ecc71'],
                         borderWidth: 0
                     }]
                 },
@@ -536,37 +644,15 @@ function updateAdminCharts(data) {
 }
 
 // Update admin charts in real-time
-async function updateAdminChartsInRealTime() {
-    try {
-        // Flash the overview cards
-        document.querySelectorAll('.overview-card').forEach(card => {
-            card.classList.add('live-flash');
-            setTimeout(() => card.classList.remove('live-flash'), 600);
-        });
+// Real-time update function removed
+// function updateAdminChartsInRealTime() {
+//     // All real-time functionality removed
+// }
 
-        // Update charts
-        await loadAdminCharts();
-        showAdminChartUpdateIndicators();
-    } catch (err) {
-        console.error('Real-time update error:', err);
-    }
-}
-
-// Show chart update indicators
-function showAdminChartUpdateIndicators() {
-    const barIndicator = document.getElementById('adminBarChartIndicator');
-    const revenueIndicator = document.getElementById('adminRevenueChartIndicator');
-
-    if (barIndicator) {
-        barIndicator.classList.add('active');
-        setTimeout(() => barIndicator.classList.remove('active'), 2000);
-    }
-
-    if (revenueIndicator) {
-        revenueIndicator.classList.add('active');
-        setTimeout(() => revenueIndicator.classList.remove('active'), 2000);
-    }
-}
+// Chart update indicators function removed
+// function showAdminChartUpdateIndicators() {
+//     // All real-time functionality removed
+// }
 
 // Navigation functions
 function editUser(userId) {
@@ -601,47 +687,55 @@ function hideLoadingState() {
     // Loading state is handled by updateStatistics function
 }
 
-// Initialize socket connection for real-time updates
-function initializeSocketConnection() {
-    try {
-        // Check if socket.io is available
-        if (typeof io !== 'undefined') {
-            socket = io('http://localhost:5000');
+// Socket initialization function removed
+// function initializeSocketConnection() {
+//     // All Socket.IO functionality removed
+// }
 
-            socket.on('connect', () => {
-                console.log('Connected to server for real-time updates');
-            });
+// Real-time localStorage handler removed
+// function handleStorageChange(event) {
+//     // All real-time functionality removed
+// }
 
-            socket.on('user:created', () => {
-                updateAdminChartsInRealTime();
-            });
+// Real-time inventory count update function removed
+// function updateInventoryCountInRealTime() {
+//     // All real-time functionality removed
+// }
 
-            socket.on('user:updated', () => {
-                updateAdminChartsInRealTime();
-            });
+// Cross-tab communication function removed
+// function initializeCrossTabCommunication() {
+//     // All cross-tab communication removed
+// }
 
-            socket.on('user:deleted', () => {
-                updateAdminChartsInRealTime();
-            });
+// Inventory update notification function removed
+// function showInventoryUpdateNotification(type) {
+//     // All real-time functionality removed
+// }
 
-            socket.on('report:updated', () => {
-                updateAdminChartsInRealTime();
-            });
+// Real-time status function removed
+// function updateRealTimeStatus(type) {
+//     // All real-time functionality removed
+// }
 
-            socket.on('report:deleted', () => {
-                updateAdminChartsInRealTime();
-            });
+// Connection status function removed
+// function updateConnectionStatus() {
+//     // All real-time functionality removed
+// }
 
-            socket.on('disconnect', () => {
-                console.log('Disconnected from server');
-            });
-        } else {
-            console.log('Socket.io not available, real-time updates disabled');
-        }
-    } catch (error) {
-        console.error('Error initializing socket connection:', error);
-    }
-}
+// Real-time test function removed
+// function testInventoryUpdate(type = 'updated') {
+//     // All real-time functionality removed
+// }
+
+// Real-time test function removed
+// function testRealTimeUpdate() {
+//     // All real-time functionality removed
+// }
+
+// Real-time inventory test function removed
+// function testInventoryUpdate() {
+//     // All real-time functionality removed
+// }
 
 // Show alert message
 function showAlert(message) {

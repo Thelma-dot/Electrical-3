@@ -69,14 +69,23 @@ function initializeTables() {
     CREATE TABLE IF NOT EXISTS inventory (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
-      product_type TEXT NOT NULL,
-      status TEXT DEFAULT 'New',
+      item_name TEXT NOT NULL,
+      category TEXT,
+      product_type TEXT,
+      quantity INTEGER DEFAULT 1,
+      unit TEXT DEFAULT 'piece',
       size TEXT,
       serial_number TEXT,
+      status TEXT DEFAULT 'Available',
       date TEXT,
       location TEXT,
+      supplier TEXT,
+      purchase_date TEXT,
+      expiry_date TEXT,
       issued_by TEXT,
+      notes TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     )
   `,
@@ -89,38 +98,47 @@ function initializeTables() {
     }
   );
 
-  // Create toolbox table
-  db.run(
-    `
-    CREATE TABLE IF NOT EXISTS toolbox (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      work_activity TEXT NOT NULL,
-      date TEXT NOT NULL,
-      work_location TEXT NOT NULL,
-      name_company TEXT NOT NULL,
-      sign TEXT NOT NULL,
-      ppe_no TEXT NOT NULL,
-      tools_used TEXT NOT NULL,
-      hazards TEXT NOT NULL,
-      circulars TEXT,
-      risk_assessment TEXT,
-      permit TEXT,
-      remarks TEXT,
-      prepared_by TEXT NOT NULL,
-      verified_by TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id)
-    )
-  `,
-    (err) => {
-      if (err) {
-        console.error("Error creating toolbox table:", err.message);
-      } else {
-        console.log("✅ Toolbox table created/verified");
-      }
+  // Drop and recreate toolbox table to ensure correct schema
+  db.run(`DROP TABLE IF EXISTS toolbox`, (err) => {
+    if (err) {
+      console.error("Error dropping toolbox table:", err.message);
+    } else {
+      console.log("🗑️ Old toolbox table dropped");
+
+      // Create toolbox table with correct schema
+      db.run(
+        `
+        CREATE TABLE toolbox (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          work_activity TEXT NOT NULL,
+          date TEXT NOT NULL,
+          work_location TEXT NOT NULL,
+          name_company TEXT NOT NULL,
+          sign TEXT NOT NULL,
+          ppe_no TEXT NOT NULL,
+          tools_used TEXT NOT NULL,
+          hazards TEXT NOT NULL,
+          circulars TEXT,
+          risk_assessment TEXT,
+          permit TEXT,
+          remarks TEXT,
+          prepared_by TEXT NOT NULL,
+          verified_by TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+      `,
+        (err) => {
+          if (err) {
+            console.error("Error creating toolbox table:", err.message);
+          } else {
+            console.log("✅ Toolbox table created with correct schema");
+          }
+        }
+      );
     }
-  );
+  });
 
   // Create settings table
   db.run(
@@ -144,6 +162,67 @@ function initializeTables() {
       }
     }
   );
+
+  // Update existing tables if needed (for schema changes)
+  updateTableSchemas();
+
+  // Verify toolbox table structure
+  verifyToolboxTable();
+}
+
+// Function to update existing table schemas
+function updateTableSchemas() {
+  // Check if inventory table needs new columns
+  db.get("PRAGMA table_info(inventory)", (err, rows) => {
+    if (err) {
+      console.error("Error checking inventory table schema:", err.message);
+      return;
+    }
+
+    // Add new columns if they don't exist
+    const addColumns = [
+      "ALTER TABLE inventory ADD COLUMN item_name TEXT",
+      "ALTER TABLE inventory ADD COLUMN category TEXT",
+      "ALTER TABLE inventory ADD COLUMN quantity INTEGER DEFAULT 1",
+      "ALTER TABLE inventory ADD COLUMN unit TEXT DEFAULT 'piece'",
+      "ALTER TABLE inventory ADD COLUMN supplier TEXT",
+      "ALTER TABLE inventory ADD COLUMN purchase_date TEXT",
+      "ALTER TABLE inventory ADD COLUMN expiry_date TEXT",
+      "ALTER TABLE inventory ADD COLUMN notes TEXT",
+      "ALTER TABLE inventory ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+    ];
+
+    addColumns.forEach((sql, index) => {
+      db.run(sql, (err) => {
+        if (err && !err.message.includes('duplicate column name')) {
+          console.error(`Error adding column ${index + 1}:`, err.message);
+        }
+      });
+    });
+  });
+}
+
+// Function to verify toolbox table structure
+function verifyToolboxTable() {
+  db.all("PRAGMA table_info(toolbox)", (err, rows) => {
+    if (err) {
+      console.error("Error checking toolbox table structure:", err.message);
+      return;
+    }
+
+    console.log("🔍 Toolbox table structure:");
+    rows.forEach(row => {
+      console.log(`  - ${row.name}: ${row.type} ${row.notnull ? 'NOT NULL' : ''} ${row.pk ? 'PRIMARY KEY' : ''}`);
+    });
+
+    // Check if work_activity column exists
+    const hasWorkActivity = rows.some(row => row.name === 'work_activity');
+    if (hasWorkActivity) {
+      console.log("✅ work_activity column found - table structure is correct");
+    } else {
+      console.error("❌ work_activity column missing - table structure is incorrect");
+    }
+  });
 }
 
 // Promisify database operations

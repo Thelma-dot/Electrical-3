@@ -13,6 +13,12 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* Admin sidebar specific positioning */
+.sidebar-header .user-greeting {
+    margin: 10px 0;
+    padding: 15px 10px;
+}
+
 .user-greeting:hover {
     background: linear-gradient(135deg, rgba(52, 152, 219, 1), rgba(41, 128, 185, 1));
     transform: translateY(-3px);

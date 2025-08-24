@@ -1,106 +1,152 @@
 // Admin Inventory Management JavaScript
 
+// Navbar functionality
+function setActiveNavLink() {
+    const currentPage = window.location.pathname.split('/').pop();
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === currentPage) {
+            link.classList.add('active');
+        }
+    });
+}
+
 let currentPage = 1;
 let itemsPerPage = 10;
 let allInventory = [];
 let filteredInventory = [];
 let editingInventoryId = null;
-let socket = null;
+let socket = null; // Socket.IO connection
 
 // Initialize Socket.IO connection for real-time updates
 function initializeSocketConnection() {
     try {
-        socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
-        
-        // Update live badge
-        const liveBadge = document.getElementById('liveBadgeAdmin');
-        if (liveBadge) {
-            const statusSpan = liveBadge.querySelector('.status');
-            if (statusSpan) {
-                statusSpan.textContent = 'LIVE';
-                liveBadge.style.background = '#27ae60';
-            }
-        }
+        socket = io('http://localhost:5000');
 
-        // Listen for real-time inventory events
         socket.on('connect', () => {
-            console.log('🔌 Connected to real-time inventory updates');
-            if (liveBadge) {
-                const statusSpan = liveBadge.querySelector('.status');
-                if (statusSpan) {
-                    statusSpan.textContent = 'LIVE';
-                    liveBadge.style.background = '#27ae60';
-                }
-            }
+            console.log('🔌 Admin inventory connected to server for real-time updates');
+            // Notify server that admin inventory page is connected
+            socket.emit('admin:connected', { type: 'inventory', timestamp: new Date().toISOString() });
         });
 
         socket.on('disconnect', () => {
-            console.log('🔌 Disconnected from real-time inventory updates');
-            if (liveBadge) {
-                const statusSpan = liveBadge.querySelector('.status');
-                if (statusSpan) {
-                    statusSpan.textContent = 'OFFLINE';
-                    liveBadge.style.background = '#e74c3c';
-                }
-            }
+            console.log('🔌 Admin inventory disconnected from server');
         });
 
-        // Inventory created event
-        socket.on('inventory:created', (data) => {
-            console.log('📦 Inventory created - updating admin panel');
-            flashStats();
-            loadInventory(); // Reload data
+        // Listen for inventory updates
+        socket.on('admin:inventory:created', (data) => {
+            console.log('📦 Admin inventory: Item created:', data);
+            handleInventoryUpdate('created', data);
         });
 
-        // Inventory updated event
-        socket.on('inventory:updated', (data) => {
-            console.log('📦 Inventory updated - updating admin panel');
-            flashStats();
-            loadInventory(); // Reload data
+        socket.on('admin:inventory:updated', (data) => {
+            console.log('📦 Admin inventory: Item updated:', data);
+            handleInventoryUpdate('updated', data);
         });
 
-        // Inventory deleted event
-        socket.on('inventory:deleted', (data) => {
-            console.log('📦 Inventory deleted - updating admin panel');
-            flashStats();
-            loadInventory(); // Reload data
+        socket.on('admin:inventory:deleted', (data) => {
+            console.log('📦 Admin inventory: Item deleted:', data);
+            handleInventoryUpdate('deleted', data);
         });
 
-    } catch (e) {
-        console.warn('Real-time updates unavailable', e);
+    } catch (error) {
+        console.error('❌ Error initializing Socket.IO in admin inventory:', error);
     }
 }
 
-// Flash effect for stats when real-time updates occur
+// Real-time inventory update handler
+function handleInventoryUpdate(type, data) {
+    console.log(`📦 Handling inventory ${type} update:`, data);
+
+    // Flash the stats to show update
+    flashStats();
+
+    // Reload inventory data
+    setTimeout(() => {
+        loadInventory();
+    }, 500);
+}
+
+// Real-time event listeners
+function initializeEventListeners() {
+    // Initialize Socket.IO connection
+    initializeSocketConnection();
+
+    // Other event listeners can be added here
+}
+
+// Real-time flash effects
 function flashStats() {
     const statCards = document.querySelectorAll('.stat-card');
     statCards.forEach(card => {
-        card.style.animation = 'flash 600ms ease';
+        card.style.animation = 'flash 0.6s ease';
         setTimeout(() => {
             card.style.animation = '';
         }, 600);
     });
 }
 
+function flashInventoryTable() {
+    const table = document.getElementById('inventoryTable');
+    if (table) {
+        table.style.animation = 'flash 0.6s ease';
+        setTimeout(() => {
+            table.style.animation = '';
+        }, 600);
+    }
+}
+
 // Load inventory data
 async function loadInventory() {
+    console.log('🔄 Loading inventory data...');
+
+    // Show loading indicator
+    const tableBody = document.getElementById('inventoryTableBody');
+    if (tableBody) {
+        tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 20px;"><div style="color: #3498db;">🔄 Loading inventory...</div></td></tr>';
+    }
+
     try {
+        const adminToken = localStorage.getItem('adminToken');
+        console.log('🔑 Admin token exists:', !!adminToken);
+
         const response = await fetch('http://localhost:5000/api/admin/inventory', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                'Authorization': `Bearer ${adminToken}`
             }
         });
 
+        console.log('📡 Response status:', response.status);
+
         if (response.ok) {
             allInventory = await response.json();
+            console.log('📦 Loaded inventory items:', allInventory.length);
             filteredInventory = [...allInventory];
             updateInventoryTable();
             updateInventoryStats();
+
+            // Update last refresh timestamp
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            console.log(`✅ Inventory refreshed at ${timeString}`);
         } else {
-            console.error('Failed to load inventory');
+            const errorText = await response.text();
+            console.error('❌ Failed to load inventory:', response.status, errorText);
+
+            // Show error in table
+            if (tableBody) {
+                tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 20px;"><div style="color: #e74c3c;">❌ Failed to load inventory</div></td></tr>';
+            }
         }
     } catch (error) {
-        console.error('Error loading inventory:', error);
+        console.error('❌ Error loading inventory:', error);
+
+        // Show error in table
+        if (tableBody) {
+            tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 20px;"><div style="color: #e74c3c;">❌ Error loading inventory</div></td></tr>';
+        }
     }
 }
 
@@ -144,22 +190,80 @@ function updateInventoryTable() {
 }
 
 // Update inventory statistics
-function updateInventoryStats() {
-    const stats = {
-        total: allInventory.length,
-        ups: allInventory.filter(item => item.productType === 'UPS').length,
-        avr: allInventory.filter(item => item.productType === 'AVR').length,
-        available: allInventory.filter(item => item.status === 'Available').length,
-        inUse: allInventory.filter(item => item.status === 'In Use').length,
-        maintenance: allInventory.filter(item => item.status === 'Maintenance').length
-    };
+async function updateInventoryStats() {
+    try {
+        console.log('🔄 Updating inventory statistics...');
 
-    document.getElementById('totalItems').textContent = stats.total;
-    document.getElementById('upsCount').textContent = stats.ups;
-    document.getElementById('avrCount').textContent = stats.avr;
-    document.getElementById('availableCount').textContent = stats.available;
-    document.getElementById('inUseCount').textContent = stats.inUse;
-    document.getElementById('maintenanceCount').textContent = stats.maintenance;
+        const response = await fetch('http://localhost:5000/api/admin/inventory/stats', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (response.ok) {
+            const stats = await response.json();
+            console.log('📊 Received inventory stats:', stats);
+            displayInventoryStats(stats);
+        } else {
+            console.error('❌ Failed to fetch updated inventory stats:', response.status);
+        }
+    } catch (error) {
+        console.error('❌ Error updating inventory stats:', error);
+    }
+}
+
+// Display inventory statistics
+function displayInventoryStats(stats) {
+    console.log('📊 Displaying inventory stats:', stats);
+
+    // Update total inventory count
+    const totalElement = document.getElementById('totalItems');
+    if (totalElement) {
+        totalElement.textContent = stats.totalInventory || 0;
+        console.log(`📦 Updated total items: ${stats.totalInventory}`);
+    }
+
+    // Update UPS count
+    const upsElement = document.getElementById('upsCount');
+    if (upsElement) {
+        upsElement.textContent = stats.upsCount || 0;
+        console.log(`🔋 Updated UPS count: ${stats.upsCount}`);
+    }
+
+    // Update AVR count
+    const avrElement = document.getElementById('avrCount');
+    if (avrElement) {
+        avrElement.textContent = stats.avrCount || 0;
+        console.log(`⚡ Updated AVR count: ${stats.avrCount}`);
+    }
+
+    // Update available count (new items)
+    const availableElement = document.getElementById('availableCount');
+    if (availableElement) {
+        availableElement.textContent = stats.newCount || 0;
+        console.log(`🆕 Updated available count: ${stats.newCount}`);
+    }
+
+    // Update in use count (replaced items)
+    const inUseElement = document.getElementById('inUseCount');
+    if (inUseElement) {
+        inUseElement.textContent = stats.replacedCount || 0;
+        console.log(`🔧 Updated in use count: ${stats.replacedCount}`);
+    }
+
+    // Update maintenance count (if available)
+    const maintenanceElement = document.getElementById('maintenanceCount');
+    if (maintenanceElement) {
+        // Calculate maintenance count as total - (new + replaced)
+        const maintenanceCount = (stats.totalInventory || 0) - ((stats.newCount || 0) + (stats.replacedCount || 0));
+        maintenanceElement.textContent = Math.max(0, maintenanceCount);
+        console.log(`🔨 Updated maintenance count: ${maintenanceCount}`);
+    }
+
+    // Flash the stats to indicate update
+    flashStats();
+
+    console.log('✅ Inventory statistics updated successfully');
 }
 
 // Search inventory
@@ -399,6 +503,7 @@ function showNotification(message, type = 'info') {
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
-    // Socket.IO is already initialized in the HTML file
-    initializeSocketConnection();
+    // Initialize real-time functionality
+    initializeEventListeners();
+    setActiveNavLink();
 });

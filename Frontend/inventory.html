@@ -3,12 +3,20 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Inventory</title>
   <link rel="icon" type="image/png" href="./images/logo_gpha.png">
   <link rel="stylesheet" href="./dashboard.css">
   <link rel="stylesheet" href="./inventory.css">
   <link rel="stylesheet" href="./user-greeting.css">
+  <style>
+    .add-container {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+  </style>
 
 </head>
 
@@ -58,7 +66,9 @@
             <th>Action</th>
           </tr>
         </thead>
-        <tbody id="inventoryBody"></tbody>
+        <tbody id="inventoryBody">
+          <!-- Inventory rows will be populated here by JavaScript -->
+        </tbody>
       </table>
 
       <!-- Add New Inventory Modal -->
@@ -112,163 +122,11 @@
         </div>
       </div>
 
-      <!-- Update Form (for editing existing inventory) - Optional, can be removed if not needed -->
-      <div id="updateForm" class="hidden">
-        <h3>Update Inventory</h3>
-        <label for="type">Product Type (UPS or AVR)</label>
-        <select id="type">
-          <option value="UPS">UPS</option>
-          <option value="AVR">AVR</option>
-        </select>
 
-        <label for="status">Status (New or Replaced)</label>
-        <select id="status">
-          <option value="New">New</option>
-          <option value="Replaced">Replaced</option>
-        </select>
-
-        <label for="size">Size</label>
-        <select id="size">
-          <option value="1.5kva">1.5kva</option>
-          <option value="3kva">3kva</option>
-          <option value="6kva">6kva</option>
-          <option value="10kva">10kva</option>
-          <option value="20kva">20kva</option>
-          <option value="30kva">30kva</option>
-          <option value="40kva">40kva</option>
-          <option value="60kva">60kva</option>
-        </select>
-
-        <label for="serial">Serial Number</label>
-        <input type="text" id="serial" required>
-
-        <label for="date">Date</label>
-        <input type="date" id="date" required>
-
-        <label for="location">Location</label>
-        <input type="text" id="location" required>
-
-        <label for="issued">Issued By</label>
-        <input type="text" id="issued" required>
-
-        <button onclick="updateInventory()">Update</button>
-        <button onclick="hideUpdateForm()">Cancel</button>
-      </div>
     </main>
   </div>
 
-  <script>
-    async function searchInventory() {
-      const query = document.getElementById('searchInput').value.trim();
-      const page = 1; // Start from first page
 
-      if (!query || query.length < 2) {
-        showResults([]);
-        return;
-      }
-
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/inventory/search?query=${query}&page=${page}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) throw new Error('Search failed');
-
-        const { data } = await response.json();
-        showResults(data);
-      } catch (err) {
-        console.error('Search error:', err);
-        showResults([]);
-      }
-    }
-
-    function showResults(items) {
-      const inventoryBody = document.getElementById('inventoryBody');
-      inventoryBody.innerHTML = '';
-
-      if (items.length === 0) {
-        inventoryBody.innerHTML = '<tr><td colspan="8">No results found</td></tr>';
-        return;
-      }
-
-      items.forEach(item => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-      <td>${item.product_type}</td>
-      <td>${item.status}</td>
-      <td>${item.size}</td>
-      <td>${item.serial_number}</td>
-      <td>${item.date}</td>
-      <td>${item.location}</td>
-      <td>${item.issued_by}</td>
-      <td>
-        <button class="edit-button" onclick="editInventory('${item.id}', this)">Edit</button>
-      </td>
-    `;
-        inventoryBody.appendChild(row);
-      });
-    }
-
-    // Add new inventory
-    async function addInventory() {
-      const type = document.getElementById('type').value;
-      const status = document.getElementById('status').value;
-      const size = document.getElementById('size').value;
-      const serial = document.getElementById('serial').value;
-      const date = document.getElementById('date').value;
-      const location = document.getElementById('location').value;
-      const issued = document.getElementById('issued').value;
-
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/inventory', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            productType: type,
-            status,
-            size,
-            serialNumber: serial,
-            date,
-            location,
-            issuedBy: issued
-          })
-        });
-
-        if (!response.ok) throw new Error('Failed to add inventory');
-
-        const newItem = await response.json();
-        addInventoryToTable(newItem);
-        hideAddModal();
-      } catch (err) {
-        console.error('Add inventory error:', err);
-        alert('Failed to add inventory item');
-      }
-    }
-
-    function addInventoryToTable(item) {
-      const newRow = document.createElement('tr');
-      newRow.innerHTML = `
-    <td>${item.product_type}</td>
-    <td>${item.status}</td>
-    <td>${item.size}</td>
-    <td>${item.serial_number}</td>
-    <td>${item.date}</td>
-    <td>${item.location}</td>
-    <td>${item.issued_by}</td>
-    <td><button class="edit-button" onclick="editInventory('${item.id}', this)">Edit</button></td>
-  `;
-
-      document.getElementById('inventoryBody').prepend(newRow);
-      document.getElementById('inventoryTable').classList.remove('hidden');
-    }
-  </script>
 
 
 
@@ -276,46 +134,16 @@
   <script src="./script.js"></script>
   <script src="./inventory.js"></script>
   <script src="./user-greeting.js"></script>
-  <script src="http://localhost:5000/socket.io/socket.io.js"></script>
   <script>
-    // Initialize Socket.IO connection for real-time updates
-    function initializeSocketConnection() {
-      try {
-        const socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
+    // Real-time functionality removed
+    // All Socket.IO and real-time updates have been removed
 
-        // Listen for real-time inventory events
-        socket.on('connect', () => {
-          console.log('🔌 Connected to real-time inventory updates');
-        });
-
-        socket.on('disconnect', () => {
-          console.log('🔌 Disconnected from real-time inventory updates');
-        });
-
-        // Inventory created event (for confirmation)
-        socket.on('inventory:created', (data) => {
-          console.log('📦 Inventory created successfully');
-        });
-
-        // Inventory updated event (for confirmation)
-        socket.on('inventory:updated', (data) => {
-          console.log('📦 Inventory updated successfully');
-        });
-
-        // Inventory deleted event (for confirmation)
-        socket.on('inventory:deleted', (data) => {
-          console.log('📦 Inventory deleted successfully');
-        });
-
-      } catch (e) {
-        console.warn('Real-time updates unavailable', e);
-      }
+    // Manual refresh function (simplified)
+    function manualRefresh() {
+      console.log('🔄 Manual refresh requested...');
+      loadInventory();
+      showNotification('🔄 Inventory refreshed manually', 'info');
     }
-
-    // Initialize Socket.IO when page loads
-    document.addEventListener('DOMContentLoaded', function () {
-      initializeSocketConnection();
-    });
   </script>
 </body>
 

@@ -15,6 +15,11 @@ class Inventory {
     return rows;
   }
 
+  static async findById(id) {
+    const row = await get('SELECT * FROM inventory WHERE id = ?', [id]);
+    return row;
+  }
+
   static async update(id, inventoryData) {
     const { productType, status, size, serialNumber, date, location, issuedBy } = inventoryData;
     const result = await run(

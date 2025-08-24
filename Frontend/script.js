@@ -43,10 +43,8 @@ function initializePageFeatures() {
     initInventoryPage();
   }
 
-  // Toolbox page features
-  if (document.getElementById('toolboxForm')) {
-    initToolboxForm();
-  }
+  // Toolbox page features - REMOVED to prevent conflicts with tool_box.html
+  // The toolbox form is now handled directly in tool_box.html
 
   // Deadline reminder
   if (document.getElementById('deadlineInput')) {
@@ -917,62 +915,9 @@ function formatDate(dateString) {
 }
 
 // ====================== Toolbox Page ======================
-function initToolboxForm() {
-  const form = document.getElementById('toolboxForm');
-  if (!form) return;
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    generateToolboxPDF();
-  });
-}
-
-function generateToolboxPDF() {
-  const { jsPDF } = window.jspdf;
-  if (!jsPDF) {
-    alert("PDF library not loaded!");
-    return;
-  }
-
-  const doc = new jsPDF();
-
-  // Collect values
-  const formData = {
-    WorkActivity: document.getElementById('workActivity').value,
-    Date: document.getElementById('date').value,
-    WorkLocation: document.getElementById('workLocation').value,
-    NameCompany: document.getElementById('name/company').value,
-    Sign: document.getElementById('ppe').value,
-    PPENo: document.getElementById('ppe').value,
-    ToolsUsed: document.getElementById('toolsUsed').value,
-    Hazards: document.getElementById('hazards').value,
-    Circulars: document.getElementById('circulars').value,
-    RiskAssessment: document.getElementById('riskAssessment').value,
-    Permit: document.getElementById('permit').value,
-    Remarks: document.getElementById('remarks').value,
-    PreparedBy: document.getElementById('preparedBy').value,
-    VerifiedBy: document.getElementById('verifiedBy').value,
-  };
-
-  // Add to PDF
-  let y = 10;
-  doc.setFontSize(12);
-  doc.text("Toolbox Form Submission", 10, y);
-  y += 10;
-
-  for (let key in formData) {
-    doc.text(`${key.replace(/([A-Z])/g, ' $1')}: ${formData[key]}`, 10, y);
-    y += 10;
-    if (y > 280) {
-      doc.addPage();
-      y = 10;
-    }
-  }
-
-  // Save the PDF
-  doc.save('Toolbox_Form.pdf');
-  alert("✅ PDF downloaded successfully!");
-}
+// REMOVED: initToolboxForm and generateToolboxPDF functions
+// These were causing conflicts with tool_box.html
+// The toolbox form is now handled directly in tool_box.html
 
 
 

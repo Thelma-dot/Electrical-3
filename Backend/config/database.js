@@ -18,144 +18,146 @@ const db = new sqlite3.Database(dbPath, (err) => {
 // Initialize database tables
 async function initializeDatabase() {
   return new Promise((resolve, reject) => {
-    // Enable foreign keys
-    db.run("PRAGMA foreign_keys = ON");
-
-    // Create tables
-    const tables = [
-      // Users table
-      `CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        staff_id TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        email TEXT,
-        reset_token TEXT,
-        token_expiry TEXT,
-        last_login DATETIME,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )`,
-
-      // Reports table
-      `CREATE TABLE IF NOT EXISTS reports (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        title TEXT NOT NULL,
-        job_description TEXT,
-        location TEXT,
-        remarks TEXT,
-        report_date TEXT,
-        report_time TEXT,
-        tools_used TEXT,
-        status TEXT DEFAULT 'Pending',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      )`,
-
-      // Inventory table
-      `CREATE TABLE IF NOT EXISTS inventory (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        product_type TEXT NOT NULL,
-        status TEXT DEFAULT 'New',
-        size TEXT,
-        serial_number TEXT,
-        date TEXT,
-        location TEXT,
-        issued_by TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      )`,
-
-      // Toolbox table
-      `CREATE TABLE IF NOT EXISTS toolbox (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        work_activity TEXT NOT NULL,
-        date TEXT NOT NULL,
-        work_location TEXT NOT NULL,
-        name_company TEXT NOT NULL,
-        sign TEXT NOT NULL,
-        ppe_no TEXT NOT NULL,
-        tools_used TEXT NOT NULL,
-        hazards TEXT,
-        circulars TEXT,
-        risk_assessment TEXT,
-        permit TEXT,
-        remarks TEXT,
-        prepared_by TEXT,
-        verified_by TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      )`,
-
-      // Settings table
-      `CREATE TABLE IF NOT EXISTS settings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        setting_key TEXT NOT NULL,
-        setting_value TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id, setting_key),
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      )`,
-
-      // Tasks table
-      `CREATE TABLE IF NOT EXISTS tasks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        description TEXT,
-        assigned_to INTEGER NOT NULL,
-        assigned_by INTEGER NOT NULL,
-        priority TEXT DEFAULT 'medium',
-        due_date DATETIME,
-        status TEXT DEFAULT 'pending',
-        hidden_from_user BOOLEAN DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (assigned_by) REFERENCES users(id) ON DELETE SET NULL
-      )`,
-
-      // Login logs table
-      `CREATE TABLE IF NOT EXISTS login_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        staff_id TEXT NOT NULL,
-        login_type TEXT NOT NULL,
-        ip_address TEXT,
-        user_agent TEXT,
-        success BOOLEAN DEFAULT 1,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-      )`,
-    ];
-
-    let completed = 0;
-    const total = tables.length;
-
-    tables.forEach((sql, index) => {
-      db.run(sql, (err) => {
+    try {
+      // Enable foreign keys
+      db.run("PRAGMA foreign_keys = ON", (err) => {
         if (err) {
-          console.error(`❌ Error creating table ${index + 1}:`, err.message);
-          reject(err);
+          console.error("❌ Error enabling foreign keys:", err.message);
         } else {
-          completed++;
-          console.log(`✅ Table ${index + 1} created/verified`);
-
-          if (completed === total) {
-            console.log("🎉 Database initialization completed!");
-            ensureUserRoleColumn()
-              .then(() => ensureUserLastLoginColumn())
-              .then(() => ensureUserNamePhoneColumns())
-              .then(() => ensureTaskHiddenColumn())
-              .then(() => insertDemoUsers())
-              .then(resolve)
-              .catch(reject);
-          }
+          console.log("✅ Foreign keys enabled");
         }
       });
-    });
+
+      // Create tables
+      const tables = [
+        // Users table
+        `CREATE TABLE IF NOT EXISTS users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          staff_id TEXT UNIQUE NOT NULL,
+          password TEXT NOT NULL,
+          email TEXT,
+          reset_token TEXT,
+          token_expiry TEXT,
+          last_login DATETIME,
+          role TEXT DEFAULT 'staff',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`,
+
+        // Reports table
+        `CREATE TABLE IF NOT EXISTS reports (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          title TEXT NOT NULL,
+          job_description TEXT,
+          location TEXT,
+          remarks TEXT,
+          report_date TEXT,
+          report_time TEXT,
+          tools_used TEXT,
+          status TEXT DEFAULT 'Pending',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )`,
+
+        // Inventory table
+        `CREATE TABLE IF NOT EXISTS inventory (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          product_type TEXT NOT NULL,
+          status TEXT DEFAULT 'New',
+          size TEXT,
+          serial_number TEXT,
+          date TEXT,
+          location TEXT,
+          issued_by TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )`,
+
+        // Toolbox table
+        `CREATE TABLE IF NOT EXISTS toolbox (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          work_activity TEXT NOT NULL,
+          date TEXT NOT NULL,
+          work_location TEXT NOT NULL,
+          name_company TEXT NOT NULL,
+          sign TEXT NOT NULL,
+          ppe_no TEXT NOT NULL,
+          tools_used TEXT NOT NULL,
+          hazards TEXT,
+          circulars TEXT,
+          risk_assessment TEXT,
+          permit TEXT,
+          remarks TEXT,
+          prepared_by TEXT,
+          verified_by TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )`,
+
+        // Settings table
+        `CREATE TABLE IF NOT EXISTS settings (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          setting_key TEXT NOT NULL,
+          setting_value TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(user_id, setting_key),
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )`,
+
+        // Tasks table
+        `CREATE TABLE IF NOT EXISTS tasks (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          title TEXT NOT NULL,
+          description TEXT,
+          status TEXT DEFAULT 'Pending',
+          priority TEXT DEFAULT 'Medium',
+          due_date TEXT,
+          assigned_by TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )`
+      ];
+
+      let tablesCreated = 0;
+      const totalTables = tables.length;
+
+      tables.forEach((tableSQL, index) => {
+        db.run(tableSQL, (err) => {
+          if (err) {
+            console.error(`❌ Error creating table ${index + 1}:`, err.message);
+            reject(err);
+          } else {
+            tablesCreated++;
+            console.log(`✅ Table ${index + 1} created successfully`);
+
+            if (tablesCreated === totalTables) {
+              console.log("✅ All tables created successfully");
+
+              // Insert demo data
+              insertDemoUsers()
+                .then(() => {
+                  console.log("✅ Demo users inserted successfully");
+                  resolve();
+                })
+                .catch((err) => {
+                  console.error("❌ Error inserting demo users:", err);
+                  // Don't reject here, as tables are created successfully
+                  resolve();
+                });
+            }
+          }
+        });
+      });
+    } catch (error) {
+      console.error("❌ Error in database initialization:", error);
+      reject(error);
+    }
   });
 }
 

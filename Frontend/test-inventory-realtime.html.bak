@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Inventory Real-time Updates</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .test-button:hover {
+            background: #2980b9;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .dashboard-link {
+            display: inline-block;
+            background: #27ae60;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .dashboard-link:hover {
+            background: #229954;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🧪 Test Inventory Real-time Updates</h1>
+
+    <div class="test-section">
+        <h2>📋 Test Instructions</h2>
+        <ol>
+            <li>Open the <a href="./dashboard.html" target="_blank" class="dashboard-link">Dashboard</a> in a new tab
+            </li>
+            <li>Open the <a href="./inventory.html" target="_blank" class="dashboard-link">Inventory</a> page in another
+                tab</li>
+            <li>Edit and save an inventory item in the Inventory page</li>
+            <li>Watch the Dashboard stats update in real-time</li>
+            <li>Check the console logs for debugging information</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>🔌 Connection Status</h2>
+        <div id="connectionStatus" class="status info">Checking connection...</div>
+        <button class="test-button" onclick="testConnection()">Test Connection</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Dashboard Stats Test</h2>
+        <p>Current Dashboard Stats:</p>
+        <ul>
+            <li><strong>Inventory Count:</strong> <span id="inventoryCount">Loading...</span></li>
+            <li><strong>Reports Count:</strong> <span id="reportsCount">Loading...</span></li>
+            <li><strong>Toolbox Count:</strong> <span id="toolboxCount">Loading...</span></li>
+        </ul>
+        <button class="test-button" onclick="refreshStats()">Refresh Stats</button>
+        <button class="test-button" onclick="testSocketEvents()">Test Socket Events</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📝 Event Log</h2>
+        <div id="eventLog" class="log"></div>
+        <button class="test-button" onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Manual Testing</h2>
+        <p>To test real-time updates:</p>
+        <ol>
+            <li>Make sure both Dashboard and Inventory pages are open</li>
+            <li>In Inventory page, edit an item and save it</li>
+            <li>Check Dashboard - the inventory count should update immediately</li>
+            <li>Look for the green flash effect and real-time indicator</li>
+            <li>Check for toast notifications</li>
+        </ol>
+    </div>
+
+    <script src="http://localhost:5000/socket.io/socket.io.js"></script>
+    <script>
+        let socket = null;
+        let isConnected = false;
+
+        // Initialize connection
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeSocket();
+            refreshStats();
+        });
+
+        function initializeSocket() {
+            try {
+                socket = io('http://localhost:5000', {
+                    transports: ['websocket', 'polling']
+                });
+
+                socket.on('connect', () => {
+                    isConnected = true;
+                    updateConnectionStatus('Connected to server', 'success');
+                    logEvent('🔌 Connected to server');
+                });
+
+                socket.on('disconnect', () => {
+                    isConnected = false;
+                    updateConnectionStatus('Disconnected from server', 'error');
+                    logEvent('🔌 Disconnected from server');
+                });
+
+                socket.on('connect_error', (error) => {
+                    updateConnectionStatus('Connection error: ' + error.message, 'error');
+                    logEvent('❌ Connection error: ' + error.message);
+                });
+
+                // Listen for inventory events
+                socket.on('inventory:created', (data) => {
+                    logEvent('📦 Inventory created: ' + JSON.stringify(data));
+                    refreshStats();
+                });
+
+                socket.on('inventory:updated', (data) => {
+                    logEvent('📦 Inventory updated: ' + JSON.stringify(data));
+                    refreshStats();
+                });
+
+                socket.on('inventory:deleted', (data) => {
+                    logEvent('📦 Inventory deleted: ' + JSON.stringify(data));
+                    refreshStats();
+                });
+
+            } catch (error) {
+                updateConnectionStatus('Socket.IO not available: ' + error.message, 'error');
+                logEvent('❌ Socket.IO error: ' + error.message);
+            }
+        }
+
+        function updateConnectionStatus(message, type) {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+
+        function logEvent(message) {
+            const logElement = document.getElementById('eventLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logElement.innerHTML += logEntry + '\n';
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('eventLog').innerHTML = '';
+        }
+
+        async function refreshStats() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    logEvent('⚠️ No authentication token found');
+                    return;
+                }
+
+                const [inventoryResponse, reportsResponse, toolboxResponse] = await Promise.all([
+                    fetch('http://localhost:5000/api/inventory', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch('http://localhost:5000/api/reports/summary', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch('http://localhost:5000/api/toolbox', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                ]);
+
+                if (inventoryResponse.ok) {
+                    const inventoryList = await inventoryResponse.json();
+                    const inventoryCount = Array.isArray(inventoryList) ? inventoryList.length : 0;
+                    document.getElementById('inventoryCount').textContent = inventoryCount;
+                    logEvent(`📊 Inventory count: ${inventoryCount}`);
+                }
+
+                if (reportsResponse.ok) {
+                    const reportsData = await reportsResponse.json();
+                    const reportsCount = reportsData.total || 0;
+                    document.getElementById('reportsCount').textContent = reportsCount;
+                    logEvent(`📊 Reports count: ${reportsCount}`);
+                }
+
+                if (toolboxResponse.ok) {
+                    const toolboxList = await toolboxResponse.json();
+                    const toolboxCount = Array.isArray(toolboxList) ? toolboxList.length : 0;
+                    document.getElementById('toolboxCount').textContent = toolboxCount;
+                    logEvent(`📊 Toolbox count: ${toolboxCount}`);
+                }
+
+            } catch (error) {
+                logEvent('❌ Error refreshing stats: ' + error.message);
+            }
+        }
+
+        function testConnection() {
+            if (isConnected) {
+                logEvent('✅ Connection test passed - Socket is connected');
+            } else {
+                logEvent('❌ Connection test failed - Socket is not connected');
+            }
+        }
+
+        function testSocketEvents() {
+            if (socket && socket.connected) {
+                logEvent('🧪 Testing socket events...');
+                // Emit a test event
+                socket.emit('test:event', { message: 'Test event from test page' });
+                logEvent('📤 Test event emitted');
+            } else {
+                logEvent('❌ Cannot test events - Socket not connected');
+            }
+        }
+
+        // Listen for storage events (cross-tab communication)
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'inventoryUpdate') {
+                try {
+                    const updateData = JSON.parse(event.newValue);
+                    logEvent(`📦 Storage event received: ${updateData.type} - ${JSON.stringify(updateData.data)}`);
+                    refreshStats();
+                } catch (error) {
+                    logEvent('❌ Error parsing storage event: ' + error.message);
+                }
+            }
+        });
+
+        // Listen for custom inventory update events
+        window.addEventListener('inventoryUpdate', (event) => {
+            logEvent(`📦 Custom event received: ${event.detail.type} - ${JSON.stringify(event.detail.data)}`);
+            refreshStats();
+        });
+    </script>
+</body>
+
+</html>

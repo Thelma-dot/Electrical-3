@@ -215,11 +215,12 @@ router.get("/dashboard", authenticateToken, requireAdmin, async (req, res) => {
     try {
         console.log("Admin dashboard request received");
         // Get total counts for different entities
-        const [reportsResult, inventoryResult, tasksResult, usersResult] = await Promise.all([
+        const [reportsResult, inventoryResult, tasksResult, usersResult, toolboxResult] = await Promise.all([
             all("SELECT COUNT(*) as count FROM reports"),
             all("SELECT COUNT(*) as count FROM inventory"),
             all("SELECT COUNT(*) as count FROM tasks"),
-            all("SELECT COUNT(*) as count FROM users")
+            all("SELECT COUNT(*) as count FROM users"),
+            all("SELECT COUNT(*) as count FROM toolbox")
         ]);
 
         // Get task status counts
@@ -243,6 +244,7 @@ router.get("/dashboard", authenticateToken, requireAdmin, async (req, res) => {
         const overviewData = {
             reports: reportsResult[0]?.count || 0,
             inventory: inventoryResult[0]?.count || 0,
+            toolbox: toolboxResult[0]?.count || 0,
             inProgress: inProgressTasks,
             completed: completedTasks,
             totalUsers: usersResult[0]?.count || 0,
@@ -381,6 +383,75 @@ router.get("/inventory", authenticateToken, requireAdmin, async (req, res) => {
         res.json(inventory);
     } catch (err) {
         console.error("Admin inventory error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Get inventory statistics
+router.get("/inventory/stats", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log("Admin inventory stats request received");
+
+        // Get total inventory count
+        const totalResult = await get("SELECT COUNT(*) as count FROM inventory");
+        const totalInventory = totalResult ? totalResult.count : 0;
+
+        // Get UPS count
+        const upsResult = await get("SELECT COUNT(*) as count FROM inventory WHERE product_type = 'UPS'");
+        const upsCount = upsResult ? upsResult.count : 0;
+
+        // Get AVR count
+        const avrResult = await get("SELECT COUNT(*) as count FROM inventory WHERE product_type = 'AVR'");
+        const avrCount = avrResult ? avrResult.count : 0;
+
+        // Get new items count
+        const newResult = await get("SELECT COUNT(*) as count FROM inventory WHERE status = 'New'");
+        const newCount = newResult ? newResult.count : 0;
+
+        // Get replaced items count
+        const replacedResult = await get("SELECT COUNT(*) as count FROM inventory WHERE status = 'Replaced'");
+        const replacedCount = replacedResult ? replacedResult.count : 0;
+
+        // Get recent activity (items added in last 7 days)
+        const recentResult = await get(
+            "SELECT COUNT(*) as count FROM inventory WHERE created_at >= datetime('now', '-7 days')"
+        );
+        const recentActivity = recentResult ? recentResult.count : 0;
+
+        // Get size distribution
+        const sizeResults = await all(`
+            SELECT size, COUNT(*) as count 
+            FROM inventory 
+            GROUP BY size 
+            ORDER BY count DESC
+        `);
+
+        // Get location distribution
+        const locationResults = await all(`
+            SELECT location, COUNT(*) as count 
+            FROM inventory 
+            GROUP BY location 
+            ORDER BY count DESC 
+            LIMIT 5
+        `);
+
+        const stats = {
+            totalInventory,
+            upsCount,
+            avrCount,
+            newCount,
+            replacedCount,
+            recentActivity,
+            sizeDistribution: sizeResults,
+            locationDistribution: locationResults,
+            lastUpdated: new Date().toISOString()
+        };
+
+        console.log(`Inventory stats calculated: ${totalInventory} total items`);
+        res.json(stats);
+
+    } catch (err) {
+        console.error("Admin inventory stats error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });

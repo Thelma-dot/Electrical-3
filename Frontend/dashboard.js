@@ -15,6 +15,7 @@ class DashboardRealtime {
         this.getCurrentUser();
         this.setupWebSocket();
         this.setupPollingFallback();
+        this.setupInventoryListeners(); // Add inventory update listeners
     }
 
     getCurrentUser() {
@@ -128,6 +129,57 @@ class DashboardRealtime {
             
             window.dashboardCharts.progressChart.data.datasets[0].data = chartData;
             window.dashboardCharts.progressChart.update();
+        }
+    }
+
+    setupInventoryListeners() {
+        // Listen for inventory updates from other components
+        window.addEventListener('inventoryUpdate', (event) => {
+            console.log('📦 Dashboard received inventory update:', event.detail);
+            this.handleInventoryUpdate(event.detail);
+        });
+
+        // Listen for storage changes (cross-tab communication)
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'inventoryUpdate') {
+                try {
+                    const updateData = JSON.parse(event.newValue);
+                    console.log('📦 Dashboard received storage-based inventory update:', updateData);
+                    this.handleInventoryUpdate(updateData);
+                } catch (error) {
+                    console.error('Error parsing storage update:', error);
+                }
+            }
+        });
+    }
+
+    handleInventoryUpdate(updateData) {
+        // Update inventory-related stats on the dashboard
+        this.updateInventoryStats(updateData);
+        
+        // Flash the inventory stats to indicate update
+        this.flashInventoryStats();
+    }
+
+    updateInventoryStats(updateData) {
+        // Update inventory count if available
+        const inventoryCountElement = document.querySelector('.stats .card:nth-child(1) p');
+        if (inventoryCountElement && updateData.type === 'created') {
+            const currentCount = parseInt(inventoryCountElement.textContent) || 0;
+            inventoryCountElement.textContent = currentCount + 1;
+        } else if (inventoryCountElement && updateData.type === 'deleted') {
+            const currentCount = parseInt(inventoryCountElement.textContent) || 0;
+            inventoryCountElement.textContent = Math.max(0, currentCount - 1);
+        }
+    }
+
+    flashInventoryStats() {
+        const inventoryCard = document.querySelector('.stats .card:nth-child(1)');
+        if (inventoryCard) {
+            inventoryCard.style.animation = 'flash 600ms ease';
+            setTimeout(() => {
+                inventoryCard.style.animation = '';
+            }, 600);
         }
     }
 

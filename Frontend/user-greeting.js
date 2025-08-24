@@ -126,13 +126,22 @@ class UserGreeting {
                     greetingElement = document.createElement('div');
                     greetingElement.className = 'user-greeting';
 
-                    // Insert after logo/avatar
+                    // For admin pages, insert after the logo in sidebar-header
+                    const sidebarHeader = sidebar.querySelector('.sidebar-header');
                     const logo = sidebar.querySelector('.avatar');
-                    if (logo) {
-                        logo.parentNode.insertBefore(greetingElement, logo.nextSibling);
+
+                    if (sidebarHeader && logo) {
+                        // Insert the greeting after the logo but still within the sidebar-header
+                        sidebarHeader.appendChild(greetingElement);
                     } else {
-                        // If no avatar, insert at the beginning of sidebar
-                        sidebar.insertBefore(greetingElement, sidebar.firstChild);
+                        // Fallback: insert after logo/avatar - check for both .avatar and .logo classes
+                        const logoOrAvatar = sidebar.querySelector('.avatar') || sidebar.querySelector('.logo');
+                        if (logoOrAvatar) {
+                            logoOrAvatar.parentNode.insertBefore(greetingElement, logoOrAvatar.nextSibling);
+                        } else {
+                            // If no logo/avatar, insert at the beginning of sidebar
+                            sidebar.insertBefore(greetingElement, sidebar.firstChild);
+                        }
                     }
                 }
 

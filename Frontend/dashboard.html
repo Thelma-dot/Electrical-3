@@ -3,47 +3,13 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Dashboard</title>
   <link rel="icon" type="image/png" href="./images/logo_gpha.png">
   <link rel="stylesheet" href="./dashboard.css">
   <link rel="stylesheet" href="./user-greeting.css">
   <style>
-    .live-badge {
-      display: inline-flex;
-      align-items: center;
-      margin-left: 8px;
-      font-size: 12px;
-      padding: 2px 8px;
-      border-radius: 12px;
-      background: #e74c3c;
-      color: #fff
-    }
-
-    .live-badge.on {
-      background: #27ae60
-    }
-
-    .live-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #fff;
-      margin-right: 6px;
-      animation: blink 1s infinite
-    }
-
-    @keyframes blink {
-
-      0%,
-      100% {
-        opacity: .35
-      }
-
-      50% {
-        opacity: 1
-      }
-    }
+    /* Live badge styles removed - no longer needed */
 
     .live-flash {
       animation: flash 600ms ease
@@ -59,39 +25,91 @@
       }
     }
 
-    .chart-update-indicator {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #27ae60;
-      opacity: 0;
-      transition: opacity 0.3s ease;
+    /* Chart update indicators removed - no longer needed */
+
+    /* Real-time indicator styles removed - no longer needed */
+
+    .stats .card {
+      position: relative;
     }
 
-    .chart-update-indicator.active {
-      opacity: 1;
-      animation: pulse 1s ease-in-out;
+    /* Header controls removed - no longer needed */
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
 
     @keyframes pulse {
       0% {
-        transform: scale(1);
+        opacity: 1;
       }
 
       50% {
-        transform: scale(1.2);
+        opacity: 0.5;
       }
 
       100% {
-        transform: scale(1);
+        opacity: 1;
       }
     }
 
-    .chart {
-      position: relative;
+    /* Chart loading styles removed - no longer needed */
+
+    .toast-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #27ae60;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      max-width: 300px;
+    }
+
+    .toast-notification.show {
+      transform: translateX(0);
+    }
+
+    .toast-notification.success {
+      background: #27ae60;
+    }
+
+    .toast-notification.info {
+      background: #3498db;
+    }
+
+    .toast-notification.warning {
+      background: #f39c12;
+    }
+
+    .toast-notification .toast-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast-notification .toast-icon {
+      font-size: 16px;
     }
 
     .performance-indicator {
@@ -118,6 +136,36 @@
     .performance-arrow.neutral {
       color: #95a5a6;
     }
+
+    /* System Overview Chart Styling - Make it more compact */
+    #systemOverview canvas {
+      max-height: 200px !important;
+    }
+
+    #systemOverview {
+      min-height: 280px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 250px;
+      margin: 20px 0;
+    }
+
+    .chart {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+
+    .chart h3 {
+      margin: 0 0 20px 0;
+      color: #2c3e50;
+      font-size: 18px;
+      font-weight: 600;
+    }
   </style>
 </head>
 
@@ -127,35 +175,37 @@
       <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
 
       <nav>
-        <a class="active">📊 Dashboard</a>
+        <a href="./dashboard.html">📊 Dashboard</a>
         <a href="./generate_report.html">📄 Generate Report</a>
         <a href="./tool_box.html">🛠️ Toolbox</a>
+        <a href="./toolbox-submitted.html">📋 My Toolbox Forms</a>
         <a href="./inventory.html">📦 Inventory</a>
         <a href="./settings.html">⚙️ Settings</a>
         <a href="./profile.html">👤 Profile</a>
-        <a href="./index.html" onclick="logout()">🚪 Logout</a>
+        <a href="./index.html">🚪 Logout</a>
       </nav>
     </aside>
 
     <main class="main-content">
       <header class="header">
         <h1>Dashboard</h1>
-        <span id="liveBadge" class="live-badge" aria-live="polite"><span class="live-dot"></span><span
-            class="status">OFFLINE</span></span>
       </header>
 
       <section class="stats">
         <div class="card">
           <h3>Generate Report</h3>
           <p id="reportsCount">0</p>
+
         </div>
         <div class="card">
           <h3>Toolbox Forms</h3>
           <p id="toolboxCount">0</p>
+
         </div>
         <div class="card">
           <h3>Inventory</h3>
           <p id="inventoryCount">0</p>
+
         </div>
         <div class="card">
           <h3>In Progress</h3>
@@ -167,16 +217,21 @@
         </div>
       </section>
 
+      <!-- Test Section - REMOVED -->
+      <!-- Real-time update testing functionality has been removed -->
+
       <section class="charts">
-        <div class="chart" id="projectProgress">
-          <h3>Completed Task</h3>
-          <div class="chart-update-indicator" id="barChartIndicator"></div>
-          <canvas id="progressChart"></canvas>
+        <div class="chart" id="systemOverview">
+          <h3>System Overview</h3>
+          <div class="chart-container">
+            <canvas id="systemBarChart"></canvas>
+          </div>
         </div>
         <div class="chart" id="revenueChart">
           <h3>Reports Performance</h3>
-          <div class="chart-update-indicator" id="lineChartIndicator"></div>
-          <canvas id="lineChart"></canvas>
+          <div class="chart-container">
+            <canvas id="lineChart"></canvas>
+          </div>
           <div class="performance-indicator">
             <span>Performance:</span>
             <span class="performance-arrow" id="performanceArrow">➡️</span>
@@ -249,11 +304,11 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="http://localhost:5000/socket.io/socket.io.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
-    let barChartInstance = null;
     let lineChartInstance = null;
-    let socket = null;
+    let systemBarChartInstance = null;
+    let socket = null; // Socket.IO connection
     let previousData = {
       reports: 0,
       inventory: 0,
@@ -269,8 +324,11 @@
         return;
       }
 
-      await refreshDashboard();
+      // Initialize Socket.IO connection
       initializeSocketConnection();
+
+      await refreshDashboard();
+      // Real-time updates enabled
 
       // Periodically refresh as backup
       setInterval(refreshDashboard, 30000);
@@ -285,6 +343,8 @@
         }
       }, 60000);
 
+      // Real-time event listeners enabled
+
       // Add event listener for "Show Completed Tasks" toggle
       const showCompletedToggle = document.getElementById('showCompletedTasks');
       if (showCompletedToggle) {
@@ -297,138 +357,62 @@
       }
     });
 
+    // Initialize Socket.IO connection for real-time updates
     function initializeSocketConnection() {
       try {
-        socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
-        const live = document.getElementById('liveBadge');
-
-        const setLive = (on) => {
-          if (!live) return;
-          live.classList.toggle('on', !!on);
-          live.querySelector('.status').textContent = on ? 'LIVE' : 'OFFLINE';
-        };
-
-        const flash = () => {
-          document.querySelectorAll('.stats .card').forEach(c => {
-            c.classList.add('live-flash');
-            setTimeout(() => c.classList.remove('live-flash'), 600);
-          });
-        };
+        socket = io('http://localhost:5000');
 
         socket.on('connect', () => {
-          setLive(true);
-          console.log('🔌 Connected to real-time updates');
+          console.log('🔌 Connected to server for real-time updates');
         });
 
         socket.on('disconnect', () => {
-          setLive(false);
-          console.log('🔌 Disconnected from real-time updates');
+          console.log('🔌 Disconnected from server');
         });
 
-        // Listen for real-time events and update charts immediately
-        socket.on('report:created', () => {
-          console.log('📊 Report created - updating charts');
-          flash();
-          updateChartsInRealTime();
+        // Listen for inventory updates
+        socket.on('inventory:created', (data) => {
+          console.log('📦 Inventory created:', data);
+          updateInventoryCountInRealTime();
         });
 
-        socket.on('report:updated', () => {
-          console.log('📊 Report updated - updating charts');
-          flash();
-          updateChartsInRealTime();
+        socket.on('inventory:updated', (data) => {
+          console.log('📦 Inventory updated:', data);
+          updateInventoryCountInRealTime();
         });
 
-        socket.on('report:deleted', () => {
-          console.log('📊 Report deleted - updating charts');
-          flash();
-          updateChartsInRealTime();
+        socket.on('inventory:deleted', (data) => {
+          console.log('📦 Inventory deleted:', data);
+          updateInventoryCountInRealTime();
         });
 
-        socket.on('inventory:created', () => {
-          console.log('📦 Inventory created - updating charts');
-          flash();
-          updateChartsInRealTime();
+        // Listen for toolbox updates
+        socket.on('toolbox:created', (data) => {
+          console.log('🛠️ Toolbox created:', data);
+          updateToolboxCountInRealTime();
         });
 
-        socket.on('inventory:updated', () => {
-          console.log('📦 Inventory updated - updating charts');
-          flash();
-          updateChartsInRealTime();
+        socket.on('toolbox:updated', (data) => {
+          console.log('🛠️ Toolbox updated:', data);
+          updateToolboxCountInRealTime();
         });
 
-        socket.on('inventory:deleted', () => {
-          console.log('📦 Inventory deleted - updating charts');
-          flash();
-          updateChartsInRealTime();
+        socket.on('toolbox:deleted', (data) => {
+          console.log('🛠️ Toolbox deleted:', data);
+          updateToolboxCountInRealTime();
         });
 
-        socket.on('task:created', () => {
-          console.log('✅ Task created - updating charts');
-          flash();
-          updateChartsInRealTime();
-        });
-
-        socket.on('task:updated', () => {
-          console.log('✅ Task updated - updating charts');
-          flash();
-          updateChartsInRealTime();
-        });
-
-        // Listen for toolbox events
-        socket.on('tool:created', () => {
-          console.log('🛠️ Toolbox created - updating charts');
-          flash();
-          updateChartsInRealTime();
-        });
-
-        socket.on('tool:updated', () => {
-          console.log('🛠️ Toolbox updated - updating charts');
-          flash();
-          updateChartsInRealTime();
-        });
-
-        socket.on('tool:deleted', () => {
-          console.log('🛠️ Toolbox deleted - updating charts');
-          flash();
-          updateChartsInRealTime();
-        });
-
-      } catch (e) {
-        console.warn('Realtime unavailable', e);
+      } catch (error) {
+        console.error('❌ Error initializing Socket.IO:', error);
       }
     }
 
-    async function updateChartsInRealTime() {
-      // Debounce rapid updates
-      if (updateTimeout) {
-        clearTimeout(updateTimeout);
-      }
+    // Real-time chart update function removed
+    // function updateChartsInRealTime() {
+    //   // All real-time functionality removed
+    // }
 
-      updateTimeout = setTimeout(async () => {
-        try {
-          await refreshDashboard();
-          showChartUpdateIndicators();
-        } catch (err) {
-          console.error('Real-time update error:', err);
-        }
-      }, 500);
-    }
-
-    function showChartUpdateIndicators() {
-      // Show update indicators for both charts
-      const barIndicator = document.getElementById('barChartIndicator');
-      const lineIndicator = document.getElementById('lineChartIndicator');
-
-      if (barIndicator) {
-        barIndicator.classList.add('active');
-        setTimeout(() => barIndicator.classList.remove('active'), 2000);
-      }
-
-      if (lineIndicator) {
-        lineIndicator.classList.add('active');
-        setTimeout(() => lineIndicator.classList.remove('active'), 2000);
-      }
-    }
+    // Chart loading and update indicator functions removed - no longer needed
 
     async function refreshDashboard() {
       try {
@@ -532,130 +516,365 @@
         monthlyCounts[monthIndex] += Number(item.count) || 0;
       });
 
-      // Update Bar Chart
-      const barData = {
-        labels: ['Reports', 'Toolbox Forms', 'Inventory', 'In Progress', 'Completed Task'],
-        datasets: [{
-          label: 'Progress',
-          data: [
-            data.reports,
-            data.toolbox,
-            data.inventory,
-            data.inProgress,
-            data.completed
-          ],
-          backgroundColor: [
-            '#3498db',  // Reports - Blue
-            '#9b59b6',  // Toolbox - Purple
-            '#e67e22',  // Inventory - Orange
-            '#f39c12',  // In Progress - Yellow
-            '#27ae60'   // Completed - Green
-          ],
-          borderColor: [
-            '#2980b9',
-            '#8e44ad',
-            '#d35400',
-            '#e67e22',
-            '#229954'
-          ],
-          borderWidth: 2
-        }]
-      };
+      // Create System Overview Bar Chart
+      const systemBarCtx = document.getElementById('systemBarChart')?.getContext('2d');
+      if (systemBarCtx) {
+        if (systemBarChartInstance) {
+          systemBarChartInstance.destroy();
+        }
 
-      const barCtx = document.getElementById('progressChart')?.getContext('2d');
-      if (barCtx) {
-        if (barChartInstance) {
-          barChartInstance.data = barData;
-          barChartInstance.update('active');
-        } else {
-          barChartInstance = new Chart(barCtx, {
-            type: 'bar',
-            data: barData,
-            options: {
-              responsive: true,
-              plugins: { legend: { display: false } },
-              animation: {
-                duration: 750,
-                easing: 'easeInOutQuart'
+        systemBarChartInstance = new Chart(systemBarCtx, {
+          type: 'bar',
+          data: {
+            labels: ['Reports', 'Inventory', 'Toolbox', 'In Progress', 'Completed'],
+            datasets: [{
+              label: 'Count',
+              data: [data.reports, data.inventory, data.toolbox, data.inProgress, data.completed],
+              backgroundColor: [
+                'rgba(231, 76, 60, 0.8)',   // Reports - Red
+                'rgba(52, 152, 219, 0.8)',  // Inventory - Blue
+                'rgba(155, 89, 182, 0.8)',  // Toolbox - Purple
+                'rgba(243, 156, 18, 0.8)',  // In Progress - Orange
+                'rgba(46, 204, 113, 0.8)'   // Completed - Green
+              ],
+              borderColor: [
+                'rgba(231, 76, 60, 1)',
+                'rgba(52, 152, 219, 1)',
+                'rgba(155, 89, 182, 1)',
+                'rgba(243, 156, 18, 1)',
+                'rgba(46, 204, 113, 1)'
+              ],
+              borderWidth: 2,
+              borderRadius: 6,
+              borderSkipped: false
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
               },
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  grid: {
-                    color: 'rgba(0,0,0,0.1)'
-                  }
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                borderColor: '#3498db',
+                borderWidth: 1,
+                cornerRadius: 8,
+                displayColors: true
+              }
+            },
+            layout: {
+              padding: {
+                top: 20,
+                bottom: 20,
+                left: 20,
+                right: 20
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.1)',
+                  drawBorder: false
                 },
-                x: {
-                  grid: {
-                    display: false
+                ticks: {
+                  maxTicksLimit: 6,
+                  color: '#7f8c8d',
+                  font: {
+                    size: 12
+                  }
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  color: '#7f8c8d',
+                  font: {
+                    size: 12
                   }
                 }
               }
+            },
+            animation: {
+              duration: 1000,
+              easing: 'easeInOutQuart'
             }
-          });
-          // Make barChartInstance globally accessible
-          window.barChartInstance = barChartInstance;
-        }
+          }
+        });
+
+        // Make systemBarChartInstance globally accessible
+        window.systemBarChartInstance = systemBarChartInstance;
       }
 
-      // Update Line Chart (Revenue/Performance Chart)
+      // Create Reports Performance Line Chart
       const lineCtx = document.getElementById('lineChart')?.getContext('2d');
-      const lineData = {
-        labels: months,
-        datasets: [{
-          label: 'Reports',
-          data: monthlyCounts,
-          borderColor: '#2980b9',
-          backgroundColor: 'rgba(41, 128, 185, 0.2)',
-          tension: 0.4,
-          fill: true,
-          pointBackgroundColor: '#2980b9',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 6,
-          pointHoverRadius: 8
-        }]
-      };
-
       if (lineCtx) {
         if (lineChartInstance) {
-          lineChartInstance.data = lineData;
-          lineChartInstance.update('active');
-        } else {
-          lineChartInstance = new Chart(lineCtx, {
-            type: 'line',
-            data: lineData,
-            options: {
-              responsive: true,
-              plugins: { legend: { display: false } },
-              animation: {
-                duration: 750,
-                easing: 'easeInOutQuart'
+          lineChartInstance.destroy();
+        }
+
+        lineChartInstance = new Chart(lineCtx, {
+          type: 'line',
+          data: {
+            labels: months,
+            datasets: [{
+              label: 'Reports Generated',
+              data: monthlyCounts,
+              borderColor: '#3498db',
+              backgroundColor: 'rgba(52, 152, 219, 0.1)',
+              borderWidth: 3,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#3498db',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 5,
+              pointHoverRadius: 8,
+              pointHoverBackgroundColor: '#2980b9',
+              pointHoverBorderColor: '#fff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
               },
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  grid: {
-                    color: 'rgba(0,0,0,0.1)'
-                  }
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                borderColor: '#3498db',
+                borderWidth: 1,
+                cornerRadius: 8,
+                mode: 'index',
+                intersect: false
+              }
+            },
+            layout: {
+              padding: {
+                top: 20,
+                bottom: 20,
+                left: 20,
+                right: 20
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.1)',
+                  drawBorder: false
                 },
-                x: {
-                  grid: {
-                    display: false
+                ticks: {
+                  maxTicksLimit: 6,
+                  color: '#7f8c8d',
+                  font: {
+                    size: 12
                   }
                 }
               },
-              elements: {
-                point: {
-                  hoverBackgroundColor: '#3498db'
+              x: {
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  color: '#7f8c8d',
+                  font: {
+                    size: 12
+                  }
                 }
               }
+            },
+            elements: {
+              point: {
+                hoverBackgroundColor: '#3498db'
+              }
+            },
+            interaction: {
+              mode: 'nearest',
+              axis: 'x',
+              intersect: false
+            },
+            animation: {
+              duration: 1000,
+              easing: 'easeInOutQuart'
             }
-          });
-          // Make lineChartInstance globally accessible
-          window.lineChartInstance = lineChartInstance;
-        }
+          }
+        });
+
+        // Make lineChartInstance globally accessible
+        window.lineChartInstance = lineChartInstance;
       }
+    }
+
+    // Real-time inventory count update function
+    async function updateInventoryCountInRealTime() {
+      try {
+        console.log('📦 Updating inventory count in real-time...');
+
+        // Fetch latest inventory count
+        const response = await fetch('http://localhost:5000/api/inventory', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        if (response.ok) {
+          const inventoryList = await response.json();
+          const inventoryTotal = Array.isArray(inventoryList) ? inventoryList.length : 0;
+
+          // Update dashboard stats
+          const inventoryCountElement = document.getElementById('inventoryCount');
+          if (inventoryCountElement) {
+            inventoryCountElement.textContent = inventoryTotal;
+
+            // Add visual feedback
+            inventoryCountElement.style.color = '#3498db';
+            inventoryCountElement.style.fontWeight = 'bold';
+            setTimeout(() => {
+              inventoryCountElement.style.color = '';
+              inventoryCountElement.style.fontWeight = '';
+            }, 2000);
+          }
+
+          // Update system overview chart
+          if (systemBarChartInstance) {
+            systemBarChartInstance.data.datasets[0].data[2] = inventoryTotal;
+            systemBarChartInstance.update('active');
+          }
+
+          console.log('✅ Inventory count updated in real-time');
+        }
+      } catch (error) {
+        console.error('❌ Error updating inventory count:', error);
+      }
+    }
+
+    // Real-time toolbox count update function
+    async function updateToolboxCountInRealTime() {
+      try {
+        console.log('🛠️ Updating toolbox count in real-time...');
+
+        // Fetch latest toolbox count
+        const response = await fetch('http://localhost:5000/api/toolbox', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        if (response.ok) {
+          const toolboxList = await response.json();
+          const toolboxTotal = Array.isArray(toolboxList) ? toolboxList.length : 0;
+
+          // Update dashboard stats
+          const toolboxCountElement = document.getElementById('toolboxCount');
+          if (toolboxCountElement) {
+            toolboxCountElement.textContent = toolboxTotal;
+
+            // Add visual feedback
+            toolboxCountElement.style.color = '#9b59b6';
+            toolboxCountElement.style.fontWeight = 'bold';
+            setTimeout(() => {
+              toolboxCountElement.style.color = '';
+              toolboxCountElement.style.fontWeight = '';
+            }, 2000);
+          }
+
+          // Update system overview chart
+          if (systemBarChartInstance) {
+            systemBarChartInstance.data.datasets[0].data[2] = toolboxTotal;
+            systemBarChartInstance.update('active');
+          }
+
+          console.log('✅ Toolbox count updated in real-time');
+        }
+      } catch (error) {
+        console.error('❌ Error updating toolbox count:', error);
+      }
+    }
+
+    // Update related stats that depend on inventory
+    function updateRelatedStats(inventoryCount) {
+      // Update any other stats that might be affected by inventory changes
+      // For example, if you have a "Total Items" stat that includes inventory
+      const totalItemsElement = document.querySelector('[data-stat="total-items"]');
+      if (totalItemsElement) {
+        const currentTotal = parseInt(totalItemsElement.textContent) || 0;
+        // You can add logic here to update other related stats
+        console.log(`📊 Related stats updated for inventory count: ${inventoryCount}`);
+      }
+    }
+
+    // Update task stats in real-time - REMOVED
+    // async function updateTaskStatsInRealTime() {
+    //   // All real-time functionality removed
+    // }
+
+    // Update reports count in real-time - REMOVED
+    // async function updateReportsCountInRealTime() {
+    //   // All real-time functionality removed
+    // }
+
+    // Check connection health and provide user feedback - REMOVED
+    // function checkConnectionHealth() {
+    //   // All real-time functionality removed
+    // }
+
+    // Add connection status indicator to the page - REMOVED
+    // function updateConnectionStatusIndicator() {
+    //   // All real-time functionality removed
+    // }
+
+    // Test function for manual testing of real-time updates - REMOVED
+    // function testRealTimeUpdate() {
+    //   // All real-time functionality removed
+    // }
+
+    // Test inventory update specifically - REMOVED
+    // function testInventoryUpdate() {
+    //   // All real-time functionality removed
+    // }
+
+    function showToastNotification(message, type = 'info') {
+      // Remove existing notifications
+      const existingToasts = document.querySelectorAll('.toast-notification');
+      existingToasts.forEach(toast => toast.remove());
+
+      // Create new notification
+      const toast = document.createElement('div');
+      toast.className = `toast-notification ${type}`;
+
+      // Set icon based on type
+      let icon = 'ℹ️';
+      if (type === 'success') icon = '✅';
+      else if (type === 'error') icon = '❌';
+      else if (type === 'warning') icon = '⚠️';
+
+      toast.innerHTML = `
+      <div class="toast-content">
+        <span class="toast-icon">${icon}</span>
+        <span>${message}</span>
+      </div>
+    `;
+
+      // Add to page
+      document.body.appendChild(toast);
+
+      // Show notification with animation
+      setTimeout(() => toast.classList.add('show'), 100);
+
+      // Auto-hide after appropriate duration
+      const duration = type === 'error' ? 6000 : 4000; // Errors stay longer
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+
+      return toast;
     }
   </script>
 

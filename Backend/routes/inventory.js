@@ -6,6 +6,14 @@ const inventoryController = require("../controllers/inventoryController");
 // Get all inventory items for a user
 router.get("/", authenticateToken, inventoryController.getUserInventory);
 
+// Search inventory (must come before /:id route)
+router.get("/search", authenticateToken, inventoryController.searchInventory);
+
+// Get a specific inventory item by ID
+router.get("/:id", authenticateToken, inventoryController.getInventoryById);
+
+
+
 // Create a new inventory item
 router.post("/", authenticateToken, inventoryController.createInventory);
 
@@ -14,8 +22,5 @@ router.put("/:id", authenticateToken, inventoryController.updateInventory);
 
 // Delete inventory item
 router.delete("/:id", authenticateToken, inventoryController.deleteInventory);
-
-// Search inventory
-router.get("/search", authenticateToken, inventoryController.searchInventory);
 
 module.exports = router;

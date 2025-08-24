@@ -8,155 +8,162 @@
     <link rel="icon" type="image/png" href="./images/logo_gpha.png">
     <link rel="stylesheet" href="./adminDashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <img src="./images/logo_gpha.png" alt="GPHA Logo" class="logo">
-                <h2>Inventory Management <span id="liveBadgeAdmin" class="live-badge"
-                        style="margin-left:8px;font-size:12px;padding:2px 8px;border-radius:12px;background:#e74c3c;color:#fff"><span
-                            class="live-dot"
-                            style="width:8px;height:8px;border-radius:50%;background:#fff;margin-right:6px;display:inline-block;animation:blink 1s infinite"></span><span
-                            class="status">OFFLINE</span></span></h2>
-            </div>
-            <div class="nav-menu">
-                <a href="./admin-dashboard.html" class="nav-link">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
+    <div class="admin-container">
+        <!-- Navbar Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="./admin-dashboard.html" class="nav-brand">
+                    <img src="./images/logo_gpha.png" alt="GPHA Logo">
+                    <h1>Admin Dashboard</h1>
                 </a>
-                <a href="./admin-users.html" class="nav-link">
-                    <i class="fas fa-users"></i> User Management
-                </a>
-                <a href="./admin-reports.html" class="nav-link">
-                    <i class="fas fa-chart-bar"></i> Reports Management
-                </a>
-                <a href="./admin-inventory.html" class="nav-link active">
-                    <i class="fas fa-boxes"></i> Inventory Management
-                </a>
-                <a href="./admin-toolbox.html" class="nav-link">
-                    <i class="fas fa-tools"></i> Toolbox Management
-                </a>
-                <button class="logout-btn" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
-            </div>
-        </div>
-    </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="page-header">
-            <h1>Inventory Management</h1>
-            <div class="header-actions">
-                <button class="btn secondary" onclick="exportInventory()">
-                    <i class="fas fa-download"></i> Export All
-                </button>
-            </div>
-        </div>
-
-        <!-- Inventory Statistics -->
-        <div class="stats-section">
-            <h3>Inventory Statistics</h3>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h4>Total Items</h4>
-                    <p id="totalItems">0</p>
-                </div>
-                <div class="stat-card">
-                    <h4>UPS Units</h4>
-                    <p id="upsCount">0</p>
-                </div>
-                <div class="stat-card">
-                    <h4>AVR Units</h4>
-                    <p id="avrCount">0</p>
-                </div>
-                <div class="stat-card">
-                    <h4>Available</h4>
-                    <p id="availableCount">0</p>
-                </div>
-                <div class="stat-card">
-                    <h4>In Use</h4>
-                    <p id="inUseCount">0</p>
-                </div>
-                <div class="stat-card">
-                    <h4>Maintenance</h4>
-                    <p id="maintenanceCount">0</p>
+                <div class="nav-menu">
+                    <a href="./admin-dashboard.html" class="nav-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                    <a href="./admin-users.html" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        User Management
+                    </a>
+                    <a href="./admin-reports.html" class="nav-link">
+                        <i class="fas fa-chart-bar"></i>
+                        Reports Management
+                    </a>
+                    <a href="./admin-inventory.html" class="nav-link active">
+                        <i class="fas fa-boxes"></i>
+                        Inventory Management
+                    </a>
+                    <a href="./admin-toolbox.html" class="nav-link">
+                        <i class="fas fa-tools"></i>
+                        Toolbox Management
+                    </a>
+                    <button class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
                 </div>
             </div>
-        </div>
+        </nav>
 
-        <!-- Search and Filter -->
-        <div class="search-filter">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput"
-                    placeholder="Search inventory by type, serial number, or location..." onkeyup="searchInventory()">
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Inventory Management</h1>
+                <div class="header-actions">
+                    <button class="btn secondary" onclick="exportInventory()">
+                        <i class="fas fa-download"></i> Export All
+                    </button>
+                </div>
             </div>
-            <div class="filter-box">
-                <select id="typeFilter" onchange="filterInventory()" aria-label="Filter inventory by type">
-                    <option value="">All Types</option>
-                    <option value="UPS">UPS</option>
-                    <option value="AVR">AVR</option>
-                </select>
+
+            <!-- Inventory Statistics -->
+            <div class="stats-section">
+                <h3>Inventory Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Total Items</h4>
+                        <p id="totalItems">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>UPS Units</h4>
+                        <p id="upsCount">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>AVR Units</h4>
+                        <p id="avrCount">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Available</h4>
+                        <p id="availableCount">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>In Use</h4>
+                        <p id="inUseCount">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Maintenance</h4>
+                        <p id="maintenanceCount">0</p>
+                    </div>
+                </div>
             </div>
-            <div class="filter-box">
-                <select id="statusFilter" onchange="filterInventory()" aria-label="Filter inventory by status">
-                    <option value="">All Status</option>
-                    <option value="New">New</option>
-                    <option value="Replaced">Replaced</option>
-                    <option value="In Use">In Use</option>
-                    <option value="Maintenance">Maintenance</option>
-                </select>
+
+            <!-- Search and Filter -->
+            <div class="search-filter">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput"
+                        placeholder="Search inventory by type, serial number, or location..."
+                        onkeyup="searchInventory()">
+                </div>
+                <div class="filter-box">
+                    <select id="typeFilter" onchange="filterInventory()" aria-label="Filter inventory by type">
+                        <option value="">All Types</option>
+                        <option value="UPS">UPS</option>
+                        <option value="AVR">AVR</option>
+                    </select>
+                </div>
+                <div class="filter-box">
+                    <select id="statusFilter" onchange="filterInventory()" aria-label="Filter inventory by status">
+                        <option value="">All Status</option>
+                        <option value="New">New</option>
+                        <option value="Replaced">Replaced</option>
+                        <option value="In Use">In Use</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
+                </div>
+                <div class="filter-box">
+                    <select id="sizeFilter" onchange="filterInventory()" aria-label="Filter inventory by size">
+                        <option value="">All Sizes</option>
+                        <option value="1.5kva">1.5kva</option>
+                        <option value="3kva">3kva</option>
+                        <option value="6kva">6kva</option>
+                        <option value="10kva">10kva</option>
+                        <option value="20kva">20kva</option>
+                        <option value="30kva">30kva</option>
+                        <option value="40kva">40kva</option>
+                        <option value="60kva">60kva</option>
+                    </select>
+                </div>
             </div>
-            <div class="filter-box">
-                <select id="sizeFilter" onchange="filterInventory()" aria-label="Filter inventory by size">
-                    <option value="">All Sizes</option>
-                    <option value="1.5kva">1.5kva</option>
-                    <option value="3kva">3kva</option>
-                    <option value="6kva">6kva</option>
-                    <option value="10kva">10kva</option>
-                    <option value="20kva">20kva</option>
-                    <option value="30kva">30kva</option>
-                    <option value="40kva">40kva</option>
-                    <option value="60kva">60kva</option>
-                </select>
+
+            <!-- Inventory Table -->
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Product Type</th>
+                            <th>Status</th>
+                            <th>Size</th>
+                            <th>Serial Number</th>
+                            <th>Date Added</th>
+                            <th>Location</th>
+                            <th>Issued By</th>
+                            <th>User</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody">
+                        <!-- Inventory items will be loaded here -->
+                    </tbody>
+                </table>
             </div>
-        </div>
 
-        <!-- Inventory Table -->
-        <div class="table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Product Type</th>
-                        <th>Status</th>
-                        <th>Size</th>
-                        <th>Serial Number</th>
-                        <th>Date Added</th>
-                        <th>Location</th>
-                        <th>Issued By</th>
-                        <th>User</th>
-                        <th>Last Updated</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="inventoryTableBody">
-                    <!-- Inventory items will be loaded here -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="pagination">
-            <button id="prevPage" onclick="changePage(-1)">Previous</button>
-            <span id="pageInfo">Page 1</span>
-            <button id="nextPage" onclick="changePage(1)">Next</button>
-        </div>
+            <!-- Pagination -->
+            <div class="pagination">
+                <button id="prevPage" onclick="changePage(-1)">Previous</button>
+                <span id="pageInfo">Page 1</span>
+                <button id="nextPage" onclick="changePage(1)">Next</button>
+            </div>
 
 
-    </main>
+        </main>
+    </div>
 
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="modal">
@@ -194,26 +201,6 @@
         </div>
     </div>
 
-    <script src="http://localhost:5000/socket.io/socket.io.js"></script>
-    <script>
-        // Connect to realtime to update admin inventory table instantly
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                const socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
-                const badge = document.getElementById('liveBadgeAdmin');
-                const setLive = (on) => { if (!badge) return; badge.style.background = on ? '#27ae60' : '#e74c3c'; badge.querySelector('.status').textContent = on ? 'LIVE' : 'OFFLINE'; };
-                socket.on('connect', () => setLive(true));
-                socket.on('disconnect', () => setLive(false));
-
-                // Listen for real-time updates
-                socket.on('inventory:created', () => loadInventory());
-                socket.on('inventory:updated', () => loadInventory());
-                socket.on('inventory:deleted', () => loadInventory());
-
-                loadInventory();
-            } catch (e) { /* ignore */ }
-        });
-    </script>
     <script src="./script.js"></script>
     <script src="./admin-inventory.js"></script>
 </body>

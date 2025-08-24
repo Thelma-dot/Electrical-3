@@ -116,6 +116,11 @@ async function generateReport() {
 
         const newReport = await response.json();
 
+        // Debug: Log the response to see what fields are returned
+        console.log('Backend response:', newReport);
+        console.log('Date field:', newReport.report_date || newReport.reportDate);
+        console.log('Time field:', newReport.report_time || newReport.reportTime);
+
         // Add to table
         addReportToTable(newReport);
 
@@ -241,13 +246,18 @@ function showReportPreview(report) {
     const preview = document.getElementById('generatedReport');
     if (!preview) return;
 
+    // Debug: Log what we're trying to display
+    console.log('Showing report preview:', report);
+    console.log('Date to display:', report.report_date || report.reportDate);
+    console.log('Time to display:', report.report_time || report.reportTime);
+
     document.getElementById('displayTitle').textContent = report.title;
-    document.getElementById('displayJobDescription').textContent = report.job_description;
+    document.getElementById('displayJobDescription').textContent = report.job_description || report.jobDescription || 'N/A';
     document.getElementById('displayLocation').textContent = report.location;
     document.getElementById('displayRemarks').textContent = report.remarks || '-';
     document.getElementById('displayDate').textContent = report.report_date || report.reportDate || 'N/A';
     document.getElementById('displayTime').textContent = report.report_time || report.reportTime || 'N/A';
-    document.getElementById('displayToolsUsed').textContent = report.tools_used;
+    document.getElementById('displayToolsUsed').textContent = report.tools_used || report.toolsUsed || 'N/A';
     document.getElementById('displayStatus').textContent = report.status;
 
     preview.classList.remove('hidden');
@@ -429,7 +439,7 @@ function displayReportsForCurrentPage() {
             <td>${report.remarks || '-'}</td>
             <td>${report.report_date || report.reportDate || 'N/A'}</td>
             <td>${report.report_time || report.reportTime || 'N/A'}</td>
-            <td>${report.tools_used}</td>
+            <td>${report.tools_used || report.toolsUsed || 'N/A'}</td>
             <td>${report.status}</td>
             <td>
                 <button onclick="editReport('${report.id}')" class="edit-btn">Edit</button>

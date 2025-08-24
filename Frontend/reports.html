@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>View Reports</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap"
@@ -198,9 +198,11 @@
                         (report.tools_used || report.toolsUsed).join(', ') :
                         (report.tools_used || report.toolsUsed || 'N/A')}</td>
                     <td>
-                        <button onclick="editReport(${report.id})" class="edit-btn">Edit</button>
-                        <button onclick="viewReport(${report.id})" class="view-btn">View</button>
-                        <button onclick="deleteReport(${report.id})" class="delete-btn">Delete</button>
+                        ${report.status && report.status.toLowerCase() === 'completed' ?
+                        '<span class="status-badge completed-status">✓ Complete</span>' :
+                        `<button onclick="editReport(${report.id})" class="edit-btn">Edit</button>
+                             <button onclick="deleteReport(${report.id})" class="delete-btn">Delete</button>`
+                    }
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -357,6 +359,9 @@
                 submitBtn.textContent = '⏳ Saving...';
                 submitBtn.disabled = true;
 
+                // When editing and saving, automatically mark the report as completed
+                const finalStatus = 'Completed';
+
                 const reportData = {
                     title,
                     jobDescription,
@@ -365,7 +370,7 @@
                     reportDate: date,
                     reportTime: time,
                     toolsUsed,
-                    status
+                    status: finalStatus
                 };
 
                 const token = localStorage.getItem('token');
@@ -393,7 +398,7 @@
                     // Close modal
                     modal.remove();
 
-                    alert('✅ Report updated successfully!');
+                    alert('✅ Report updated and marked as completed successfully!');
                 } else {
                     const errorData = await response.json().catch(() => ({}));
                     throw new Error(errorData.error || 'Failed to update report');
@@ -406,6 +411,49 @@
                 const submitBtn = modal.querySelector('button[type="submit"]');
                 submitBtn.textContent = '💾 Save Changes';
                 submitBtn.disabled = false;
+            }
+        }
+
+        async function markReportComplete(reportId) {
+            if (!confirm('Are you sure you want to mark this report as completed?')) return;
+
+            try {
+                const token = localStorage.getItem('token');
+                const report = allReports.find(r => r.id === reportId);
+                if (!report) return;
+
+                const reportData = {
+                    ...report,
+                    status: 'Completed'
+                };
+
+                const response = await fetch(`http://localhost:5000/api/reports/${reportId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(reportData)
+                });
+
+                if (response.ok) {
+                    const updatedReport = await response.json();
+
+                    // Update the report in the local array
+                    const index = allReports.findIndex(r => r.id === reportId);
+                    if (index !== -1) {
+                        allReports[index] = updatedReport;
+                    }
+
+                    // Refresh the display
+                    displayReports(allReports);
+                    alert('✅ Report marked as completed successfully!');
+                } else {
+                    alert('Failed to mark report as completed');
+                }
+            } catch (error) {
+                console.error('Error marking report as completed:', error);
+                alert('Error marking report as completed');
             }
         }
 
@@ -525,6 +573,18 @@
                 font-weight: bold;
             }
             
+            .status-badge.completed-status {
+                background: #28a745;
+                color: white;
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: bold;
+                display: inline-block;
+                text-align: center;
+                min-width: 80px;
+            }
+            
             .status.in-progress { 
                 background: #fff3cd; 
                 color: #856404; 
@@ -543,7 +603,7 @@
                 font-weight: bold;
             }
             
-            .view-btn, .edit-btn, .delete-btn {
+            .edit-btn, .delete-btn {
                 padding: 6px 12px;
                 margin: 0 2px;
                 border: none;
@@ -553,15 +613,6 @@
                 transition: background-color 0.3s;
                 min-width: 60px;
                 height: 32px;
-            }
-            
-            .view-btn { 
-                background: #3498db; 
-                color: white; 
-            }
-            
-            .view-btn:hover {
-                background: #2980b9;
             }
             
             .edit-btn { 
