@@ -92,26 +92,39 @@
                 <a href="./generate_report.html" class="back-btn">Generate New Report</a>
             </div>
 
-            <table id="reportsTable">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Job Description</th>
-                        <th>Location</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Status</th>
-                        <th>Tools Used</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="reportsTableBody">
-                    <!-- Reports will be populated here -->
-                </tbody>
-            </table>
-            <div id="noResultsMessage" style="display: none; text-align: center; color: #666; margin: 20px;">
-                No reports found matching your search criteria.
-            </div>
+            <!-- Reports Section -->
+            <section class="reports-section">
+                <h2>📋 My Reports</h2>
+
+                <table id="reportsTable">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Job Description</th>
+                            <th>Location</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Tools Used</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTableBody">
+                        <!-- Reports will be populated here -->
+                    </tbody>
+                </table>
+
+                <!-- Reports Table Pagination -->
+                <div class="pagination">
+                    <button id="reportsPrevPage" onclick="changeReportsPage(-1)">Previous</button>
+                    <span id="reportsPageInfo">Page 1 of 1</span>
+                    <button id="reportsNextPage" onclick="changeReportsPage(1)">Next</button>
+                </div>
+
+                <div id="noResultsMessage" style="display: none; text-align: center; color: #666; margin: 20px;">
+                    No reports found matching your search criteria.
+                </div>
+            </section>
         </main>
     </div>
 
@@ -120,6 +133,8 @@
     <script>
         // Reports page specific functionality
         let allReports = [];
+        let currentReportsPage = 1;
+        const reportsPerPage = 10; // Number of reports to display per page
 
         // Helper function to format date for input field
         function formatDateForInput(dateString) {
@@ -185,7 +200,15 @@
 
             document.getElementById('noResultsMessage').style.display = 'none';
 
-            reports.forEach((report) => {
+            // Apply pagination
+            const startIndex = (currentReportsPage - 1) * reportsPerPage;
+            const endIndex = startIndex + reportsPerPage;
+            const reportsToShow = reports.slice(startIndex, endIndex);
+
+            // Update pagination info
+            updateReportsPaginationInfo(reports.length);
+
+            reportsToShow.forEach((report) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${report.title || 'N/A'}</td>
@@ -209,6 +232,35 @@
             });
         }
 
+        // Reports pagination functions
+        function updateReportsPaginationInfo(totalReports) {
+            const totalPages = Math.ceil(totalReports / reportsPerPage);
+            const pageInfo = document.getElementById('reportsPageInfo');
+            if (pageInfo) {
+                pageInfo.textContent = `Page ${currentReportsPage} of ${totalPages}`;
+            }
+
+            // Update button states
+            const prevBtn = document.getElementById('reportsPrevPage');
+            const nextBtn = document.getElementById('reportsNextPage');
+
+            if (prevBtn) prevBtn.disabled = currentReportsPage <= 1;
+            if (nextBtn) nextBtn.disabled = currentReportsPage >= totalPages;
+        }
+
+        function changeReportsPage(direction) {
+            const totalReports = allReports.length;
+            const totalPages = Math.ceil(totalReports / reportsPerPage);
+
+            if (direction === -1 && currentReportsPage > 1) {
+                currentReportsPage--;
+            } else if (direction === 1 && currentReportsPage < totalPages) {
+                currentReportsPage++;
+            }
+
+            displayReports(allReports);
+        }
+
         function searchReports() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const filteredReports = allReports.filter(report =>
@@ -218,6 +270,7 @@
                 (report.status || '').toLowerCase().includes(searchTerm) ||
                 (report.tools_used || report.toolsUsed || '').toLowerCase().includes(searchTerm)
             );
+            currentReportsPage = 1; // Reset to first page on new search
             displayReports(filteredReports);
         }
 
@@ -672,6 +725,70 @@
             
             .edit-modal input:hover, .edit-modal textarea:hover, .edit-modal select:hover {
                 border-color: #bdc3c7;
+            }
+            
+            /* Reports Section Styles */
+            .reports-section {
+                margin-top: 2rem;
+                padding: 2rem;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            
+            .reports-section h2 {
+                font-size: 1.8rem;
+                font-weight: 600;
+                color: #1f2937;
+                margin-bottom: 1.5rem;
+                text-align: center;
+                border-bottom: 2px solid #e5e7eb;
+                padding-bottom: 0.5rem;
+            }
+            
+            /* Pagination Styles */
+            .pagination {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 1rem;
+                margin-top: 2rem;
+                padding: 1rem;
+                text-align: center;
+                width: 100%;
+            }
+            
+            .pagination button {
+                padding: 0.5rem 1rem;
+                border: 1px solid #d1d5db;
+                background: white;
+                color: #374151;
+                border-radius: 0.375rem;
+                cursor: pointer;
+                font-size: 0.875rem;
+                font-weight: 500;
+                transition: all 0.2s;
+                min-width: 80px;
+            }
+            
+            .pagination button:hover:not(:disabled) {
+                background: #f3f4f6;
+                border-color: #9ca3af;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            
+            .pagination button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            
+            .pagination span {
+                font-size: 0.875rem;
+                color: #6b7280;
+                font-weight: 500;
+                min-width: 100px;
+                text-align: center;
             }
         `;
         document.head.appendChild(style);

@@ -106,6 +106,10 @@ function showResults(items) {
 
     if (!items || items.length === 0) {
         inventoryBody.innerHTML = '<tr><td colspan="8" class="loading">No results found. Try a different search term.</td></tr>';
+        // Reset pagination when no search results
+        if (typeof updateInventoryPaginationInfo === 'function') {
+            updateInventoryPaginationInfo(0);
+        }
         return;
     }
 
@@ -130,6 +134,14 @@ function showResults(items) {
     });
 
     document.getElementById('inventoryTable').classList.remove('hidden');
+
+    // Reset to first page and apply pagination for search results
+    if (typeof currentInventoryPage !== 'undefined') {
+        currentInventoryPage = 1;
+    }
+    if (typeof renderInventoryWithPagination === 'function') {
+        renderInventoryWithPagination();
+    }
 }
 
 // Form validation
@@ -463,6 +475,10 @@ function displayInventory(inventory) {
 
     if (!inventory || inventory.length === 0) {
         inventoryBody.innerHTML = '<tr><td colspan="8" class="loading">No inventory items found. Click "Add New Inventory" to get started.</td></tr>';
+        // Reset pagination when no items
+        if (typeof updateInventoryPaginationInfo === 'function') {
+            updateInventoryPaginationInfo(0);
+        }
         return;
     }
 
@@ -488,8 +504,10 @@ function displayInventory(inventory) {
 
     document.getElementById('inventoryTable').classList.remove('hidden');
 
-    // Check for recently updated items and restore their state
-    checkRecentlyUpdatedItems();
+    // Apply pagination after displaying inventory
+    if (typeof renderInventoryWithPagination === 'function') {
+        renderInventoryWithPagination();
+    }
 }
 
 // Toggle edit mode for inline editing

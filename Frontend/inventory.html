@@ -16,6 +16,70 @@
       margin: 20px 0;
       flex-wrap: wrap;
     }
+
+    /* Inventory Section Styles */
+    .inventory-section {
+      margin-top: 2rem;
+      padding: 2rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .inventory-section h2 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 0.5rem;
+    }
+
+    /* Pagination Styles */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding: 1rem;
+      text-align: center;
+      width: 100%;
+    }
+
+    .pagination button {
+      padding: 0.5rem 1rem;
+      border: 1px solid #d1d5db;
+      background: white;
+      color: #374151;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      min-width: 80px;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination span {
+      font-size: 0.875rem;
+      color: #6b7280;
+      font-weight: 500;
+      min-width: 100px;
+      text-align: center;
+    }
   </style>
 
 </head>
@@ -52,24 +116,36 @@
         <button onclick="showAddModal()" class="add-button">Add New Inventory</button>
       </div>
 
-      <!-- Inventory Table -->
-      <table id="inventoryTable" class="hidden">
-        <thead>
-          <tr>
-            <th>Product Type</th>
-            <th>Status</th>
-            <th>Size</th>
-            <th>Serial Number</th>
-            <th>Date</th>
-            <th>Location</th>
-            <th>Issued By</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="inventoryBody">
-          <!-- Inventory rows will be populated here by JavaScript -->
-        </tbody>
-      </table>
+      <!-- Inventory Section -->
+      <section class="inventory-section">
+        <h2>📦 My Inventory</h2>
+
+        <!-- Inventory Table -->
+        <table id="inventoryTable" class="hidden">
+          <thead>
+            <tr>
+              <th>Product Type</th>
+              <th>Status</th>
+              <th>Size</th>
+              <th>Serial Number</th>
+              <th>Date</th>
+              <th>Location</th>
+              <th>Issued By</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryBody">
+            <!-- Inventory rows will be populated here by JavaScript -->
+          </tbody>
+        </table>
+
+        <!-- Inventory Table Pagination -->
+        <div class="pagination">
+          <button id="inventoryPrevPage" onclick="changeInventoryPage(-1)">Previous</button>
+          <span id="inventoryPageInfo">Page 1 of 1</span>
+          <button id="inventoryNextPage" onclick="changeInventoryPage(1)">Next</button>
+        </div>
+      </section>
 
       <!-- Add New Inventory Modal -->
       <div id="addModal" class="modal">
@@ -130,20 +206,129 @@
 
 
 
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="./dark-mode.js"></script>
   <script src="./script.js"></script>
   <script src="./inventory.js"></script>
   <script src="./user-greeting.js"></script>
   <script>
-    // Real-time functionality removed
-    // All Socket.IO and real-time updates have been removed
+    // Socket.IO connection for real-time updates
+    let socket;
 
-    // Manual refresh function (simplified)
+    // Inventory pagination variables
+    let currentInventoryPage = 1;
+    const inventoryPerPage = 10; // Number of inventory items to display per page
+
+    // Initialize Socket.IO connection
+    function initializeSocket() {
+      socket = io('http://localhost:5000', {
+        auth: {
+          token: localStorage.getItem('token')
+        }
+      });
+
+      socket.on('connect', () => {
+        console.log('🔌 Connected to server for real-time inventory updates');
+      });
+
+      socket.on('disconnect', () => {
+        console.log('🔌 Disconnected from server');
+      });
+
+      // Listen for inventory updates from admin
+      socket.on('inventory:updated', (data) => {
+        console.log('📦 Received inventory update:', data);
+        showNotification('🔄 Inventory item updated by admin', 'info');
+        loadInventory(); // Refresh inventory to show changes
+      });
+
+      // Listen for inventory deletions from admin
+      socket.on('inventory:deleted', (data) => {
+        console.log('🗑️ Received inventory deletion:', data);
+        showNotification('🗑️ Inventory item deleted by admin', 'warning');
+        loadInventory(); // Refresh inventory to show changes
+      });
+
+      // Listen for new inventory created by other users
+      socket.on('inventory:created', (data) => {
+        console.log('➕ Received new inventory:', data);
+        showNotification('➕ New inventory item added', 'success');
+        loadInventory(); // Refresh inventory to show changes
+      });
+    }
+
+    // Manual refresh function
     function manualRefresh() {
       console.log('🔄 Manual refresh requested...');
       loadInventory();
       showNotification('🔄 Inventory refreshed manually', 'info');
     }
+
+    // Inventory pagination functions
+    function updateInventoryPaginationInfo(totalInventory) {
+      const totalPages = Math.ceil(totalInventory / inventoryPerPage);
+      const pageInfo = document.getElementById('inventoryPageInfo');
+      if (pageInfo) {
+        pageInfo.textContent = `Page ${currentInventoryPage} of ${totalPages}`;
+      }
+
+      // Update button states
+      const prevBtn = document.getElementById('inventoryPrevPage');
+      const nextBtn = document.getElementById('inventoryNextPage');
+
+      if (prevBtn) prevBtn.disabled = currentInventoryPage <= 1;
+      if (nextBtn) nextBtn.disabled = currentInventoryPage >= totalPages;
+    }
+
+    function changeInventoryPage(direction) {
+      const totalInventory = document.querySelectorAll('#inventoryBody tr').length;
+      const totalPages = Math.ceil(totalInventory / inventoryPerPage);
+
+      if (direction === -1 && currentInventoryPage > 1) {
+        currentInventoryPage--;
+      } else if (direction === 1 && currentInventoryPage < totalPages) {
+        currentInventoryPage++;
+      }
+
+      // Re-render the inventory table with pagination
+      renderInventoryWithPagination();
+    }
+
+    function renderInventoryWithPagination() {
+      const tbody = document.getElementById('inventoryBody');
+      if (!tbody) return;
+
+      const allRows = Array.from(tbody.querySelectorAll('tr'));
+      const totalInventory = allRows.length;
+
+      if (totalInventory === 0) return;
+
+      // Hide all rows first
+      allRows.forEach(row => row.style.display = 'none');
+
+      // Calculate which rows to show
+      const startIndex = (currentInventoryPage - 1) * inventoryPerPage;
+      const endIndex = startIndex + inventoryPerPage;
+      const rowsToShow = allRows.slice(startIndex, endIndex);
+
+      // Show only the rows for current page
+      rowsToShow.forEach(row => row.style.display = '');
+
+      // Update pagination info
+      updateInventoryPaginationInfo(totalInventory);
+    }
+
+    // Make pagination functions globally accessible
+    window.updateInventoryPaginationInfo = updateInventoryPaginationInfo;
+    window.changeInventoryPage = changeInventoryPage;
+    window.renderInventoryWithPagination = renderInventoryWithPagination;
+    window.currentInventoryPage = currentInventoryPage;
+    window.inventoryPerPage = inventoryPerPage;
+
+    // Initialize Socket.IO when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeSocket();
+    });
   </script>
 </body>
 
