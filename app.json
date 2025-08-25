@@ -1,0 +1,36 @@
+{
+  "name": "Electrical Management System",
+  "description": "A comprehensive electrical management system with real-time inventory, toolbox management, and admin dashboard",
+  "repository": "https://github.com/Thelma-dot/Electrical-3",
+  "logo": "https://raw.githubusercontent.com/Thelma-dot/Electrical-3/main/Frontend/images/logo_gpha.png",
+  "keywords": [
+    "node",
+    "express",
+    "socket.io",
+    "electrical",
+    "management",
+    "inventory",
+    "real-time"
+  ],
+  "env": {
+    "NODE_ENV": {
+      "description": "Environment setting for the application",
+      "value": "production"
+    },
+    "PORT": {
+      "description": "Port for the application to run on",
+      "value": "5000"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}

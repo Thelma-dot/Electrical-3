@@ -1,132 +1,216 @@
-# Electrical Management System
+# 🔌 Electrical Management System
 
-A comprehensive web-based system for managing electrical equipment, tools, reports, and inventory.
+A comprehensive electrical management system with real-time inventory tracking, toolbox management, and admin dashboard.
 
-## Features
+## ✨ Features
 
-- **User Authentication**: Secure login system with staff ID
-- **Report Management**: Create and manage work reports
-- **Inventory Management**: Track electrical equipment and supplies
-- **Toolbox Management**: Manage tools and their assignments
-- **Settings**: User preferences and system configuration
-- **Password Reset**: Email-based password recovery
+- **Real-time Inventory Management** - Live updates with Socket.IO
+- **Toolbox System** - Equipment and tool tracking
+- **Admin Dashboard** - Comprehensive management interface
+- **User Authentication** - Secure login and role-based access
+- **Reporting System** - Generate and export reports
+- **Mobile Responsive** - Works on all devices
+- **Real-time Notifications** - Instant updates and alerts
 
-## Tech Stack
+## 🚀 Quick Start
 
-- **Backend**: Node.js, Express.js, SQLite
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **Database**: SQLite (for development), MySQL (for production)
+### Prerequisites
+- Node.js 16+ 
+- npm or yarn
+- Git
 
-## Quick Start
-
-### Option 1: Using the Batch File (Windows)
-
-1. Double-click `start-project.bat`
-2. The system will automatically start both servers
-3. Your browser will open to `http://localhost:5500`
-
-### Option 2: Manual Setup
-
-#### Prerequisites
-
-- Node.js (v14 or higher)
-- Python (for frontend server)
-
-#### Backend Setup
-
+### Local Development
 ```bash
-cd Backend
+# Clone the repository
+git clone https://github.com/Thelma-dot/Electrical-3.git
+cd Electrical-3
+
+# Install dependencies
 npm install
-npm start
-```
 
-#### Frontend Setup
+# Set up environment variables
+cp env.example .env
+# Edit .env with your configuration
 
-```bash
-cd Frontend
-python -m http.server 5500
-```
+# Initialize database
+npm run setup
 
-## Access URLs
-
-- **Frontend**: http://localhost:5500
-- **Backend API**: http://localhost:5000
-- **API Health Check**: http://localhost:5000/health
-
-## Database Setup
-
-The system uses SQLite for development, which is automatically set up when you first run the backend. The database file will be created at `Backend/electrical_management.db`.
-
-### For Production (MySQL)
-
-1. Install MySQL
-2. Update the `.env` file with your MySQL credentials
-3. Run `node setup-db.js` to create the database schema
-
-## API Endpoints
-
-- `POST /api/auth/login` - User login
-- `POST /api/auth/reset-password` - Password reset
-- `GET /api/reports` - Get reports
-- `POST /api/reports` - Create report
-- `GET /api/inventory` - Get inventory
-- `POST /api/inventory` - Add inventory item
-- `GET /api/toolbox` - Get tools
-- `POST /api/toolbox` - Add tool
-- `GET /api/settings` - Get user settings
-- `POST /api/settings` - Update settings
-
-## Project Structure
-
-```
-Electrical_management_system-main/
-├── Backend/
-│   ├── config/          # Database configuration
-│   ├── controllers/     # API controllers
-│   ├── middlewares/     # Express middlewares
-│   ├── models/          # Data models
-│   ├── routes/          # API routes
-│   ├── utils/           # Utility functions
-│   └── server.js        # Main server file
-├── Frontend/
-│   ├── images/          # Static images
-│   ├── *.html           # HTML pages
-│   ├── *.css            # Stylesheets
-│   └── script.js        # Main JavaScript file
-└── start-project.bat    # Quick start script
-```
-
-## Troubleshooting
-
-### Backend Issues
-
-- Ensure Node.js is installed
-- Check if port 5000 is available
-- Verify all dependencies are installed with `npm install`
-
-### Frontend Issues
-
-- Ensure Python is installed
-- Check if port 5500 is available
-- Try using a different port: `python -m http.server 8000`
-
-### Database Issues
-
-- SQLite database is created automatically
-- Check file permissions in the Backend directory
-- For MySQL issues, verify connection settings in `.env`
-
-## Development
-
-To run in development mode with auto-reload:
-
-```bash
-cd Backend
-npm install nodemon -g
+# Start development server
 npm run dev
 ```
 
-## License
+### Production Deployment
+```bash
+# Install dependencies
+npm ci --only=production
 
-This project is licensed under the ISC License.
+# Start production server
+npm start
+```
+
+## 🐳 Docker Deployment
+
+### Quick Start with Docker
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Or build and run manually
+docker build -t electrical-management .
+docker run -p 5000:5000 electrical-management
+```
+
+### Docker Compose Services
+- **App**: Main Node.js application
+- **PostgreSQL**: Database (optional, uncomment in docker-compose.yml)
+- **Redis**: Session storage (optional, uncomment in docker-compose.yml)
+
+## ☁️ Cloud Deployment
+
+### 1. Heroku (Recommended)
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Thelma-dot/Electrical-3)
+
+```bash
+# Manual deployment
+heroku create your-app-name
+heroku config:set NODE_ENV=production
+git push heroku main
+```
+
+### 2. Vercel
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+### 3. Railway
+1. Connect your GitHub repository
+2. Railway will auto-deploy on push
+3. Set environment variables in dashboard
+
+## 🔧 Configuration
+
+### Environment Variables
+```bash
+NODE_ENV=production
+PORT=5000
+SESSION_SECRET=your-secret-key
+JWT_SECRET=your-jwt-secret
+DB_TYPE=sqlite
+FRONTEND_URL=https://your-domain.com
+```
+
+### Database Options
+- **SQLite**: Default, good for development
+- **PostgreSQL**: Recommended for production
+- **MySQL**: Alternative production option
+
+## 📁 Project Structure
+
+```
+Electrical-3/
+├── Backend/                 # Node.js backend
+│   ├── server.js           # Main server
+│   ├── app.js              # Express app
+│   ├── config/             # Configuration
+│   ├── controllers/        # Route controllers
+│   ├── models/             # Database models
+│   ├── routes/             # API routes
+│   └── middleware/         # Custom middleware
+├── Frontend/               # Frontend assets
+│   ├── *.html             # HTML pages
+│   ├── *.css              # Stylesheets
+│   ├── *.js               # JavaScript
+│   └── images/            # Images
+├── package.json            # Dependencies
+├── Dockerfile              # Docker configuration
+├── docker-compose.yml      # Docker services
+└── README.md               # This file
+```
+
+## 🔌 API Endpoints
+
+### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/logout` - User logout
+
+### Inventory
+- `GET /api/inventory` - Get all inventory
+- `POST /api/inventory` - Create inventory item
+- `PUT /api/inventory/:id` - Update inventory item
+- `DELETE /api/inventory/:id` - Delete inventory item
+
+### Toolbox
+- `GET /api/toolbox` - Get all toolbox items
+- `POST /api/toolbox` - Submit toolbox form
+- `PUT /api/toolbox/:id` - Update toolbox item
+
+### Reports
+- `GET /api/reports` - Get all reports
+- `POST /api/reports` - Generate report
+- `GET /api/reports/:id` - Get specific report
+
+## 🧪 Testing
+
+```bash
+# Run tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Run specific test file
+npm test -- --grep "inventory"
+```
+
+## 📊 Monitoring
+
+### Health Check
+- Endpoint: `/health`
+- Returns application status and database connectivity
+
+### Logging
+- Application logs: `npm start`
+- Docker logs: `docker-compose logs -f app`
+
+## 🔒 Security
+
+- JWT-based authentication
+- Session management with express-session
+- CORS protection
+- Helmet.js security headers
+- Input validation and sanitization
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Issues**: [GitHub Issues](https://github.com/Thelma-dot/Electrical-3/issues)
+- **Documentation**: [Wiki](https://github.com/Thelma-dot/Electrical-3/wiki)
+- **Email**: your-email@example.com
+
+## 🙏 Acknowledgments
+
+- Express.js team for the web framework
+- Socket.IO for real-time capabilities
+- SQLite for the database engine
+- All contributors and users
+
+---
+
+**Made with ❤️ for electrical management professionals**
 
