@@ -35,14 +35,15 @@
                         <i class="fas fa-chart-bar"></i>
                         Reports Management
                     </a>
-                    <a href="./admin-toolbox.html" class="nav-link">
-                        <i class="fas fa-tools"></i>
-                        Toolbox Management
-                    </a>
                     <a href="./admin-inventory.html" class="nav-link active">
                         <i class="fas fa-boxes"></i>
                         Inventory Management
                     </a>
+                    <a href="./admin-toolbox.html" class="nav-link">
+                        <i class="fas fa-tools"></i>
+                        Toolbox Management
+                    </a>
+
                     <button class="logout-btn" onclick="logout()">
                         <i class="fas fa-sign-out-alt"></i>
                         Logout
@@ -161,7 +162,22 @@
                 <div class="charts-container">
                     <div class="chart-card">
                         <h3>System Overview (Barchart)</h3>
-                        <canvas id="adminBarChart"></canvas>
+                        <div style="margin-bottom: 1rem;">
+                            <button onclick="testAPIEndpoint()" class="btn" style="margin-right: 0.5rem;">
+                                <i class="fas fa-vial"></i> Test API
+                            </button>
+                            <button onclick="testChartCreation()" class="btn">
+                                <i class="fas fa-chart-bar"></i> Test Chart
+                            </button>
+                        </div>
+                        <div id="adminBarChartContainer">
+                            <canvas id="adminBarChart"></canvas>
+                            <div id="adminBarChartFallback"
+                                style="display: none; text-align: center; padding: 2rem; color: #666;">
+                                <p>Chart loading...</p>
+                                <p id="adminBarChartStatus">Initializing...</p>
+                            </div>
+                        </div>
                     </div>
                     <div class="chart-card">
                         <h3>Reports Performance (Revenue Chart)</h3>
@@ -178,7 +194,6 @@
             </div>
         </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
         <script src="./script.js"></script>
         <script src="./admin-dashboard.js"></script>

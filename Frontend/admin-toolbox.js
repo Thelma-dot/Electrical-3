@@ -31,16 +31,21 @@ document.addEventListener('DOMContentLoaded', function () {
 // Initialize Socket.IO connection for real-time updates
 function initializeSocketConnection() {
     try {
+        console.log('🔌 Attempting to connect to Socket.IO server...');
         socket = io('http://localhost:5000');
 
         socket.on('connect', () => {
             console.log('🔌 Admin toolbox connected to server for real-time updates');
-            // Notify server that admin toolbox page is connected
-            socket.emit('admin:connected', { type: 'toolbox', timestamp: new Date().toISOString() });
+            console.log('🔌 Socket ID:', socket.id);
+            console.log('🔌 Connection status:', socket.connected);
         });
 
         socket.on('disconnect', () => {
             console.log('🔌 Admin toolbox disconnected from server');
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('❌ Socket.IO connection error:', error);
         });
 
         // Listen for toolbox updates
@@ -51,6 +56,7 @@ function initializeSocketConnection() {
 
         socket.on('admin:toolbox:updated', (data) => {
             console.log('🛠️ Admin toolbox: Form updated:', data);
+            console.log('🔄 Event data received:', JSON.stringify(data, null, 2));
             handleToolboxUpdate('updated', data);
         });
 
@@ -72,10 +78,138 @@ function handleToolboxUpdate(type, data) {
     // Flash the stats to show update
     flashStats();
 
-    // Reload toolbox data
+    // For updates, check if we need to update a specific row
+    if (type === 'updated' && data.toolboxId) {
+        console.log('🔄 Processing toolbox update for ID:', data.toolboxId);
+        updateToolboxRow(data.toolboxId);
+    } else {
+        // Reload toolbox data for other types
+        console.log('🔄 Reloading entire toolbox table');
+        setTimeout(() => {
+            loadToolbox();
+        }, 500);
+    }
+}
+
+// Update a specific toolbox row when its status changes
+async function updateToolboxRow(toolboxId) {
+    console.log('🔄 Starting row update for toolbox:', toolboxId);
+
+    try {
+        // Fetch the updated toolbox data
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:5000/api/toolbox/admin/${toolboxId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        console.log('🔄 Fetch response status:', response.status);
+
+        if (response.ok) {
+            const updatedToolbox = await response.json();
+            console.log('🔄 Updated toolbox data:', updatedToolbox);
+
+            // Find the existing row
+            const existingRow = document.querySelector(`tr[data-toolbox-id="${toolboxId}"]`);
+            console.log('🔄 Existing row found:', !!existingRow);
+
+            if (existingRow) {
+                // Update the row with new data instead of removing it
+                updateRowContent(existingRow, updatedToolbox);
+
+                // Flash the updated row to show the change
+                flashRow(existingRow);
+
+                // Update statistics
+                updateStats();
+
+                console.log('✅ Row updated successfully');
+            } else {
+                console.log('⚠️ Row not found, reloading entire table');
+                // If row not found, reload the entire table
+                setTimeout(() => {
+                    loadToolbox();
+                }, 300);
+            }
+        } else {
+            console.log('❌ Failed to fetch updated toolbox data');
+            // If we can't fetch the updated data, reload the entire table
+            setTimeout(() => {
+                loadToolbox();
+            }, 300);
+        }
+    } catch (error) {
+        console.error('❌ Error updating toolbox row:', error);
+        // Fallback to reloading the entire table
+        setTimeout(() => {
+            loadToolbox();
+        }, 300);
+    }
+}
+
+// Update the content of a specific row
+function updateRowContent(row, toolbox) {
+    // Handle both snake_case and camelCase field names
+    const workActivity = toolbox.work_activity || toolbox.workActivity || 'N/A';
+    const date = toolbox.date || 'N/A';
+    const workLocation = toolbox.work_location || toolbox.workLocation || 'N/A';
+    const nameCompany = toolbox.name_company || toolbox.nameCompany || 'N/A';
+    const toolsUsed = toolbox.tools_used || toolbox.toolsUsed || 'N/A';
+    const preparedBy = toolbox.prepared_by || toolbox.preparedBy || 'N/A';
+    const verifiedBy = toolbox.verified_by || toolbox.verifiedBy || 'N/A';
+    const createdAt = toolbox.created_at || toolbox.createdAt || 'N/A';
+    const status = toolbox.status || 'submitted';
+
+    // Get user information
+    const userName = toolbox.user_name || toolbox.userName || 'N/A';
+
+    // Determine action buttons based on status
+    let actionButtons;
+    if (status === 'completed') {
+        actionButtons = '<span class="completed-status">✅ Completed</span>';
+    } else {
+        actionButtons = `
+            <div class="action-buttons">
+                <button class="btn btn-sm btn-primary" onclick="viewToolDetails(${toolbox.id})">
+                    <i class="fas fa-eye"></i> View
+                </button>
+                <button class="btn btn-sm btn-warning" onclick="editTool(${toolbox.id})">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteTool(${toolbox.id})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        `;
+    }
+
+    // Update the row content
+    row.innerHTML = `
+        <td>${workActivity}</td>
+        <td>${formatDate(date)}</td>
+        <td>${workLocation}</td>
+        <td>${nameCompany}</td>
+        <td>${truncateText(toolsUsed, 30)}</td>
+        <td>${preparedBy}</td>
+        <td>${verifiedBy}</td>
+        <td>${userName}</td>
+        <td>
+            <span class="toolbox-status-badge ${status === 'completed' ? 'toolbox-status-completed' : 'toolbox-status-submitted'}">
+                ${status === 'completed' ? '✅ Completed' : '📝 Submitted'}
+            </span>
+        </td>
+        <td>${formatDate(createdAt)}</td>
+        <td>${actionButtons}</td>
+    `;
+}
+
+// Flash a specific row to highlight the update
+function flashRow(row) {
+    row.style.animation = 'flash 0.6s ease';
     setTimeout(() => {
-        loadToolbox();
-    }, 500);
+        row.style.animation = '';
+    }, 600);
 }
 
 // Real-time flash effects
@@ -119,6 +253,7 @@ async function loadToolbox() {
             filteredTools = [...allTools];
             updateStats();
             displayTools();
+            populateUserFilter(); // Populate user filter after loading data
         } else if (response.status === 401) {
             console.error('Authentication expired');
             window.location.href = './index.html';
@@ -134,26 +269,14 @@ async function loadToolbox() {
 // Update statistics
 function updateStats() {
     const totalTools = allTools.length;
-    const today = new Date().toISOString().split('T')[0];
-    const thisWeek = new Date();
-    thisWeek.setDate(thisWeek.getDate() - 7);
-    const thisMonth = new Date();
-    thisMonth.setMonth(thisMonth.getMonth() - 1);
 
-    const todayCount = allTools.filter(tool => tool.date === today).length;
-    const weekCount = allTools.filter(tool => new Date(tool.date) >= thisWeek).length;
-    const monthCount = allTools.filter(tool => new Date(tool.date) >= thisMonth).length;
-
-    // Get unique locations and activities
-    const locations = [...new Set(allTools.map(tool => tool.work_location || tool.workLocation))].filter(Boolean);
-    const activities = [...new Set(allTools.map(tool => tool.work_activity || tool.workActivity))].filter(Boolean);
+    // Count by status
+    const completedCount = allTools.filter(tool => tool.status === 'completed').length;
+    const submittedCount = allTools.filter(tool => tool.status !== 'completed').length;
 
     document.getElementById('totalTools').textContent = totalTools;
-    document.getElementById('availableTools').textContent = todayCount;
-    document.getElementById('inUseTools').textContent = weekCount;
-    document.getElementById('maintenanceTools').textContent = monthCount;
-    document.getElementById('overdueTools').textContent = locations.length;
-    document.getElementById('totalCategories').textContent = activities.length;
+    document.getElementById('submittedTools').textContent = submittedCount;
+    document.getElementById('completedTools').textContent = completedCount;
 }
 
 // Display tools in the table
@@ -166,7 +289,7 @@ function displayTools() {
     if (filteredTools.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="10" style="text-align: center; padding: 40px; color: #666;">
+                <td colspan="11" style="text-align: center; padding: 40px; color: #666;">
                     No toolbox forms found.
                 </td>
             </tr>
@@ -180,6 +303,7 @@ function displayTools() {
 
     pageTools.forEach(tool => {
         const row = document.createElement('tr');
+        row.setAttribute('data-toolbox-id', tool.id); // Add data attribute for row identification
 
         // Handle both snake_case and camelCase field names
         const workActivity = tool.work_activity || tool.workActivity || 'N/A';
@@ -190,21 +314,17 @@ function displayTools() {
         const preparedBy = tool.prepared_by || tool.preparedBy || 'N/A';
         const verifiedBy = tool.verified_by || tool.verifiedBy || 'N/A';
         const createdAt = tool.created_at || tool.createdAt || 'N/A';
+        const status = tool.status || 'submitted';
 
         // Get user information
         const userName = tool.user_name || tool.userName || 'N/A';
 
-        row.innerHTML = `
-            <td>${workActivity}</td>
-            <td>${formatDate(date)}</td>
-            <td>${workLocation}</td>
-            <td>${nameCompany}</td>
-            <td>${truncateText(toolsUsed, 30)}</td>
-            <td>${preparedBy}</td>
-            <td>${verifiedBy}</td>
-            <td>${userName}</td>
-            <td>${formatDate(createdAt)}</td>
-            <td>
+        // Determine action buttons based on status
+        let actionButtons;
+        if (status === 'completed') {
+            actionButtons = '<span class="completed-status">✅ Completed</span>';
+        } else {
+            actionButtons = `
                 <div class="action-buttons">
                     <button class="btn btn-sm btn-primary" onclick="viewToolDetails(${tool.id})">
                         <i class="fas fa-eye"></i> View
@@ -216,7 +336,25 @@ function displayTools() {
                         <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
+            `;
+        }
+
+        row.innerHTML = `
+            <td>${workActivity}</td>
+            <td>${formatDate(date)}</td>
+            <td>${workLocation}</td>
+            <td>${nameCompany}</td>
+            <td>${truncateText(toolsUsed, 30)}</td>
+            <td>${preparedBy}</td>
+            <td>${verifiedBy}</td>
+            <td>${userName}</td>
+            <td>
+                <span class="toolbox-status-badge ${status === 'completed' ? 'toolbox-status-completed' : 'toolbox-status-submitted'}">
+                    ${status === 'completed' ? '✅ Completed' : '📝 Submitted'}
+                </span>
             </td>
+            <td>${formatDate(createdAt)}</td>
+            <td>${actionButtons}</td>
         `;
 
         tbody.appendChild(row);
@@ -293,7 +431,7 @@ function filterTools() {
             matches = false;
         }
 
-        if (userFilter && tool.user_name !== userFilter) {
+        if (userFilter && (tool.user_name || tool.userName) !== userFilter) {
             matches = false;
         }
 
@@ -304,6 +442,26 @@ function filterTools() {
     displayTools();
 }
 
+// Populate user filter dropdown
+function populateUserFilter() {
+    const userFilter = document.getElementById('userFilter');
+    if (!userFilter) return;
+
+    // Get unique users from all tools
+    const users = [...new Set(allTools.map(tool => tool.user_name || tool.userName).filter(Boolean))];
+
+    // Clear existing options except the first one
+    userFilter.innerHTML = '<option value="">All Users</option>';
+
+    // Add user options
+    users.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user;
+        option.textContent = user;
+        userFilter.appendChild(option);
+    });
+}
+
 // View tool details
 function viewToolDetails(toolId) {
     const tool = allTools.find(t => t.id == toolId);
@@ -311,6 +469,11 @@ function viewToolDetails(toolId) {
         alert('Tool not found');
         return;
     }
+
+    // Check if toolbox is completed
+    const statusMessage = tool.status === 'completed'
+        ? '\n\n✅ This toolbox form has been completed and finalized.'
+        : '';
 
     // Create a simple modal or use alert for now
     const details = `
@@ -320,7 +483,9 @@ Work Location: ${tool.work_location || tool.workLocation || 'N/A'}
 Company: ${tool.name_company || tool.nameCompany || 'N/A'}
 Tools Used: ${tool.tools_used || tool.toolsUsed || 'N/A'}
 Prepared By: ${tool.prepared_by || tool.preparedBy || 'N/A'}
-Created At: ${formatDate(tool.created_at || tool.createdAt)}
+Verified By: ${tool.verified_by || tool.verifiedBy || 'N/A'}
+Status: ${tool.status === 'completed' ? '✅ Completed' : '📝 Submitted'}
+Created At: ${formatDate(tool.created_at || tool.createdAt)}${statusMessage}
     `;
 
     alert(details);
@@ -328,6 +493,18 @@ Created At: ${formatDate(tool.created_at || tool.createdAt)}
 
 // Edit tool
 function editTool(toolId) {
+    const tool = allTools.find(t => t.id == toolId);
+    if (!tool) {
+        alert('Tool not found');
+        return;
+    }
+
+    // Check if toolbox is already completed
+    if (tool.status === 'completed') {
+        alert('❌ This toolbox form is already completed and cannot be edited.');
+        return;
+    }
+
     // Redirect to toolbox form with edit mode
     window.location.href = `./tool_box.html?edit=${toolId}`;
 }
@@ -337,6 +514,12 @@ function deleteTool(toolId) {
     const tool = allTools.find(t => t.id == toolId);
     if (!tool) {
         alert('Tool not found');
+        return;
+    }
+
+    // Check if toolbox is already completed
+    if (tool.status === 'completed') {
+        alert('❌ This toolbox form is already completed and cannot be deleted.');
         return;
     }
 
@@ -383,9 +566,39 @@ function showMessage(message, type = 'info') {
     console.log(`${type.toUpperCase()}: ${message}`);
 }
 
+// Logout function
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = './index.html';
 }
 
+// Modal functions
+function closeToolDetailsModal() {
+    const modal = document.getElementById('toolDetailsModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function editCurrentTool() {
+    // Implementation for editing current tool
+    console.log('Edit current tool functionality');
+}
+
+function closeCheckoutModal() {
+    const modal = document.getElementById('checkoutModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function processCheckout() {
+    // Implementation for processing checkout
+    console.log('Process checkout functionality');
+}
+
+function confirmDeleteTool() {
+    // Implementation for confirming tool deletion
+    console.log('Confirm delete tool functionality');
+}

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            width: 600px;
+            height: 400px;
+            margin: 50px auto;
+            border: 1px solid #ccc;
+            padding: 20px;
+        }
+
+        .test-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Chart.js Test</h1>
+
+    <button class="test-button" onclick="createTestChart()">Create Test Chart</button>
+    <button class="test-button" onclick="createInventoryChart()">Create Inventory Chart</button>
+
+    <div class="chart-container">
+        <canvas id="testChart"></canvas>
+    </div>
+
+    <div id="status" style="text-align: center; margin: 20px; font-family: monospace;"></div>
+
+    <script>
+        let chartInstance = null;
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function createTestChart() {
+            updateStatus('Creating test chart...');
+
+            const ctx = document.getElementById('testChart');
+            if (!ctx) {
+                updateStatus('ERROR: Canvas element not found');
+                return;
+            }
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            try {
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Test 1', 'Test 2', 'Test 3'],
+                        datasets: [{
+                            label: 'Test Data',
+                            data: [10, 20, 30],
+                            backgroundColor: ['#e74c3c', '#3498db', '#2ecc71'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+                updateStatus('✅ Test chart created successfully');
+                console.log('Test chart created:', chartInstance);
+            } catch (error) {
+                updateStatus('❌ Error creating test chart: ' + error.message);
+                console.error('Chart creation error:', error);
+            }
+        }
+
+        function createInventoryChart() {
+            updateStatus('Creating inventory chart...');
+
+            const ctx = document.getElementById('testChart');
+            if (!ctx) {
+                updateStatus('ERROR: Canvas element not found');
+                return;
+            }
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            try {
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Reports', 'Toolbox', 'Inventory', 'In Progress', 'Completed'],
+                        datasets: [{
+                            label: 'Count',
+                            data: [5, 3, 10, 2, 8],
+                            backgroundColor: ['#e74c3c', '#9b59b6', '#3498db', '#f39c12', '#2ecc71'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+                updateStatus('✅ Inventory chart created successfully');
+                console.log('Inventory chart created:', chartInstance);
+            } catch (error) {
+                updateStatus('❌ Error creating inventory chart: ' + error.message);
+                console.error('Chart creation error:', error);
+            }
+        }
+
+        // Test on page load
+        window.addEventListener('load', () => {
+            updateStatus('Page loaded - click buttons to test charts');
+        });
+    </script>
+</body>
+
+</html>

@@ -1,5 +1,5 @@
 const Report = require('../models/Report');
-const pool = require('../config/db');
+const { get, all } = require('../config/db-sqlite');
 
 exports.createReport = async (req, res) => {
   try {
@@ -19,8 +19,7 @@ exports.createReport = async (req, res) => {
     });
 
     // Get the created report to return
-    const reports = await pool.query('SELECT * FROM reports WHERE id = ?', [reportId]);
-    const createdReport = reports[0][0]; // pool.query returns [rows], rows is array, so reports[0][0]
+    const createdReport = await get('SELECT * FROM reports WHERE id = ?', [reportId]);
 
     // Emit real-time update to admin panels
     if (req.app.locals.io) {
@@ -48,7 +47,36 @@ exports.getUserReports = async (req, res) => {
 exports.updateReport = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, jobDescription, location, remarks, reportDate, reportTime, toolsUsed, status } = req.body;
+    // Handle both snake_case and camelCase field names from frontend
+    const { 
+      title, 
+      jobDescription, 
+      location, 
+      remarks, 
+      reportDate, 
+      reportTime, 
+      toolsUsed,
+      report_date,
+      report_time,
+      tools_used,
+      status 
+    } = req.body;
+    
+    console.log('🔧 Backend received update request:', {
+      id,
+      title,
+      jobDescription,
+      location,
+      remarks,
+      reportDate,
+      reportTime,
+      toolsUsed,
+      report_date,
+      report_time,
+      tools_used,
+      status
+    });
+    
     const userId = req.user.id;
 
     // Verify report belongs to user
@@ -59,20 +87,25 @@ exports.updateReport = async (req, res) => {
       return res.status(404).json({ error: 'Report not found' });
     }
 
-    await Report.update(id, {
+    const updateData = {
       title,
       jobDescription,
       location,
       remarks,
-      reportDate,
-      reportTime,
-      toolsUsed,
+      reportDate: report_date !== undefined ? report_date : reportDate,
+      reportTime: report_time !== undefined ? report_time : reportTime,
+      toolsUsed: tools_used !== undefined ? tools_used : toolsUsed,
       status
-    });
+    };
+    
+    console.log('🔧 Sending data to Report.update:', updateData);
+    
+    await Report.update(id, updateData);
 
     // Get the updated report to return
-    const updatedReports = await pool.query('SELECT * FROM reports WHERE id = ?', [id]);
-    const updatedReport = updatedReports[0][0]; // pool.query returns [rows], rows is array, so updatedReports[0][0]
+    const updatedReport = await get('SELECT * FROM reports WHERE id = ?', [id]);
+    
+    console.log('🔧 Retrieved updated report from database:', updatedReport);
 
     // Emit real-time update to admin panels
     if (req.app.locals.io) {

@@ -208,6 +208,30 @@ router.delete("/reports/:id", authenticateToken, requireAdmin, async (req, res) 
     }
 });
 
+// Test endpoint for admin dashboard data
+router.get("/dashboard/test", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log("Admin dashboard test request received");
+        
+        // Return test data to verify the endpoint is working
+        const testData = {
+            reports: 5,
+            inventory: 10,
+            toolbox: 3,
+            inProgress: 2,
+            completed: 8,
+            totalUsers: 15,
+            todayLogins: 3
+        };
+        
+        console.log("Test data sent:", testData);
+        res.json(testData);
+    } catch (err) {
+        console.error("Admin dashboard test error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 // ====================== Admin Dashboard ======================
 
 // Get admin dashboard data (overview statistics)

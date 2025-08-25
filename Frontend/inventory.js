@@ -12,6 +12,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     loadInventory();
     setupEventListeners();
+    
+    // Check for recently updated items to restore their completed status
+    setTimeout(() => {
+        checkRecentlyUpdatedItems();
+    }, 1000);
 });
 
 function setupEventListeners() {
@@ -116,6 +121,29 @@ function showResults(items) {
     items.forEach(item => {
         const row = document.createElement('tr');
         row.setAttribute('data-inventory-id', item.id);
+        
+        // Check if this item was recently updated
+        const updateKey = `inventory_updated_${item.id}`;
+        const updateTimestamp = localStorage.getItem(updateKey);
+        const isRecentlyUpdated = updateTimestamp && (Date.now() - parseInt(updateTimestamp)) < 24 * 60 * 60 * 1000;
+        
+        if (isRecentlyUpdated) {
+            console.log('🔄 [showResults] Found recently updated item:', item.id, 'showing completed status');
+        }
+        
+        // Determine action column content
+        let actionColumn;
+        if (isRecentlyUpdated) {
+            actionColumn = '<span class="completed-action">✓ Completed</span>';
+            row.classList.add('updated');
+        } else {
+            actionColumn = `
+                <button class="edit-button" onclick="toggleEditMode('${item.id}', this)">Edit</button>
+                <button class="delete-button" onclick="deleteInventory('${item.id}')">Delete</button>
+                <button class="cancel-button" onclick="cancelEdit('${item.id}', this)" style="display: none;">Cancel</button>
+            `;
+        }
+        
         row.innerHTML = `
             <td class="editable-cell" data-field="product_type" data-value="${item.product_type || ''}">${item.product_type || 'N/A'}</td>
             <td class="editable-cell" data-field="status" data-value="${item.status || ''}">${item.status || 'N/A'}</td>
@@ -124,11 +152,7 @@ function showResults(items) {
             <td class="editable-cell" data-field="date" data-value="${item.date || ''}">${item.date || 'N/A'}</td>
             <td class="editable-cell" data-field="location" data-value="${item.location || ''}">${item.location || 'N/A'}</td>
             <td class="editable-cell" data-field="issued_by" data-value="${item.issued_by || ''}">${item.issued_by || 'N/A'}</td>
-            <td>
-                <button class="edit-button" onclick="toggleEditMode('${item.id}', this)">Edit</button>
-                <button class="delete-button" onclick="deleteInventory('${item.id}')">Delete</button>
-                <button class="cancel-button" onclick="cancelEdit('${item.id}', this)" style="display: none;">Cancel</button>
-            </td>
+            <td>${actionColumn}</td>
         `;
         inventoryBody.appendChild(row);
     });
@@ -485,6 +509,29 @@ function displayInventory(inventory) {
     inventory.forEach(item => {
         const row = document.createElement('tr');
         row.setAttribute('data-inventory-id', item.id);
+        
+        // Check if this item was recently updated
+        const updateKey = `inventory_updated_${item.id}`;
+        const updateTimestamp = localStorage.getItem(updateKey);
+        const isRecentlyUpdated = updateTimestamp && (Date.now() - parseInt(updateTimestamp)) < 24 * 60 * 60 * 1000;
+        
+        if (isRecentlyUpdated) {
+            console.log('🔄 [displayInventory] Found recently updated item:', item.id, 'showing completed status');
+        }
+        
+        // Determine action column content
+        let actionColumn;
+        if (isRecentlyUpdated) {
+            actionColumn = '<span class="completed-action">✓ Completed</span>';
+            row.classList.add('updated');
+        } else {
+            actionColumn = `
+                <button class="edit-button" onclick="toggleEditMode('${item.id}', this)">Edit</button>
+                <button class="delete-button" onclick="deleteInventory('${item.id}')">Delete</button>
+                <button class="cancel-button" onclick="cancelEdit('${item.id}', this)" style="display: none;">Cancel</button>
+            `;
+        }
+        
         row.innerHTML = `
             <td class="editable-cell" data-field="product_type" data-value="${item.product_type || ''}">${item.product_type || 'N/A'}</td>
             <td class="editable-cell" data-field="status" data-value="${item.status || ''}">${item.status || 'N/A'}</td>
@@ -493,11 +540,7 @@ function displayInventory(inventory) {
             <td class="editable-cell" data-field="date" data-value="${item.date || ''}">${item.date || 'N/A'}</td>
             <td class="editable-cell" data-field="location" data-value="${item.location || ''}">${item.location || 'N/A'}</td>
             <td class="editable-cell" data-field="issued_by" data-value="${item.issued_by || ''}">${item.issued_by || 'N/A'}</td>
-            <td>
-                <button class="edit-button" onclick="toggleEditMode('${item.id}', this)">Edit</button>
-                <button class="delete-button" onclick="deleteInventory('${item.id}')">Delete</button>
-                <button class="cancel-button" onclick="cancelEdit('${item.id}', this)" style="display: none;">Cancel</button>
-            </td>
+            <td>${actionColumn}</td>
         `;
         inventoryBody.appendChild(row);
     });
@@ -707,24 +750,11 @@ async function saveInventoryChanges(inventoryId, row, button) {
             // Exit edit mode
             exitEditMode(row, button);
 
-            // Hide edit and delete buttons after successful save
-            const editButton = row.querySelector('.edit-button');
-            const deleteButton = row.querySelector('.delete-button');
-
-            if (editButton) {
-                editButton.style.display = 'none';
-            }
-            if (deleteButton) {
-                deleteButton.style.display = 'none';
-            }
-
-            // Add a "Completed" indicator
+            // Clear the action column and show "Completed"
             const actionCell = row.querySelector('td:last-child');
             if (actionCell) {
-                const updatedIndicator = document.createElement('span');
-                updatedIndicator.className = 'updated-indicator';
-                updatedIndicator.textContent = '✓ Completed';
-                actionCell.appendChild(updatedIndicator);
+                actionCell.innerHTML = '<span class="completed-action">✓ Completed</span>';
+                console.log('✅ Action column updated to show Completed for inventory ID:', inventoryId);
             }
 
             // Add updated class to the row for CSS styling
@@ -739,8 +769,7 @@ async function saveInventoryChanges(inventoryId, row, button) {
             // Show success message
             alert('✅ Inventory item updated successfully!');
 
-            // Reload inventory to ensure data consistency
-            loadInventory();
+            // Don't reload inventory - keep the completed status visible
 
             // Emit update event
             // emitInventoryUpdate('updated', { id: inventoryId, ...updatedData }); // REMOVED
@@ -1046,13 +1075,10 @@ function checkRecentlyUpdatedItems() {
                 // Add updated class
                 row.classList.add('updated');
 
-                // Add updated indicator
+                // Show completed action
                 const actionCell = row.querySelector('td:last-child');
                 if (actionCell) {
-                    const updatedIndicator = document.createElement('span');
-                    updatedIndicator.className = 'updated-indicator';
-                    updatedIndicator.textContent = '✓ Completed';
-                    actionCell.appendChild(updatedIndicator);
+                    actionCell.innerHTML = '<span class="completed-action">✓ Completed</span>';
                 }
             } else {
                 // Remove old update records (older than 24 hours)

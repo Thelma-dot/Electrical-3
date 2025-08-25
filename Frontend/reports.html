@@ -157,6 +157,35 @@
             return timeString;
         }
 
+        // Helper function to format date for display
+        function formatDateForDisplay(dateString) {
+            if (!dateString) return 'N/A';
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return 'N/A';
+                return date.toLocaleDateString();
+            } catch (error) {
+                return 'N/A';
+            }
+        }
+
+        // Helper function to format time for display
+        function formatTimeForDisplay(timeString) {
+            if (!timeString) return 'N/A';
+            try {
+                // If time is in HH:MM:SS format, extract HH:MM
+                if (timeString.includes(':')) {
+                    const parts = timeString.split(':');
+                    if (parts.length >= 2) {
+                        return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+                    }
+                }
+                return timeString;
+            } catch (error) {
+                return 'N/A';
+            }
+        }
+
         // Load reports when page loads
         document.addEventListener('DOMContentLoaded', function () {
             loadReports();
@@ -178,6 +207,18 @@
 
                 if (response.ok) {
                     allReports = await response.json();
+                    console.log('📋 Received reports data:', allReports);
+
+                    // Debug date and time fields
+                    allReports.forEach((report, index) => {
+                        console.log(`📅 Report ${index + 1} date/time fields:`, {
+                            id: report.id,
+                            report_date: report.report_date,
+                            report_time: report.report_time,
+                            title: report.title
+                        });
+                    });
+
                     displayReports(allReports);
                 } else {
                     console.error('Failed to load reports');
@@ -210,14 +251,31 @@
 
             reportsToShow.forEach((report) => {
                 const row = document.createElement('tr');
+                // Format date and time properly
+                const reportDate = report.report_date || report.reportDate;
+                const reportTime = report.report_time || report.reportTime;
+
+                console.log(`📊 Displaying report ${report.id}:`, {
+                    title: report.title,
+                    report_date: report.report_date,
+                    report_time: report.report_time,
+                    reportDate: report.reportDate,
+                    reportTime: report.reportTime,
+                    tools_used: report.tools_used,
+                    toolsUsed: report.toolsUsed
+                });
+
+                const formattedDate = reportDate ? formatDateForDisplay(reportDate) : 'N/A';
+                const formattedTime = reportTime ? formatTimeForDisplay(reportTime) : 'N/A';
+
                 row.innerHTML = `
                     <td>${report.title || 'N/A'}</td>
                     <td>${report.job_description || report.jobDescription || 'N/A'}</td>
                     <td>${report.location || 'N/A'}</td>
-                    <td>${report.report_date || report.reportDate || 'N/A'}</td>
-                    <td>${report.report_time || report.reportTime || 'N/A'}</td>
-                    <td><span class="status ${(report.status || '').toLowerCase().replace(' ', '-')}">${report.status || 'N/A'}</span></td>
-                        <td>${Array.isArray(report.tools_used || report.toolsUsed) ?
+                    <td>${formattedDate}</td>
+                    <td>${formattedTime}</td>
+                    <td><span class="status ${(report.status || '').toLowerCase().replace(' ', '-')}">${report.status || 'N/A'}</td>
+                    <td>${Array.isArray(report.tools_used || report.toolsUsed) ?
                         (report.tools_used || report.toolsUsed).join(', ') :
                         (report.tools_used || report.toolsUsed || 'N/A')}</td>
                     <td>
@@ -291,8 +349,8 @@
                         <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Title:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.title}</td></tr>
                         <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Description:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.job_description || report.jobDescription}</td></tr>
                         <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Location:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.location}</td></tr>
-                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Date:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.report_date || report.reportDate}</td></tr>
-                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Time:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.report_time || report.reportTime}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Date:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${formatDateForDisplay(report.report_date || report.reportDate)}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Time:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${formatTimeForDisplay(report.report_time || report.reportTime)}</td></tr>
                         <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Status:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.status}</td></tr>
                         <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Tools Used:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${Array.isArray(report.tools_used || report.toolsUsed) ? (report.tools_used || report.toolsUsed).join(', ') : (report.tools_used || report.toolsUsed || 'N/A')}</td></tr>
                         <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Remarks:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.remarks || 'N/A'}</td></tr>
@@ -309,6 +367,8 @@
         async function editReport(reportId) {
             const report = allReports.find(r => r.id === reportId);
             if (!report) return;
+
+            console.log('📝 Original report data for editing:', report);
 
             const modal = document.createElement('div');
             modal.style.cssText = `
@@ -401,6 +461,14 @@
                 const toolsUsed = document.getElementById('editToolsUsed').value.trim();
                 const remarks = document.getElementById('editRemarks').value.trim();
 
+                                 console.log('🔍 Form values collected:', { title, jobDescription, location, date, time, status, toolsUsed, remarks });
+                 console.log('🔍 Form element values:', {
+                     title: document.getElementById('editTitle').value,
+                     date: document.getElementById('editDate').value,
+                     time: document.getElementById('editTime').value,
+                     toolsUsed: document.getElementById('editToolsUsed').value
+                 });
+
                 if (!title || !jobDescription || !location || !date || !status) {
                     alert('Please fill in all required fields');
                     return;
@@ -420,11 +488,13 @@
                     jobDescription,
                     location,
                     remarks,
-                    reportDate: date,
-                    reportTime: time,
-                    toolsUsed,
+                    report_date: date,
+                    report_time: time,
+                    tools_used: toolsUsed,
                     status: finalStatus
                 };
+
+                console.log('💾 Sending report data to backend:', reportData);
 
                 const token = localStorage.getItem('token');
                 const response = await fetch(`http://localhost:5000/api/reports/${reportId}`, {
@@ -438,11 +508,21 @@
 
                 if (response.ok) {
                     const updatedReport = await response.json();
+                    console.log('✅ Received updated report from backend:', updatedReport);
+                    console.log('🔍 Checking field mapping in updated report:', {
+                        report_date: updatedReport.report_date,
+                        report_time: updatedReport.report_time,
+                        tools_used: updatedReport.tools_used,
+                        reportDate: updatedReport.reportDate,
+                        reportTime: updatedReport.reportTime,
+                        toolsUsed: updatedReport.toolsUsed
+                    });
 
                     // Update the report in the local array
                     const index = allReports.findIndex(r => r.id === reportId);
                     if (index !== -1) {
                         allReports[index] = updatedReport;
+                        console.log('💾 Updated local report array:', allReports[index]);
                     }
 
                     // Refresh the display
@@ -476,7 +556,13 @@
                 if (!report) return;
 
                 const reportData = {
-                    ...report,
+                    title: report.title,
+                    jobDescription: report.job_description || report.jobDescription,
+                    location: report.location,
+                    remarks: report.remarks,
+                    report_date: report.report_date || report.reportDate,
+                    report_time: report.report_time || report.reportTime,
+                    tools_used: report.tools_used || report.toolsUsed,
                     status: 'Completed'
                 };
 
@@ -491,6 +577,7 @@
 
                 if (response.ok) {
                     const updatedReport = await response.json();
+                    console.log('✅ Received updated report from backend (markComplete):', updatedReport);
 
                     // Update the report in the local array
                     const index = allReports.findIndex(r => r.id === reportId);

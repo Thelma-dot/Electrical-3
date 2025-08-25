@@ -121,6 +121,19 @@ async function initializeDatabase() {
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )`,
+
+        // Login logs table
+        `CREATE TABLE IF NOT EXISTS login_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          staff_id TEXT NOT NULL,
+          login_type TEXT DEFAULT 'staff',
+          ip_address TEXT,
+          user_agent TEXT,
+          success INTEGER DEFAULT 1,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )`
       ];
 
@@ -143,10 +156,14 @@ async function initializeDatabase() {
               insertDemoUsers()
                 .then(() => {
                   console.log("✅ Demo users inserted successfully");
+                  return insertDemoData();
+                })
+                .then(() => {
+                  console.log("✅ Demo data inserted successfully");
                   resolve();
                 })
                 .catch((err) => {
-                  console.error("❌ Error inserting demo users:", err);
+                  console.error("❌ Error inserting demo data:", err);
                   // Don't reject here, as tables are created successfully
                   resolve();
                 });
@@ -273,6 +290,55 @@ async function insertDemoUsers() {
     } catch (error) {
       console.log(`⚠️ Demo user ${user.staffID} already exists`);
     }
+  }
+}
+
+// Insert demo data (reports, inventory, tasks, toolbox)
+async function insertDemoData() {
+  const demoReports = [
+    { userID: 2, title: "Report 1", jobDescription: "Job 1", location: "Location A", remarks: "Remarks 1" },
+    { userID: 2, title: "Report 2", jobDescription: "Job 2", location: "Location B", remarks: "Remarks 2" },
+    { userID: 3, title: "Report 3", jobDescription: "Job 3", location: "Location A", remarks: "Remarks 3" },
+  ];
+  const demoInventory = [
+    { userID: 2, productType: "Tool", status: "New", size: "Medium", serialNumber: "INV001", date: "2023-01-01", location: "Warehouse A", issuedBy: "User A" },
+    { userID: 2, productType: "Equipment", status: "Used", size: "Large", serialNumber: "INV002", date: "2023-02-01", location: "Warehouse B", issuedBy: "User B" },
+    { userID: 3, productType: "Material", status: "New", size: "Small", serialNumber: "INV003", date: "2023-03-01", location: "Warehouse A", issuedBy: "User A" },
+  ];
+  const demoTasks = [
+    { userID: 2, title: "Task 1", description: "Description 1", status: "Pending", priority: "High", dueDate: "2023-10-01", assignedBy: "User A" },
+    { userID: 2, title: "Task 2", description: "Description 2", status: "Completed", priority: "Medium", dueDate: "2023-10-10", assignedBy: "User B" },
+    { userID: 3, title: "Task 3", description: "Description 3", status: "Pending", priority: "Low", dueDate: "2023-10-20", assignedBy: "User A" },
+  ];
+  const demoToolbox = [
+    { userID: 2, workActivity: "Activity 1", date: "2023-09-01", workLocation: "Location X", nameCompany: "Company A", sign: "Sign 1", ppeNo: "PPE001", toolsUsed: "Tool 1, Tool 2", hazards: "Hazard 1", circulars: "Circular 1", riskAssessment: "Risk 1", permit: "Permit 1", remarks: "Remarks 1", preparedBy: "User A", verifiedBy: "User B" },
+    { userID: 2, workActivity: "Activity 2", date: "2023-09-10", workLocation: "Location Y", nameCompany: "Company B", sign: "Sign 2", ppeNo: "PPE002", toolsUsed: "Tool 3, Tool 4", hazards: "Hazard 2", circulars: "Circular 2", riskAssessment: "Risk 2", permit: "Permit 2", remarks: "Remarks 2", preparedBy: "User A", verifiedBy: "User B" },
+    { userID: 3, workActivity: "Activity 3", date: "2023-09-20", workLocation: "Location Z", nameCompany: "Company A", sign: "Sign 1", ppeNo: "PPE001", toolsUsed: "Tool 5, Tool 6", hazards: "Hazard 1", circulars: "Circular 1", riskAssessment: "Risk 1", permit: "Permit 1", remarks: "Remarks 1", preparedBy: "User A", verifiedBy: "User B" },
+  ];
+
+  for (const report of demoReports) {
+    await run(
+      "INSERT OR IGNORE INTO reports (user_id, title, job_description, location, remarks) VALUES (?, ?, ?, ?, ?)",
+      [report.userID, report.title, report.jobDescription, report.location, report.remarks]
+    );
+  }
+  for (const inventory of demoInventory) {
+    await run(
+      "INSERT OR IGNORE INTO inventory (user_id, product_type, status, size, serial_number, date, location, issued_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [inventory.userID, inventory.productType, inventory.status, inventory.size, inventory.serialNumber, inventory.date, inventory.location, inventory.issuedBy]
+    );
+  }
+  for (const task of demoTasks) {
+    await run(
+      "INSERT OR IGNORE INTO tasks (user_id, title, description, status, priority, due_date, assigned_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [task.userID, task.title, task.description, task.status, task.priority, task.dueDate, task.assignedBy]
+    );
+  }
+  for (const toolbox of demoToolbox) {
+    await run(
+      "INSERT OR IGNORE INTO toolbox (user_id, work_activity, date, work_location, name_company, sign, ppe_no, tools_used, hazards, circulars, risk_assessment, permit, remarks, prepared_by, verified_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [toolbox.userID, toolbox.workActivity, toolbox.date, toolbox.workLocation, toolbox.nameCompany, toolbox.sign, toolbox.ppeNo, toolbox.toolsUsed, toolbox.hazards, toolbox.circulars, toolbox.riskAssessment, toolbox.permit, toolbox.remarks, toolbox.preparedBy, toolbox.verifiedBy]
+    );
   }
 }
 

@@ -1,20 +1,27 @@
-const { run, get, all } = require('../config/database');
+const { run, get, all } = require('../config/db-sqlite');
 
 class Toolbox {
   static async create(toolbox) {
-    const { userId, workActivity, date, workLocation, nameCompany, sign, ppeNo, toolsUsed, hazards, circulars, riskAssessment, permit, remarks, preparedBy, verifiedBy } = toolbox;
+    const { userId, workActivity, date, workLocation, nameCompany, sign, ppeNo, toolsUsed, hazards, circulars, riskAssessment, permit, remarks, preparedBy, verifiedBy, status } = toolbox;
     const result = await run(
       `INSERT INTO toolbox 
-      (user_id, work_activity, date, work_location, name_company, sign, ppe_no, tools_used, hazards, circulars, risk_assessment, permit, remarks, prepared_by, verified_by) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [userId, workActivity, date, workLocation, nameCompany, sign, ppeNo, toolsUsed, hazards, circulars, riskAssessment, permit, remarks, preparedBy, verifiedBy]
+      (user_id, work_activity, date, work_location, name_company, sign, ppe_no, tools_used, hazards, circulars, risk_assessment, permit, remarks, prepared_by, verified_by, status) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [userId, workActivity, date, workLocation, nameCompany, sign, ppeNo, toolsUsed, hazards, circulars, riskAssessment, permit, remarks, preparedBy, verifiedBy, status]
     );
     return result.id;
   }
 
   static async findByUserId(userId) {
-    const rows = await all('SELECT * FROM toolbox WHERE user_id = ?', [userId]);
-    return rows;
+    console.log('🔍 Toolbox.findByUserId called with userId:', userId);
+    try {
+      const rows = await all('SELECT * FROM toolbox WHERE user_id = ?', [userId]);
+      console.log('📋 Found toolbox rows:', rows);
+      return rows;
+    } catch (error) {
+      console.error('❌ Error in Toolbox.findByUserId:', error);
+      throw error;
+    }
   }
 
   static async findById(id) {
@@ -23,14 +30,14 @@ class Toolbox {
   }
 
   static async update(id, toolbox) {
-    const { workActivity, date, workLocation, nameCompany, sign, ppeNo, toolsUsed, hazards, circulars, riskAssessment, permit, remarks, preparedBy, verifiedBy } = toolbox;
+    const { workActivity, date, workLocation, nameCompany, sign, ppeNo, toolsUsed, hazards, circulars, riskAssessment, permit, remarks, preparedBy, verifiedBy, status } = toolbox;
     const result = await run(
       `UPDATE toolbox SET 
         work_activity = ?, date = ?, work_location = ?, name_company = ?, sign = ?, 
         ppe_no = ?, tools_used = ?, hazards = ?, circulars = ?, risk_assessment = ?, 
-        permit = ?, remarks = ?, prepared_by = ?, verified_by = ?
+        permit = ?, remarks = ?, prepared_by = ?, verified_by = ?, status = ?
       WHERE id = ?`,
-      [workActivity, date, workLocation, nameCompany, sign, ppeNo, toolsUsed, hazards, circulars, riskAssessment, permit, remarks, preparedBy, verifiedBy, id]
+      [workActivity, date, workLocation, nameCompany, sign, ppeNo, toolsUsed, hazards, circulars, riskAssessment, permit, remarks, preparedBy, verifiedBy, status, id]
     );
     return result.changes > 0;
   }

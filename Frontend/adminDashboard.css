@@ -774,16 +774,34 @@ body {
     padding: 1.5rem;
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
 }
 
 .chart-card h3 {
     font-size: 1.25rem;
     margin-bottom: 1rem;
     color: #1f2937;
+    flex-shrink: 0;
 }
 
 .chart-card canvas {
     max-height: 300px;
+    flex: 1;
+    min-height: 300px;
+}
+
+/* Specific styling for admin bar chart */
+#adminBarChart {
+    min-height: 300px;
+    width: 100% !important;
+    height: 300px !important;
+}
+
+/* Ensure chart containers are visible */
+.charts-container {
+    margin-bottom: 2rem;
 }
 
 /* Recent Users Table */
@@ -3022,5 +3040,61 @@ body.dark-mode {
         max-width: 300px;
         right: 10px;
         left: 10px;
+    }
+}
+
+/* === Toolbox Status Styles === */
+.completed-status {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #27ae60;
+    color: white;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    text-align: center;
+    min-width: 120px;
+}
+
+.toolbox-status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 100px;
+}
+
+.toolbox-status-completed {
+    background-color: #27ae60;
+    color: white;
+}
+
+.toolbox-status-submitted {
+    background-color: #3498db;
+    color: white;
+}
+
+/* === Notification Animations === */
+@keyframes slideInRight {
+    0% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(100%);
+        opacity: 0;
     }
 }

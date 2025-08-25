@@ -142,12 +142,12 @@ function renderReportsTable() {
         row.dataset.reportId = report.id;
         row.innerHTML = `
             <td>${report.title || 'N/A'}</td>
-            <td>${report.job_description || 'N/A'}</td>
+            <td>${report.job_description || report.jobDescription || 'N/A'}</td>
             <td>${report.location || 'N/A'}</td>
             <td>${user ? user.staff_id : 'Unknown'}</td>
             <td><span class="status-badge ${report.status?.toLowerCase().replace(' ', '-')}">${report.status || 'Pending'}</span></td>
-            <td>${formatDate(report.report_date || report.created_at)}</td>
-            <td>${report.tools_used || 'N/A'}</td>
+            <td>${formatDate(report.report_date || report.reportDate || report.created_at)}</td>
+            <td>${report.tools_used || report.toolsUsed || 'N/A'}</td>
             <td>
                 <button class="btn small" onclick="viewReportDetails(${report.id})" title="View Details">
                     <i class="fas fa-eye"></i>
@@ -176,7 +176,7 @@ function getFilteredReports() {
         const matchesSearch = (
             (report.title && report.title.toLowerCase().includes(searchTerm)) ||
             (report.location && report.location.toLowerCase().includes(searchTerm)) ||
-            (report.job_description && report.job_description.toLowerCase().includes(searchTerm))
+            ((report.job_description || report.jobDescription) && (report.job_description || report.jobDescription).toLowerCase().includes(searchTerm))
         );
 
         const matchesStatus = !statusFilter || report.status === statusFilter;
@@ -232,7 +232,7 @@ async function viewReportDetails(reportId) {
                     <strong>Title:</strong> ${report.title || 'N/A'}
                 </div>
                 <div class="detail-row">
-                    <strong>Job Description:</strong> ${report.job_description || 'N/A'}
+                    <strong>Job Description:</strong> ${report.job_description || report.jobDescription || 'N/A'}
                 </div>
                 <div class="detail-row">
                     <strong>Location:</strong> ${report.location || 'N/A'}
@@ -244,13 +244,13 @@ async function viewReportDetails(reportId) {
                     <strong>Status:</strong> <span class="status-badge ${report.status?.toLowerCase().replace(' ', '-')}">${report.status || 'Pending'}</span>
                 </div>
                 <div class="detail-row">
-                    <strong>Date:</strong> ${formatDate(report.report_date || report.created_at)}
+                    <strong>Date:</strong> ${formatDate(report.report_date || report.reportDate || report.created_at)}
                 </div>
                 <div class="detail-row">
                     <strong>Time:</strong> ${report.report_time || 'N/A'}
                 </div>
                 <div class="detail-row">
-                    <strong>Tools Used:</strong> ${report.tools_used || 'N/A'}
+                    <strong>Tools Used:</strong> ${report.tools_used || report.toolsUsed || 'N/A'}
                 </div>
                 <div class="detail-row">
                     <strong>Remarks:</strong> ${report.remarks || 'N/A'}
@@ -313,7 +313,7 @@ function printReportDetails() {
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Job Description:</span>
-                    <span class="detail-value">${report.job_description || 'N/A'}</span>
+                    <span class="detail-value">${report.job_description || report.jobDescription || 'N/A'}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Location:</span>
@@ -333,7 +333,7 @@ function printReportDetails() {
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Date:</span>
-                    <span class="detail-value">${formatDate(report.report_date || report.created_at)}</span>
+                    <span class="detail-value">${formatDate(report.report_date || report.reportDate || report.created_at)}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Time:</span>
@@ -341,7 +341,7 @@ function printReportDetails() {
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Tools Used:</span>
-                    <span class="detail-value">${report.tools_used || 'N/A'}</span>
+                    <span class="detail-value">${report.tools_used || report.toolsUsed || 'N/A'}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Remarks:</span>
@@ -468,12 +468,12 @@ function generateCSV(reports) {
         const user = allUsers.find(u => u.id === report.user_id);
         return [
             report.title || '',
-            report.job_description || '',
+                            report.job_description || report.jobDescription || '',
             report.location || '',
             user ? user.staff_id : '',
             report.status || '',
-            formatDate(report.report_date || report.created_at),
-            report.tools_used || '',
+            formatDate(report.report_date || report.reportDate || report.created_at),
+                            report.tools_used || report.toolsUsed || '',
             report.remarks || ''
         ];
     });

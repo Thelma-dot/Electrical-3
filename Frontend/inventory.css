@@ -112,6 +112,36 @@
     animation: fadeIn 0.5s ease-in;
 }
 
+/* Completed action styling */
+.completed-action {
+    color: #27ae60;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 6px 12px;
+    background: #d5f4e6;
+    border-radius: 16px;
+    display: inline-block;
+    border: 2px solid #27ae60;
+    animation: fadeIn 0.5s ease-in;
+    text-align: center;
+    min-width: 100px;
+}
+
+/* Backward compatibility for old completed class */
+.completed {
+    color: #27ae60;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 6px 12px;
+    background: #d5f4e6;
+    border-radius: 16px;
+    display: inline-block;
+    border: 2px solid #27ae60;
+    animation: fadeIn 0.5s ease-in;
+    text-align: center;
+    min-width: 100px;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;

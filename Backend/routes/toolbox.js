@@ -20,5 +20,6 @@ router.delete("/:id", authenticateToken, toolboxController.deleteToolbox);
 
 // Admin routes
 router.get("/admin/all", authenticateToken, toolboxController.getAllToolboxes);
+router.get("/admin/:id", authenticateToken, toolboxController.getAdminToolboxById);
 
 module.exports = router;

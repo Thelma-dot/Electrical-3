@@ -316,6 +316,43 @@ body {
   background: #2980b9;
 }
 
+.btn-sm {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s;
+}
+
+.btn-warning {
+  background: #f39c12;
+  color: white;
+}
+
+.btn-warning:hover {
+  background: #e67e22;
+}
+
+.btn-danger {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #c0392b;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+  margin: 0;
+}
+
 /* Task status row styling */
 .status-pending {
   background: #fff3cd !important;
@@ -415,6 +452,78 @@ button {
 
 button:hover {
   background-color: #003366;
+}
+
+/* === Toolbox Action Buttons === */
+.view-btn, .edit-btn, .delete-btn {
+  padding: 8px 16px;
+  margin: 0 4px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.view-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+.view-btn:hover {
+  background-color: #2980b9;
+}
+
+.edit-btn {
+  background-color: #f39c12;
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: #e67e22;
+}
+
+.delete-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+}
+
+/* === Completed Status === */
+.completed-status {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #27ae60;
+  color: white;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+  min-width: 120px;
+}
+
+/* === Status Badges === */
+.toolbox-status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 100px;
+}
+
+.toolbox-status-completed {
+  background-color: #27ae60;
+  color: white;
+}
+
+.toolbox-status-submitted {
+  background-color: #3498db;
+  color: white;
 }
 
 /* === Status Options === */

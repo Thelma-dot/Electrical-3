@@ -639,7 +639,7 @@ function editInventory(button) {
 
     // Replace the Edit/Save button with 'Completed'
     const actionCell = cells[7];
-    actionCell.innerHTML = '<span class="completed">Completed</span>';
+    actionCell.innerHTML = '<span class="completed-action">✓ Completed</span>';
   } else {
     // Change to save button
     button.textContent = 'Save';

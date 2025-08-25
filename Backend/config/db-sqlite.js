@@ -118,6 +118,7 @@ function initializeTables() {
       remarks TEXT,
       prepared_by TEXT NOT NULL,
       verified_by TEXT NOT NULL,
+      status TEXT DEFAULT 'draft',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     )
@@ -190,6 +191,29 @@ function updateTableSchemas() {
         }
       });
     });
+  });
+
+  // Check if toolbox table needs status column
+  db.all("PRAGMA table_info(toolbox)", (err, rows) => {
+    if (err) {
+      console.error("Error checking toolbox table schema:", err.message);
+      return;
+    }
+
+    // Check if status column exists
+    const hasStatus = rows.some(row => row.name === 'status');
+    if (!hasStatus) {
+      console.log("🔧 Adding status column to toolbox table...");
+      db.run("ALTER TABLE toolbox ADD COLUMN status TEXT DEFAULT 'draft'", (err) => {
+        if (err) {
+          console.error("Error adding status column to toolbox table:", err.message);
+        } else {
+          console.log("✅ Status column added to toolbox table");
+        }
+      });
+    } else {
+      console.log("✅ Status column already exists in toolbox table");
+    }
   });
 }
 

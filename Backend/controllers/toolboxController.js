@@ -17,7 +17,8 @@ exports.createToolbox = async (req, res) => {
       permit,
       remarks,
       preparedBy,
-      verifiedBy
+      verifiedBy,
+      status
     } = req.body;
 
     const userId = req.user.userId; // Fixed: use userId from JWT token
@@ -37,7 +38,8 @@ exports.createToolbox = async (req, res) => {
       permit,
       remarks,
       preparedBy,
-      verifiedBy
+      verifiedBy,
+      status: status || 'draft'
     });
 
     // Emit real-time update to all connected clients
@@ -72,10 +74,14 @@ exports.createToolbox = async (req, res) => {
 exports.getUserToolboxes = async (req, res) => {
   try {
     const userId = req.user.userId; // Fixed: use userId from JWT token
+    console.log('🔍 Getting toolboxes for user:', userId);
+
     const toolboxes = await Toolbox.findByUserId(userId);
+    console.log('📋 Found toolboxes:', toolboxes);
+
     res.json(toolboxes);
   } catch (err) {
-    console.error(err);
+    console.error('❌ Error in getUserToolboxes:', err);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -94,12 +100,41 @@ exports.getAllToolboxes = async (req, res) => {
         console.error('Database error:', err);
         return res.status(500).json({ error: 'Database error' });
       }
-
       res.json(toolboxes);
     });
-  } catch (error) {
-    console.error('Error getting all toolboxes:', error);
-    res.status(500).json({ error: 'Internal server error' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Admin endpoint to get a single toolbox by ID
+exports.getAdminToolboxById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const query = `
+      SELECT t.*, u.name as user_name, u.email as user_email 
+      FROM toolbox t 
+      LEFT JOIN users u ON t.user_id = u.id 
+      WHERE t.id = ?
+    `;
+
+    db.get(query, [id], (err, toolbox) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      if (!toolbox) {
+        return res.status(404).json({ error: 'Toolbox not found' });
+      }
+
+      res.json(toolbox);
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -145,7 +180,8 @@ exports.updateToolbox = async (req, res) => {
       permit,
       remarks,
       preparedBy,
-      verifiedBy
+      verifiedBy,
+      status
     } = req.body;
 
     // Get toolbox by ID first to verify ownership
@@ -175,13 +211,15 @@ exports.updateToolbox = async (req, res) => {
       permit,
       remarks,
       preparedBy,
-      verifiedBy
+      verifiedBy,
+      status
     });
 
     if (success) {
       // Emit real-time update to all connected clients
       if (req.app.locals.io) {
         console.log('🔌 Emitting toolbox:updated event');
+        console.log('🔌 Event data:', { toolboxId: id, userId, timestamp: new Date().toISOString(), action: 'updated' });
 
         // Emit to all connected clients for dashboard updates
         req.app.locals.io.emit('toolbox:updated', {
@@ -195,10 +233,13 @@ exports.updateToolbox = async (req, res) => {
         req.app.locals.io.emit('admin:toolbox:updated', {
           toolboxId: id,
           userId,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          action: 'updated'
         });
 
         console.log('✅ Real-time events emitted successfully');
+      } else {
+        console.log('⚠️ Socket.IO not available, skipping real-time updates');
       }
 
       res.json({ message: 'Toolbox form updated successfully' });
