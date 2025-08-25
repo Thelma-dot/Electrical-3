@@ -1,5 +1,4 @@
 const path = require("path");
-const bcrypt = require("bcrypt");
 require("dotenv").config({ path: path.join(__dirname, "..", "config.env") });
 
 // Check if we're running on Vercel
@@ -25,6 +24,10 @@ async function initializeDatabase() {
     return true;
   } catch (error) {
     console.error("❌ Database initialization failed:", error);
+    // Don't throw error in Vercel, just log it
+    if (!isVercel) {
+      throw error;
+    }
     return false;
   }
 }
@@ -32,6 +35,7 @@ async function initializeDatabase() {
 // Initialize PostgreSQL for Vercel
 async function initializePostgreSQL() {
   try {
+    // Only require pg if we're on Vercel
     const { Pool } = require('pg');
     
     const pool = new Pool({
@@ -41,9 +45,9 @@ async function initializePostgreSQL() {
       database: process.env.DB_NAME,
       port: process.env.DB_PORT || 5432,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      max: 5, // Reduce for serverless
+      idleTimeoutMillis: 10000, // Reduce for serverless
+      connectionTimeoutMillis: 5000,
     });
 
     // Test connection
@@ -57,7 +61,11 @@ async function initializePostgreSQL() {
     
   } catch (error) {
     console.error("❌ PostgreSQL connection failed:", error);
-    throw error;
+    // In Vercel, don't crash the function if DB fails
+    if (!isVercel) {
+      throw error;
+    }
+    console.log("⚠️ Continuing without database connection on Vercel");
   }
 }
 
@@ -88,6 +96,11 @@ async function initializeSQLite() {
 
 // Create database tables
 async function createTables() {
+  if (!db) {
+    console.log("⚠️ No database connection, skipping table creation");
+    return;
+  }
+
   const tables = [
     // Users table
     `CREATE TABLE IF NOT EXISTS users (

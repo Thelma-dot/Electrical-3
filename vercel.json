@@ -2,18 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "Backend/server.js",
+      "src": "Backend/api/index.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "Frontend/**/*",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "Backend/server.js"
+      "dest": "Backend/api/index.js"
     },
     {
       "src": "/images/(.*)",
@@ -36,7 +32,7 @@
     "NODE_ENV": "production"
   },
   "functions": {
-    "Backend/server.js": {
+    "Backend/api/index.js": {
       "maxDuration": 30
     }
   }
