@@ -80,6 +80,14 @@ function initializeSocketConnection() {
             console.log('🔌 Admin dashboard disconnected from server');
         });
 
+        socket.on('connect_error', (error) => {
+            console.error('🔌 Socket.IO connection error:', error);
+        });
+
+        socket.on('error', (error) => {
+            console.error('🔌 Socket.IO error:', error);
+        });
+
         // Listen for inventory updates
         socket.on('admin:inventory:created', (data) => {
             console.log('📦 Admin: Inventory created:', data);
@@ -549,11 +557,11 @@ function updateAdminCharts(data) {
             adminBarChartInstance = new Chart(barCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Reports', 'Inventory', 'Toolbox', 'In Progress', 'Completed'],
+                    labels: ['Reports', 'Toolbox', 'Inventory', 'In Progress', 'Completed'],
                     datasets: [{
                         label: 'Count',
-                        data: [data.reports, data.inventory, data.toolbox, data.inProgress, data.completed],
-                        backgroundColor: ['#e74c3c', '#3498db', '#9b59b6', '#f39c12', '#2ecc71'],
+                        data: [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed],
+                        backgroundColor: ['#e74c3c', '#9b59b6', '#3498db', '#f39c12', '#2ecc71'],
                         borderWidth: 0
                     }]
                 },

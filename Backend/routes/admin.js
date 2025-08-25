@@ -456,6 +456,102 @@ router.get("/inventory/stats", authenticateToken, requireAdmin, async (req, res)
     }
 });
 
+// Delete inventory item (admin)
+router.delete("/inventory/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log("Admin delete inventory request received for ID:", id);
+
+        // Check if inventory item exists
+        const inventoryItem = await get("SELECT * FROM inventory WHERE id = ?", [id]);
+        if (!inventoryItem) {
+            return res.status(404).json({ error: "Inventory item not found" });
+        }
+
+        // Delete the inventory item
+        await run("DELETE FROM inventory WHERE id = ?", [id]);
+        console.log(`Inventory item ${id} deleted successfully`);
+
+        // Emit real-time updates for both admin and user views
+        try {
+            // Emit admin-specific update
+            req.app.locals.io.emit('admin:inventory:deleted', {
+                inventoryId: id,
+                timestamp: new Date().toISOString()
+            });
+
+            // Also emit general inventory update so users can see changes
+            req.app.locals.io.emit('inventory:deleted', {
+                inventoryId: id,
+                timestamp: new Date().toISOString()
+            });
+
+            console.log('✅ Emitted both admin:inventory:deleted and inventory:deleted events');
+        } catch (e) {
+            console.log('Socket not available for real-time updates');
+        }
+
+        res.json({ message: "Inventory item deleted successfully" });
+    } catch (err) {
+        console.error("Admin delete inventory error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Update inventory item (admin)
+router.put("/inventory/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { productType, status, size, serialNumber, date, location, issuedBy, notes } = req.body;
+        console.log("Admin update inventory request received for ID:", id, req.body);
+
+        // Check if inventory item exists
+        const inventoryItem = await get("SELECT * FROM inventory WHERE id = ?", [id]);
+        if (!inventoryItem) {
+            return res.status(404).json({ error: "Inventory item not found" });
+        }
+
+        // Update the inventory item
+        await run(`
+            UPDATE inventory 
+            SET product_type = ?, status = ?, size = ?, serial_number = ?, 
+                date = ?, location = ?, issued_by = ?, notes = ?
+            WHERE id = ?
+        `, [productType, status, size, serialNumber, date, location, issuedBy, notes, id]);
+
+        console.log(`Inventory item ${id} updated successfully`);
+
+        // Get updated item for real-time update
+        const updatedItem = await get("SELECT * FROM inventory WHERE id = ?", [id]);
+
+        // Emit real-time updates for both admin and user views
+        try {
+            // Emit admin-specific update
+            req.app.locals.io.emit('admin:inventory:updated', {
+                inventoryId: id,
+                inventory: updatedItem,
+                timestamp: new Date().toISOString()
+            });
+
+            // Also emit general inventory update so users can see changes
+            req.app.locals.io.emit('inventory:updated', {
+                inventoryId: id,
+                inventory: updatedItem,
+                timestamp: new Date().toISOString()
+            });
+
+            console.log('✅ Emitted both admin:inventory:updated and inventory:updated events');
+        } catch (e) {
+            console.log('Socket not available for real-time updates');
+        }
+
+        res.json({ message: "Inventory item updated successfully" });
+    } catch (err) {
+        console.error("Admin update inventory error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 // Admin Toolbox Management Routes
 router.get("/toolbox", authenticateToken, requireAdmin, async (req, res) => {
     try {

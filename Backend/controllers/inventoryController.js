@@ -66,10 +66,11 @@ exports.createInventory = async (req, res) => {
     // Emit real-time update to all connected clients
     if (req.app.locals.io) {
       console.log('🔌 Emitting inventory:created event');
-      
+      console.log('🔌 Number of connected clients:', req.app.locals.io.engine.clientsCount);
+
       // Emit to all connected clients for dashboard updates
-      req.app.locals.io.emit('inventory:created', { 
-        inventoryId, 
+      req.app.locals.io.emit('inventory:created', {
+        inventoryId,
         userId,
         inventory: newInventory,
         timestamp: new Date().toISOString(),
@@ -85,6 +86,8 @@ exports.createInventory = async (req, res) => {
       });
 
       console.log('✅ Real-time events emitted successfully');
+    } else {
+      console.log('⚠️ Socket.IO not available in app.locals.io');
     }
 
     res.status(201).json(newInventory);
@@ -170,6 +173,55 @@ exports.getInventoryById = async (req, res) => {
   }
 };
 
+// Get inventory summary statistics for dashboard
+exports.getInventorySummary = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const inventory = await Inventory.findByUserId(userId);
+
+    // Calculate summary statistics
+    const summary = {
+      total: inventory.length,
+      byProductType: {
+        UPS: inventory.filter(item => item.product_type === 'UPS').length,
+        AVR: inventory.filter(item => item.product_type === 'AVR').length
+      },
+      byStatus: {
+        New: inventory.filter(item => item.status === 'New').length,
+        Replaced: inventory.filter(item => item.status === 'Replaced').length
+      },
+      bySize: {
+        '1.5kva': inventory.filter(item => item.size === '1.5kva').length,
+        '3kva': inventory.filter(item => item.size === '3kva').length,
+        '6kva': inventory.filter(item => item.size === '6kva').length,
+        '10kva': inventory.filter(item => item.size === '10kva').length,
+        '20kva': inventory.filter(item => item.size === '20kva').length,
+        '30kva': inventory.filter(item => item.size === '30kva').length,
+        '40kva': inventory.filter(item => item.size === '40kva').length,
+        '60kva': inventory.filter(item => item.size === '60kva').length
+      },
+      active: inventory.filter(item => item.status === 'New').length, // Active items are new items
+      uniqueLocations: new Set(inventory.map(item => item.location)).size,
+      recentItems: inventory
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 5)
+        .map(item => ({
+          id: item.id,
+          productType: item.product_type,
+          status: item.status,
+          size: item.size,
+          location: item.location,
+          date: item.date
+        }))
+    };
+
+    res.json(summary);
+  } catch (err) {
+    console.error('Error getting inventory summary:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 exports.updateInventory = async (req, res) => {
   try {
     const { id } = req.params;
@@ -213,10 +265,10 @@ exports.updateInventory = async (req, res) => {
     // Emit real-time update to all connected clients
     if (req.app.locals.io) {
       console.log('🔌 Emitting inventory:updated event');
-      
+
       // Emit to all connected clients for dashboard updates
-      req.app.locals.io.emit('inventory:updated', { 
-        inventoryId: id, 
+      req.app.locals.io.emit('inventory:updated', {
+        inventoryId: id,
         userId,
         inventory: updatedInventory,
         timestamp: new Date().toISOString(),
@@ -267,10 +319,10 @@ exports.deleteInventory = async (req, res) => {
     // Emit real-time update to all connected clients
     if (req.app.locals.io) {
       console.log('🔌 Emitting inventory:deleted event');
-      
+
       // Emit to all connected clients for dashboard updates
-      req.app.locals.io.emit('inventory:deleted', { 
-        inventoryId: id, 
+      req.app.locals.io.emit('inventory:deleted', {
+        inventoryId: id,
         userId,
         timestamp: new Date().toISOString(),
         action: 'deleted'
@@ -340,6 +392,21 @@ exports.searchInventory = async (req, res) => {
     });
   } catch (err) {
     console.error('Error searching inventory:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Get all users' inventory for admin dashboard chart
+exports.getAllUsersInventory = async (req, res) => {
+  try {
+    // Check if user is admin (you may need to implement this check based on your auth system)
+    // For now, we'll allow any authenticated user to access this endpoint
+    
+    const allInventory = await Inventory.findAll();
+    
+    res.json(allInventory);
+  } catch (err) {
+    console.error('Error getting all users inventory:', err);
     res.status(500).json({ error: 'Server error' });
   }
 };

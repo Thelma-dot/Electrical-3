@@ -102,71 +102,80 @@
     </div>
 
     <!-- Task Management Section -->
+    <section class="task-management-section">
 
 
-    <div class="task-stats">
-        <div class="stat-card">
-            <h3>Total Tasks</h3>
-            <p id="totalTasks">0</p>
+        <div class="task-stats">
+            <div class="stat-card">
+                <h3>Total Tasks</h3>
+                <p id="totalTasks">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Pending</h3>
+                <p id="pendingTasks">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>In Progress</h3>
+                <p id="inProgressTasks">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Completed</h3>
+                <p id="completedTasks">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Hidden from Users</h3>
+                <p id="hiddenTasks">0</p>
+            </div>
         </div>
-        <div class="stat-card">
-            <h3>Pending</h3>
-            <p id="pendingTasks">0</p>
-        </div>
-        <div class="stat-card">
-            <h3>In Progress</h3>
-            <p id="inProgressTasks">0</p>
-        </div>
-        <div class="stat-card">
-            <h3>Completed</h3>
-            <p id="completedTasks">0</p>
-        </div>
-        <div class="stat-card">
-            <h3>Hidden from Users</h3>
-            <p id="hiddenTasks">0</p>
-        </div>
-    </div>
 
-    <div class="search-filter">
-        <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="taskSearchInput" placeholder="Search tasks..." onkeyup="searchTasks()">
+        <div class="search-filter">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="taskSearchInput" placeholder="Search tasks..." onkeyup="searchTasks()">
+            </div>
+            <div class="filter-box">
+                <select id="taskStatusFilter" onchange="filterTasks()">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="filter-box">
+                <select id="taskUserFilter" onchange="filterTasks()">
+                    <option value="">All Users</option>
+                </select>
+            </div>
         </div>
-        <div class="filter-box">
-            <select id="taskStatusFilter" onchange="filterTasks()">
-                <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-            </select>
-        </div>
-        <div class="filter-box">
-            <select id="taskUserFilter" onchange="filterTasks()">
-                <option value="">All Users</option>
-            </select>
-        </div>
-    </div>
 
-    <div class="table-container">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>Assigned To</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th>Due Date</th>
-                    <th>Visibility</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="tasksTableBody">
-                <!-- Tasks will be loaded here -->
-            </tbody>
-        </table>
-    </div>
+        <div class="table-container">
+            <h2>📋 Task Assignments</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Assigned To</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                        <th>Visibility</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tasksTableBody">
+                    <!-- Tasks will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Task Table Pagination -->
+        <div class="pagination">
+            <button id="taskPrevPage" onclick="changeTaskPage(-1)">Previous</button>
+            <span id="taskPageInfo">Page 1 of 1</span>
+            <button id="taskNextPage" onclick="changeTaskPage(1)">Next</button>
+        </div>
     </section>
 
     <!-- Add User Modal -->
@@ -267,7 +276,7 @@
         </div>
     </div>
 
-    <script src="http://localhost:5000/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
         // Connect to realtime to update admin users table and tasks instantly
         document.addEventListener('DOMContentLoaded', () => {

@@ -15,8 +15,16 @@ async function startServer() {
     const { Server } = require('socket.io');
     const io = new Server(http, {
       cors: {
-        origin: process.env.FRONTEND_URL || 'http://127.0.0.1:5500',
-        methods: ['GET', 'POST', 'PUT', 'DELETE']
+        origin: [
+          process.env.FRONTEND_URL || 'http://127.0.0.1:5500',
+          'http://localhost:5500',
+          'http://localhost:3000',
+          'http://localhost:8080',
+          'http://127.0.0.1:3000',
+          'http://127.0.0.1:8080'
+        ],
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        credentials: true
       }
     });
 
@@ -25,7 +33,7 @@ async function startServer() {
 
     io.on('connection', (socket) => {
       console.log('🔌 Client connected', socket.id);
-      
+
       // Log when admin pages connect
       socket.on('admin:connected', (data) => {
         console.log('👑 Admin connected:', data);
@@ -49,6 +57,33 @@ async function startServer() {
       socket.on('test:event', (data) => {
         console.log('🧪 Test event received:', data);
         socket.emit('test:response', { message: 'Test event received successfully' });
+      });
+
+      // Handle test connection event
+      socket.on('test:connection', (data) => {
+        console.log('🧪 Test connection event received:', data);
+        console.log('🔌 Client socket ID:', socket.id);
+        console.log('🔌 Total connected clients:', io.engine.clientsCount);
+        socket.emit('test:connection:response', { 
+          message: 'Connection test successful', 
+          socketId: socket.id,
+          clientCount: io.engine.clientsCount,
+          timestamp: new Date().toISOString()
+        });
+      });
+
+      // Test inventory event emission
+      socket.on('test:inventory:event', (data) => {
+        console.log('🧪 Test inventory event received:', data);
+        // Emit a test inventory event to verify Socket.IO is working
+        io.emit('inventory:created', {
+          inventoryId: 'test-123',
+          userId: 'test-user',
+          inventory: { productType: 'UPS', status: 'New', size: '3kva' },
+          timestamp: new Date().toISOString(),
+          action: 'test-created'
+        });
+        console.log('✅ Test inventory event emitted');
       });
 
       socket.on('disconnect', () => {

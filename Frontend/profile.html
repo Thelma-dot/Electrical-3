@@ -99,7 +99,7 @@
             <h2>Edit Profile</h2>
             <span class="close" style="cursor:pointer;font-size:20px;" onclick="closeEditProfileModal()">&times;</span>
           </div>
-          <form id="profileForm">
+          <form id="editProfileForm">
             <div class="form-group"><label>Name</label><input id="nameInput" type="text" placeholder="Your full name">
             </div>
             <div class="form-group"><label>Staff ID</label><input id="staffIdDisplay" type="text" disabled></div>
@@ -170,7 +170,7 @@
       }
 
       // Setup form submission (modal form)
-      document.getElementById('profileForm').addEventListener('submit', updateProfile);
+      document.getElementById('editProfileForm').addEventListener('submit', updateProfile);
     });
 
     function displayProfile(profile) {
@@ -189,6 +189,14 @@
       document.getElementById('nameInput').value = name;
       document.getElementById('emailInput').value = profile.email || '';
       document.getElementById('phoneInput').value = profile.phone || '';
+    }
+
+    function showEditProfileModal() {
+      document.getElementById('editProfileModal').style.display = 'flex';
+    }
+
+    function closeEditProfileModal() {
+      document.getElementById('editProfileModal').style.display = 'none';
     }
 
     async function updateProfile(e) {

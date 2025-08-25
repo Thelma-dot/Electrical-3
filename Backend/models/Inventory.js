@@ -43,6 +43,11 @@ class Inventory {
     );
     return rows;
   }
+
+  static async findAll() {
+    const rows = await all('SELECT * FROM inventory');
+    return rows;
+  }
 }
 
 module.exports = Inventory;

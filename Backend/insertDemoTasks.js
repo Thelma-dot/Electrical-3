@@ -54,39 +54,39 @@ async function insertDemoData() {
     console.log("👥 Setting up demo users...");
     for (const user of demoUsers) {
       const hashedPassword = await bcrypt.hash(user.password, SALT_ROUNDS);
-      
+
       await sqliteDb.run(
         `INSERT OR IGNORE INTO users (staff_id, password, role) 
          VALUES (?, ?, ?)`,
         [user.staffID, hashedPassword, 'staff']
       );
-      
+
       console.log(`✅ User ready: ${user.staffID}`);
     }
 
     // Get user IDs for task assignment
-    const users = await sqliteDb.all("SELECT id, staff_id FROM users WHERE staff_id IN (?, ?, ?, ?)", 
+    const users = await sqliteDb.all("SELECT id, staff_id FROM users WHERE staff_id IN (?, ?, ?, ?)",
       demoUsers.map(u => u.staffID));
-    
+
     if (users.length === 0) {
       console.log("❌ No users found. Please run insertDemoUsers-sqlite.js first.");
       return;
     }
 
     console.log("\n📋 Inserting demo tasks...");
-    
+
     // Insert demo tasks
     for (let i = 0; i < demoTasks.length; i++) {
       const task = demoTasks[i];
       const assignedTo = users[i % users.length].id; // Distribute tasks among users
       const assignedBy = users[0].id; // First user as admin
-      
+
       await sqliteDb.run(
         `INSERT OR IGNORE INTO tasks (title, description, assigned_to, assigned_by, priority, due_date, status) 
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [task.title, task.description, assignedTo, assignedBy, task.priority, task.due_date, task.status]
       );
-      
+
       console.log(`✅ Task added: ${task.title}`);
     }
 
@@ -99,7 +99,7 @@ async function insertDemoData() {
     console.log("   1. Logging in with any demo user");
     console.log("   2. Going to the dashboard");
     console.log("   3. Checking the 'Task Deadline Reminders' section");
-    
+
   } catch (error) {
     console.error("❌ Error inserting demo data:", error.message);
   } finally {

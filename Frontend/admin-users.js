@@ -16,7 +16,9 @@ function setActiveNavLink() {
 let allUsers = [];
 let allTasks = [];
 let currentPage = 1;
+let currentTaskPage = 1;
 const usersPerPage = 10;
+const tasksPerPage = 10;
 
 // Initialize user management
 document.addEventListener('DOMContentLoaded', () => {
@@ -419,7 +421,16 @@ function renderTasksTable() {
     if (!tbody) return;
     tbody.innerHTML = '';
     const tasks = getFilteredTasks();
-    tasks.forEach(t => {
+
+    // Apply pagination
+    const startIndex = (currentTaskPage - 1) * tasksPerPage;
+    const endIndex = startIndex + tasksPerPage;
+    const tasksToShow = tasks.slice(startIndex, endIndex);
+
+    // Update pagination info
+    updateTaskPaginationInfo(tasks.length);
+
+    tasksToShow.forEach(t => {
         const tr = document.createElement('tr');
         tr.className = t.hidden_from_user === 1 ? 'hidden-task' : '';
         tr.innerHTML = `
@@ -444,6 +455,35 @@ function renderTasksTable() {
     });
 }
 
+// Task pagination functions
+function updateTaskPaginationInfo(totalTasks) {
+    const totalPages = Math.ceil(totalTasks / tasksPerPage);
+    const pageInfo = document.getElementById('taskPageInfo');
+    if (pageInfo) {
+        pageInfo.textContent = `Page ${currentTaskPage} of ${totalPages}`;
+    }
+
+    // Update button states
+    const prevBtn = document.getElementById('taskPrevPage');
+    const nextBtn = document.getElementById('taskNextPage');
+
+    if (prevBtn) prevBtn.disabled = currentTaskPage <= 1;
+    if (nextBtn) nextBtn.disabled = currentTaskPage >= totalPages;
+}
+
+function changeTaskPage(direction) {
+    const totalTasks = getFilteredTasks().length;
+    const totalPages = Math.ceil(totalTasks / tasksPerPage);
+
+    if (direction === -1 && currentTaskPage > 1) {
+        currentTaskPage--;
+    } else if (direction === 1 && currentTaskPage <= totalPages) {
+        currentTaskPage++;
+    }
+
+    renderTasksTable();
+}
+
 function toTaskLabel(s) {
     return (s || '').replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -463,8 +503,14 @@ function lookupStaffId(id) {
 }
 
 // Task filters handlers
-function searchTasks() { renderTasksTable(); }
-function filterTasks() { renderTasksTable(); }
+function searchTasks() {
+    currentTaskPage = 1; // Reset to first page when searching
+    renderTasksTable();
+}
+function filterTasks() {
+    currentTaskPage = 1; // Reset to first page when filtering
+    renderTasksTable();
+}
 
 // Quick task actions
 async function markTask(id, status) {
@@ -747,6 +793,21 @@ function editUser(userId) {
     document.getElementById('editUserId').value = user.id;
     document.getElementById('editStaffId').value = user.staff_id;
     document.getElementById('editEmail').value = user.email || '';
+    document.getElementById('editRole').value = user.role;
+
+    document.getElementById('editUserModal').style.display = 'flex';
+}
+
+function showEditUserModal(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) {
+        showAlert('User not found', 'error');
+        return;
+    }
+
+    document.getElementById('editUserId').value = user.id;
+    document.getElementById('editStaffId').value = user.staff_id;
+    document.getElementById('editEmail').value = user.email;
     document.getElementById('editRole').value = user.role;
 
     document.getElementById('editUserModal').style.display = 'flex';

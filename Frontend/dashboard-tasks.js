@@ -1,25 +1,26 @@
 // Dashboard Tasks Management
-class DashboardTasksManager {
+class DashboardTasks {
     constructor() {
-        this.apiEndpoints = {
-            myTasks: 'http://localhost:5000/api/tasks/my',
-            updateTask: 'http://localhost:5000/api/tasks',
-            taskCounts: 'http://localhost:5000/api/tasks/counts'
-        };
         this.init();
     }
 
     init() {
-        this.setupEventListeners();
         this.loadMyTasks();
-        this.loadTaskCounts();
+        this.setupEventListeners();
+        this.initDeadlineReminder();
     }
 
     setupEventListeners() {
         // Task status filter
         const statusFilter = document.getElementById('myTaskStatusFilter');
         if (statusFilter) {
-            statusFilter.addEventListener('change', () => this.filterTasks());
+            statusFilter.addEventListener('change', () => this.loadMyTasks());
+        }
+
+        // Show completed tasks toggle
+        const showCompletedToggle = document.getElementById('showCompletedTasks');
+        if (showCompletedToggle) {
+            showCompletedToggle.addEventListener('change', () => this.loadMyTasks());
         }
 
         // Refresh button
@@ -27,21 +28,17 @@ class DashboardTasksManager {
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => this.loadMyTasks());
         }
-
-        // Show completed tasks toggle
-        const showCompletedToggle = document.getElementById('showCompletedTasks');
-        if (showCompletedToggle) {
-            showCompletedToggle.addEventListener('change', () => this.toggleCompletedTasks());
-        }
-
-        // Setup real-time updates
-        this.setupRealtimeUpdates();
     }
 
     async loadMyTasks() {
         try {
             const showCompleted = document.getElementById('showCompletedTasks')?.checked || false;
-            const endpoint = showCompleted ? `${this.apiEndpoints.myTasks}/completed` : this.apiEndpoints.myTasks;
+            const statusFilter = document.getElementById('myTaskStatusFilter')?.value || '';
+
+            let endpoint = 'http://localhost:5000/api/tasks/my';
+            if (showCompleted) {
+                endpoint = 'http://localhost:5000/api/tasks/my/completed';
+            }
 
             const response = await fetch(endpoint, {
                 headers: {
@@ -49,415 +46,428 @@ class DashboardTasksManager {
                 }
             });
 
-            if (response.ok) {
-                const tasks = await response.json();
-                this.displayTasks(tasks);
-                this.updateTaskCounts(tasks);
-
-                // Update deadline reminders when tasks are loaded
-                if (typeof updateTaskDeadlineReminders === 'function') {
-                    updateTaskDeadlineReminders();
-                }
-            } else {
-                console.error('Failed to load tasks');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+
+            const tasks = await response.json();
+            this.displayMyTasks(tasks, statusFilter);
         } catch (error) {
-            console.error('Error loading tasks:', error);
+            console.error('Error loading my tasks:', error);
+            this.showTaskError('Failed to load tasks. Please try again.');
         }
     }
 
-    async loadTaskCounts() {
-        try {
-            const response = await fetch(this.apiEndpoints.taskCounts, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-
-            if (response.ok) {
-                const counts = await response.json();
-                this.updateDashboardStats(counts);
-            }
-        } catch (error) {
-            console.error('Error loading task counts:', error);
-        }
-    }
-
-    displayTasks(tasks) {
-        const tableBody = document.querySelector('#myTasksTable tbody');
+    displayMyTasks(tasks, statusFilter) {
+        const tbody = document.querySelector('#myTasksTable tbody');
         const emptyMessage = document.getElementById('myTasksEmpty');
 
-        if (!tableBody) return;
+        if (!tbody) return;
 
-        if (tasks.length === 0) {
-            if (emptyMessage) emptyMessage.style.display = 'block';
-            tableBody.innerHTML = '';
+        // Filter tasks by status if filter is applied
+        let filteredTasks = tasks;
+        if (statusFilter) {
+            filteredTasks = tasks.filter(task =>
+                task.status && task.status.toLowerCase() === statusFilter.toLowerCase()
+            );
+        }
+
+        if (filteredTasks.length === 0) {
+            tbody.innerHTML = '';
+            if (emptyMessage) {
+                emptyMessage.style.display = 'block';
+            }
             return;
         }
 
-        if (emptyMessage) emptyMessage.style.display = 'none';
+        if (emptyMessage) {
+            emptyMessage.style.display = 'none';
+        }
 
-        tableBody.innerHTML = tasks.map(task => `
-            <tr data-task-id="${task.id}">
+        tbody.innerHTML = filteredTasks.map(task => `
+            <tr>
+                <td>${task.title || 'N/A'}</td>
                 <td>
-                    <div class="task-title">
-                        <strong>${this.escapeHtml(task.title)}</strong>
-                        ${task.description ? `<br><small>${this.escapeHtml(task.description)}</small>` : ''}
-                    </div>
-                </td>
-                <td>
-                    <span class="priority-badge priority-${task.priority || 'medium'}">
-                        ${this.capitalizeFirst(task.priority || 'medium')}
+                    <span class="priority-badge priority-${(task.priority || 'medium').toLowerCase()}">
+                        ${task.priority || 'Medium'}
                     </span>
                 </td>
                 <td>
-                    <select class="task-status-select" onchange="dashboardTasksManager.updateTaskStatus(${task.id}, this.value)">
-                        <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>Pending</option>
-                        <option value="in_progress" ${task.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
-                        <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>Completed</option>
-                        <option value="cancelled" ${task.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-                    </select>
+                                    <span class="status-badge status-${(task.status || 'pending').toLowerCase().replace(/[^a-z0-9]/g, '-')}">
+                    ${task.status || 'Pending'}
+                </span>
                 </td>
+                <td>${task.due_date ? new Date(task.due_date).toLocaleDateString() : 'N/A'}</td>
                 <td>
-                    ${task.due_date ? this.formatDate(task.due_date) : 'No due date'}
-                </td>
-                <td>
-                    <div class="task-actions">
-                        <button class="btn-small btn-primary" onclick="dashboardTasksManager.viewTaskDetails(${task.id})">
+                    <button class="btn btn-primary btn-sm" onclick="dashboardTasks.viewTaskDetails(${task.id})">
                             View
                         </button>
-                    </div>
+                    ${task.status === 'pending' ? `
+                        <button class="btn btn-success btn-sm" onclick="dashboardTasks.startTask(${task.id})">
+                            Start
+                        </button>
+                    ` : ''}
+                    ${task.status === 'in_progress' ? `
+                        <button class="btn btn-success btn-sm" onclick="dashboardTasks.completeTask(${task.id})">
+                            Complete
+                        </button>
+                    ` : ''}
                 </td>
             </tr>
         `).join('');
     }
 
-    async updateTaskStatus(taskId, newStatus) {
+    async startTask(taskId) {
         try {
-            const response = await fetch(`${this.apiEndpoints.updateTask}/${taskId}`, {
+            const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ status: newStatus })
+                body: JSON.stringify({ status: 'in_progress' })
             });
 
             if (response.ok) {
-                // If task is completed, remove it from the display immediately
-                if (newStatus === 'completed') {
-                    this.removeCompletedTask(taskId);
-                } else {
-                    // Update the row styling based on new status
-                    this.updateTaskRowStatus(taskId, newStatus);
+                this.showTaskSuccess('Task started successfully!');
+                this.loadMyTasks();
+                // Refresh dashboard to update counts
+                if (typeof refreshDashboard === 'function') {
+                    refreshDashboard();
                 }
-
-                // Refresh task counts
-                this.loadTaskCounts();
-
-                // Reset alarm if task is completed or cancelled
-                if (newStatus === 'completed' || newStatus === 'cancelled') {
-                    if (typeof resetTaskAlarm === 'function') {
-                        resetTaskAlarm(taskId);
-                    }
-                }
-
-                // Refresh deadline reminders when task status changes
-                if (typeof updateTaskDeadlineReminders === 'function') {
-                    updateTaskDeadlineReminders();
-                }
-
-                // Show success message
-                this.showNotification('Task completed successfully! It has been removed from your dashboard.', 'success');
             } else {
-                this.showNotification('Failed to update task status', 'error');
+                throw new Error('Failed to start task');
             }
         } catch (error) {
-            console.error('Error updating task status:', error);
-            this.showNotification('Error updating task status', 'error');
+            console.error('Error starting task:', error);
+            this.showTaskError('Failed to start task. Please try again.');
         }
     }
 
-    updateTaskRowStatus(taskId, status) {
-        const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
-        if (row) {
-            // Remove existing status classes
-            row.classList.remove('status-pending', 'status-in_progress', 'status-completed', 'status-cancelled');
-            // Add new status class
-            row.classList.add(`status-${status}`);
-        }
-    }
+    async completeTask(taskId) {
+        try {
+            const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ status: 'completed' })
+            });
 
-    removeCompletedTask(taskId) {
-        const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
-        if (row) {
-            // Add fade-out animation
-            row.style.transition = 'opacity 0.5s ease-out';
-            row.style.opacity = '0';
-
-            // Remove the row after animation
-            setTimeout(() => {
-                row.remove();
-
-                // Check if table is empty and show empty message
-                const tbody = document.querySelector('#myTasksTable tbody');
-                const emptyMessage = document.getElementById('myTasksEmpty');
-                if (tbody && tbody.children.length === 0 && emptyMessage) {
-                    emptyMessage.style.display = 'block';
+            if (response.ok) {
+                this.showTaskSuccess('Task completed successfully!');
+                this.loadMyTasks();
+                // Refresh dashboard to update counts
+                if (typeof refreshDashboard === 'function') {
+                    refreshDashboard();
                 }
-            }, 500);
-        }
-    }
-
-    toggleCompletedTasks() {
-        this.loadMyTasks();
-        
-        // After loading tasks, update the dashboard charts to reflect the new display
-        setTimeout(() => {
-            // Force a refresh of the main dashboard to update charts
-            if (window.refreshDashboard) {
-                window.refreshDashboard();
-            }
-        }, 100);
-    }
-
-    filterTasks() {
-        const statusFilter = document.getElementById('myTaskStatusFilter');
-        const filterValue = statusFilter.value;
-        const rows = document.querySelectorAll('#myTasksTable tbody tr');
-
-        rows.forEach(row => {
-            const statusSelect = row.querySelector('.task-status-select');
-            const taskStatus = statusSelect ? statusSelect.value : '';
-
-            if (!filterValue || taskStatus === filterValue) {
-                row.style.display = '';
             } else {
-                row.style.display = 'none';
+                throw new Error('Failed to complete task');
             }
-        });
-    }
-
-    updateTaskCounts(tasks) {
-        const counts = {
-            total: tasks.length,
-            pending: tasks.filter(t => t.status === 'pending').length,
-            in_progress: tasks.filter(t => t.status === 'in_progress').length,
-            completed: tasks.filter(t => t.status === 'completed').length,
-            cancelled: tasks.filter(t => t.status === 'cancelled').length
-        };
-
-        this.updateDashboardStats(counts);
-
-        // Also update the main dashboard charts to reflect the current task display
-        this.updateDashboardCharts(counts);
-    }
-
-    updateDashboardStats(counts) {
-        // Update the dashboard stats cards
-        const inProgressCard = document.querySelector('.card:nth-child(3) p');
-        const completedCard = document.querySelector('.card:nth-child(4) p');
-        
-        if (inProgressCard) {
-            inProgressCard.textContent = counts.in_progress || 0;
-        }
-        
-        if (completedCard) {
-            completedCard.textContent = counts.completed || 0;
-        }
-
-        // Also update the main dashboard stats if they exist
-        const mainInProgressCount = document.getElementById('inProgressCount');
-        const mainCompletedCount = document.getElementById('completedCount');
-        
-        if (mainInProgressCount) {
-            mainInProgressCount.textContent = counts.in_progress || 0;
-        }
-        
-        if (mainCompletedCount) {
-            mainCompletedCount.textContent = counts.completed || 0;
-        }
-    }
-
-    updateDashboardCharts(counts) {
-        // Update the main dashboard charts to reflect current task counts
-        if (window.refreshDashboard) {
-            // Call the main dashboard refresh function to update charts
-            window.refreshDashboard();
-        } else {
-            // Fallback: manually update the chart data if refreshDashboard is not available
-            this.updateChartsManually(counts);
-        }
-    }
-
-    updateChartsManually(counts) {
-        // Manually update the bar chart data to reflect current task counts
-        const barChart = window.barChartInstance;
-        if (barChart && barChart.data && barChart.data.datasets && barChart.data.datasets[0]) {
-            // Update the completed task count in the bar chart
-            barChart.data.datasets[0].data[3] = counts.completed; // Index 3 is "Completed Task"
-            barChart.data.datasets[0].data[2] = counts.in_progress; // Index 2 is "In Progress"
-            barChart.update('active');
-        }
-
-        // Update the performance indicator
-        this.updatePerformanceIndicator(counts);
-    }
-
-    updatePerformanceIndicator(counts) {
-        const performanceArrow = document.getElementById('performanceArrow');
-        const performanceText = document.getElementById('performanceText');
-
-        if (!performanceArrow || !performanceText) return;
-
-        // Calculate performance based on completed tasks vs total visible tasks
-        const totalVisibleTasks = counts.in_progress + counts.completed;
-        const completionRate = totalVisibleTasks > 0 ? (counts.completed / totalVisibleTasks) * 100 : 0;
-
-        // Update the performance display
-        if (completionRate > 0) {
-            performanceArrow.textContent = '↗️';
-            performanceArrow.className = 'performance-arrow up';
-            performanceText.textContent = `Performance: ${completionRate.toFixed(1)}%`;
-        } else {
-            performanceArrow.textContent = '➡️';
-            performanceArrow.className = 'performance-arrow neutral';
-            performanceText.textContent = `No tasks to measure`;
+        } catch (error) {
+            console.error('Error completing task:', error);
+            this.showTaskError('Failed to complete task. Please try again.');
         }
     }
 
     viewTaskDetails(taskId) {
-        // This could open a modal with detailed task information
-        // For now, we'll just show an alert with basic info
-        const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
-        if (row) {
-            const title = row.querySelector('.task-title strong').textContent;
-            const description = row.querySelector('.task-title small')?.textContent || 'No description';
-            const priority = row.querySelector('.priority-badge').textContent;
-            const status = row.querySelector('.task-status-select').value;
-
-            alert(`Task Details:\n\nTitle: ${title}\nDescription: ${description}\nPriority: ${priority}\nStatus: ${status}`);
-        }
+        // This could open a modal or navigate to a detailed view
+        console.log('Viewing task details for ID:', taskId);
+        // For now, just show an alert
+        alert('Task details view - to be implemented');
     }
 
-    setupRealtimeUpdates() {
-        // Listen for real-time task updates
-        if (window.io) {
-            const socket = io('http://localhost:5000');
-
-            socket.on('task:created', (data) => {
-                if (data.assigned_to === this.getCurrentUserId()) {
-                    this.loadMyTasks();
-                    this.showNotification('New task assigned to you!', 'info');
-
-                    // Reset alarm for new task so it can play when deadline is reached
-                    if (typeof resetTaskAlarm === 'function') {
-                        resetTaskAlarm(data.id);
-                    }
-
-                    // Update deadline reminders for new tasks
-                    if (typeof updateTaskDeadlineReminders === 'function') {
-                        updateTaskDeadlineReminders();
-                    }
-                }
-            });
-
-            socket.on('task:updated', (data) => {
-                this.loadMyTasks();
-                this.loadTaskCounts();
-
-                // Reset alarm for updated task in case due date changed
-                if (typeof resetTaskAlarm === 'function') {
-                    resetTaskAlarm(data.id);
-                }
-
-                // Update deadline reminders when tasks are updated
-                if (typeof updateTaskDeadlineReminders === 'function') {
-                    updateTaskDeadlineReminders();
-                }
-            });
-        }
-    }
-
-    getCurrentUserId() {
-        const user = JSON.parse(localStorage.getItem('user'));
-        return user ? user.id : null;
-    }
-
-    showNotification(message, type = 'info') {
-        // Create a simple notification
+    showTaskSuccess(message) {
+        // Create a simple success notification
         const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
+        notification.className = 'task-notification success';
         notification.textContent = message;
         notification.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 12px 20px;
-            border-radius: 4px;
+            background: #27ae60;
             color: white;
-            font-weight: 500;
+            padding: 12px 20px;
+            border-radius: 8px;
             z-index: 1000;
             animation: slideIn 0.3s ease;
         `;
 
-        // Set background color based on type
-        switch (type) {
-            case 'success':
-                notification.style.backgroundColor = '#27ae60';
-                break;
-            case 'error':
-                notification.style.backgroundColor = '#e74c3c';
-                break;
-            case 'info':
-                notification.style.backgroundColor = '#3498db';
-                break;
-            default:
-                notification.style.backgroundColor = '#95a5a6';
-        }
-
         document.body.appendChild(notification);
 
-        // Remove after 3 seconds
         setTimeout(() => {
             notification.remove();
         }, 3000);
     }
 
-    // Utility functions
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+    showTaskError(message) {
+        // Create a simple error notification
+        const notification = document.createElement('div');
+        notification.className = 'task-notification error';
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #e74c3c;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
     }
 
-    capitalizeFirst(text) {
-        return text.charAt(0).toUpperCase() + text.slice(1);
+    // Deadline reminder functionality
+    initDeadlineReminder() {
+        this.updateTaskDeadlineReminders();
+        // Update every minute
+        setInterval(() => {
+            this.updateTaskDeadlineReminders();
+        }, 60000);
     }
 
-    formatDate(dateString) {
-        if (!dateString) return 'No date';
-        const date = new Date(dateString);
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    async updateTaskDeadlineReminders() {
+        try {
+            const response = await fetch('http://localhost:5000/api/tasks/my', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch tasks');
+            }
+
+            const tasks = await response.json();
+            this.displayDeadlineReminders(tasks);
+        } catch (error) {
+            console.error('Error updating deadline reminders:', error);
+        }
     }
 
-    // Public method to refresh tasks
-    refresh() {
-        this.loadMyTasks();
-        this.loadTaskCounts();
+    displayDeadlineReminders(tasks) {
+        const upcomingDeadlines = document.getElementById('upcomingDeadlines');
+        const noDeadlines = document.getElementById('noDeadlines');
+        const deadlineReminders = document.getElementById('deadlineReminders');
+
+        if (!upcomingDeadlines || !noDeadlines || !deadlineReminders) return;
+
+        // Filter tasks with upcoming deadlines (next 7 days)
+        const now = new Date();
+        const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        const upcomingTasks = tasks.filter(task => {
+            if (!task.due_date || task.status === 'completed') return false;
+            const dueDate = new Date(task.due_date);
+            return dueDate >= now && dueDate <= nextWeek;
+        }).sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+
+        if (upcomingTasks.length === 0) {
+            upcomingDeadlines.style.display = 'none';
+            noDeadlines.style.display = 'block';
+            deadlineReminders.innerHTML = '';
+            return;
+        }
+
+        upcomingDeadlines.style.display = 'none';
+        noDeadlines.style.display = 'none';
+
+        deadlineReminders.innerHTML = upcomingTasks.map(task => {
+            const dueDate = new Date(task.due_date);
+            const daysUntilDue = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+            const isUrgent = daysUntilDue <= 1;
+            const isWarning = daysUntilDue <= 3;
+
+            return `
+                <div class="deadline-item ${isUrgent ? 'urgent' : isWarning ? 'warning' : 'normal'}">
+                    <div class="deadline-header">
+                        <span class="deadline-title">${task.title}</span>
+                        <span class="deadline-days ${isUrgent ? 'urgent' : isWarning ? 'warning' : 'normal'}">
+                            ${daysUntilDue === 0 ? 'Due today' : daysUntilDue === 1 ? 'Due tomorrow' : `Due in ${daysUntilDue} days`}
+                        </span>
+                    </div>
+                    <div class="deadline-details">
+                        <span class="deadline-date">${dueDate.toLocaleDateString()}</span>
+                        <span class="deadline-priority priority-${(task.priority || 'medium').toLowerCase()}">
+                            ${task.priority || 'Medium'}
+                        </span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Add CSS for deadline items
+        this.addDeadlineStyles();
+    }
+
+    addDeadlineStyles() {
+        if (document.getElementById('deadline-styles')) return;
+
+        const style = document.createElement('style');
+        style.id = 'deadline-styles';
+        style.textContent = `
+            .deadline-item {
+                background: white;
+                border-radius: 8px;
+                padding: 15px;
+                margin: 10px 0;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                border-left: 4px solid #3498db;
+            }
+
+            .deadline-item.urgent {
+                border-left-color: #e74c3c;
+                background: #fdf2f2;
+            }
+
+            .deadline-item.warning {
+                border-left-color: #f39c12;
+                background: #fef9e7;
+            }
+
+            .deadline-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+            }
+
+            .deadline-title {
+                font-weight: 600;
+                color: #2c3e50;
+            }
+
+            .deadline-days {
+                font-size: 0.9em;
+                font-weight: 500;
+            }
+
+            .deadline-days.urgent {
+                color: #e74c3c;
+            }
+
+            .deadline-days.warning {
+                color: #f39c12;
+            }
+
+            .deadline-days.normal {
+                color: #3498db;
+            }
+
+            .deadline-details {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 0.85em;
+                color: #7f8c8d;
+            }
+
+            .deadline-priority {
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 0.8em;
+                font-weight: 500;
+            }
+
+            .priority-high {
+                background: #e74c3c;
+                color: white;
+            }
+
+            .priority-medium {
+                background: #f39c12;
+                color: white;
+            }
+
+            .priority-low {
+                background: #27ae60;
+                color: white;
+            }
+
+            .priority-badge, .status-badge {
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 0.8em;
+                font-weight: 500;
+            }
+
+            .status-pending {
+                background: #f39c12;
+                color: white;
+            }
+
+            .status-in_progress {
+                background: #3498db;
+                color: white;
+            }
+
+            .status-completed {
+                background: #27ae60;
+            color: white;
+            }
+
+            .status-cancelled {
+                background: #95a5a6;
+                color: white;
+            }
+
+            .btn {
+                padding: 6px 12px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.85em;
+                margin: 0 2px;
+            }
+
+            .btn-primary {
+                background: #3498db;
+                color: white;
+            }
+
+            .btn-success {
+                background: #27ae60;
+                color: white;
+            }
+
+            .btn-sm {
+                padding: 4px 8px;
+                font-size: 0.8em;
+            }
+
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+
+        document.head.appendChild(style);
     }
 }
 
-// Initialize dashboard tasks manager when DOM is loaded
+// Initialize dashboard tasks when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('myTasksTable')) {
-        window.dashboardTasksManager = new DashboardTasksManager();
-    }
+    window.dashboardTasks = new DashboardTasks();
 });
 
-// Global function for status updates
-function updateTaskStatus(taskId, newStatus) {
-    if (window.dashboardTasksManager) {
-        window.dashboardTasksManager.updateTaskStatus(taskId, newStatus);
+// Make functions globally accessible
+window.updateTaskDeadlineReminders = function () {
+    if (window.dashboardTasks) {
+        window.dashboardTasks.updateTaskDeadlineReminders();
     }
-}
+};

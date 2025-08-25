@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Inventory System Test</h1>
+    
+    <div class="test-section info">
+        <h3>Test Instructions</h3>
+        <p>This page will test the inventory system to see if data is being loaded correctly.</p>
+        <p>Make sure you're logged in to the main system first.</p>
+    </div>
+
+    <div class="test-section">
+        <h3>Authentication Test</h3>
+        <button onclick="checkAuth()">Check Authentication</button>
+        <div id="authResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Inventory Data Test</h3>
+        <button onclick="testInventoryData()">Test Inventory Data</button>
+        <div id="inventoryResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Inventory Summary Test</h3>
+        <button onclick="testInventorySummary()">Test Inventory Summary</button>
+        <div id="summaryResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Dashboard Stats Test</h3>
+        <button onclick="testDashboardStats()">Test Dashboard Stats</button>
+        <div id="statsResult"></div>
+    </div>
+
+    <script>
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `test-section ${type}`;
+            element.innerHTML = `<h3>Result</h3><pre>${message}</pre>`;
+        }
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                showResult('authResult', `✅ Token found: ${token.substring(0, 20)}...`, 'success');
+            } else {
+                showResult('authResult', '❌ No token found. Please log in first.', 'error');
+            }
+        }
+
+        async function testInventoryData() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    showResult('inventoryResult', '❌ No token found. Please log in first.', 'error');
+                    return;
+                }
+
+                const response = await fetch('http://localhost:5000/api/inventory', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('inventoryResult', `✅ Inventory data loaded successfully!\n\nTotal items: ${data.data?.length || 0}\n\nSample data:\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    const error = await response.text();
+                    showResult('inventoryResult', `❌ Failed to load inventory: ${response.status} ${response.statusText}\n\n${error}`, 'error');
+                }
+            } catch (error) {
+                showResult('inventoryResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testInventorySummary() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    showResult('summaryResult', '❌ No token found. Please log in first.', 'error');
+                    return;
+                }
+
+                const response = await fetch('http://localhost:5000/api/inventory/summary', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('summaryResult', `✅ Inventory summary loaded successfully!\n\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    const error = await response.text();
+                    showResult('summaryResult', `❌ Failed to load inventory summary: ${response.status} ${response.statusText}\n\n${error}`, 'error');
+                }
+            } catch (error) {
+                showResult('summaryResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDashboardStats() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    showResult('statsResult', '❌ No token found. Please log in first.', 'error');
+                    return;
+                }
+
+                // Test multiple endpoints like the dashboard does
+                const [summary, inventoryList, toolboxList] = await Promise.all([
+                    fetch('http://localhost:5000/api/reports/summary', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+                    fetch('http://localhost:5000/api/inventory', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.ok ? r.json() : []),
+                    fetch('http://localhost:5000/api/toolbox', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.ok ? r.json() : [])
+                ]);
+
+                const inventoryTotal = Array.isArray(inventoryList) ? inventoryList.length : 0;
+                const toolboxTotal = Array.isArray(toolboxList) ? toolboxList.length : 0;
+
+                const stats = {
+                    reports: summary.total || 0,
+                    inventory: inventoryTotal,
+                    toolbox: toolboxTotal,
+                    inventoryList: inventoryList,
+                    toolboxList: toolboxList
+                };
+
+                showResult('statsResult', `✅ Dashboard stats loaded successfully!\n\n${JSON.stringify(stats, null, 2)}`, 'success');
+            } catch (error) {
+                showResult('statsResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-check auth on page load
+        window.addEventListener('load', checkAuth);
+    </script>
+</body>
+</html>

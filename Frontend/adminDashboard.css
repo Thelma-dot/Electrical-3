@@ -873,6 +873,24 @@ body {
     background: #c0392b;
 }
 
+.btn.primary {
+    background: #3498db;
+    color: white;
+}
+
+.btn.primary:hover {
+    background: #2980b9;
+}
+
+.btn.secondary {
+    background: #95a5a6;
+    color: white;
+}
+
+.btn.secondary:hover {
+    background: #7f8c8d;
+}
+
 /* Loading state */
 .loading {
     opacity: 0.6;
@@ -1095,6 +1113,24 @@ form {
 }
 
 /* Task Management Section Styles */
+.task-management-section {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.task-management-section h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 0.5rem;
+}
+
 .task-management {
     margin-top: 3rem;
     padding: 2rem;

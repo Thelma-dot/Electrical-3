@@ -8,6 +8,7 @@
   <link rel="icon" type="image/png" href="./images/logo_gpha.png">
   <link rel="stylesheet" href="./dashboard.css">
   <link rel="stylesheet" href="./user-greeting.css">
+  <link rel="stylesheet" href="./adminDashboard.css">
   <style>
     /* Toolbox Submitted Page Styling */
     .submission-success {
@@ -138,40 +139,6 @@
       margin-bottom: 20px;
     }
 
-    .table-container {
-      overflow-x: auto;
-    }
-
-    #toolboxTable {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    #toolboxTable th,
-    #toolboxTable td {
-      padding: 15px;
-      text-align: left;
-      border-bottom: 1px solid #ecf0f1;
-    }
-
-    #toolboxTable th {
-      background: #34495e;
-      color: white;
-      border-bottom: 2px solid #2c3e50;
-    }
-
-    #toolboxTable tr:last-child td {
-      border-bottom: none;
-    }
-
-    #toolboxTable tr:hover {
-      background-color: #f0f3f5;
-    }
-
     /* Status Badge Styling */
     .status-badge {
       padding: 4px 8px;
@@ -192,7 +159,9 @@
     }
 
     /* Action Button Styling */
-    .btn-edit, .btn-save, .btn-delete {
+    .btn-edit,
+    .btn-save,
+    .btn-delete {
       padding: 6px 12px;
       border: none;
       border-radius: 4px;
@@ -266,41 +235,44 @@
 
     /* Responsive Design */
     @media (max-width: 768px) {
+
       .submission-success,
       .submission-details,
       .toolbox-table-section {
         margin: 10px;
         padding: 15px;
       }
-      
+
       .detail-grid {
         grid-template-columns: 1fr;
       }
-      
+
       .action-buttons {
         flex-direction: column;
         align-items: center;
       }
-      
+
       .table-controls {
         flex-direction: column;
         align-items: stretch;
       }
-      
+
       .table-controls input,
       .table-controls select,
       .table-controls button {
         width: 100%;
         margin-bottom: 10px;
       }
-      
+
       #toolboxTable th,
       #toolboxTable td {
         padding: 8px;
         font-size: 14px;
       }
-      
-      .btn-edit, .btn-save, .btn-delete {
+
+      .btn-edit,
+      .btn-save,
+      .btn-delete {
         padding: 4px 8px;
         font-size: 11px;
         margin: 2px;
@@ -339,7 +311,7 @@
       padding: 5px;
       border: 1px solid #ddd;
       border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
@@ -361,93 +333,49 @@
     </aside>
 
     <main class="main-content">
-      <header class="header">
-        <h1>✅ Toolbox Form Submitted Successfully!</h1>
-        <p>Your toolbox form has been submitted and saved to the system.</p>
-      </header>
 
-      <!-- Submission Success Message -->
-      <div class="submission-success">
-        <h2>🎉 Form Submitted Successfully!</h2>
-        <p style="font-size: 18px; color: #155724; margin-bottom: 0;">
-          Your toolbox form has been submitted and is now available in the system.
-        </p>
-      </div>
 
-      <!-- Submitted Form Details -->
-      <div class="submission-details">
-        <h3>📋 Submitted Form Details</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <label>Work Activity:</label>
-            <span id="submittedWorkActivity">Loading...</span>
-          </div>
-          <div class="detail-item">
-            <label>Date:</label>
-            <span id="submittedDate">Loading...</span>
-          </div>
-          <div class="detail-item">
-            <label>Work Location:</label>
-            <span id="submittedLocation">Loading...</span>
-          </div>
-          <div class="detail-item">
-            <label>Company:</label>
-            <span id="submittedCompany">Loading...</span>
-          </div>
-          <div class="detail-item">
-            <label>Tools Used:</label>
-            <span id="submittedTools">Loading...</span>
-          </div>
-          <div class="detail-item">
-            <label>Submitted At:</label>
-            <span id="submittedTime">Loading...</span>
-          </div>
-        </div>
 
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-          <a href="./tool_box.html" class="btn btn-primary">📝 Submit Another Form</a>
-          <a href="./dashboard.html" class="btn btn-success">📊 Go to Dashboard</a>
-          <button onclick="refreshToolboxTable()" class="btn btn-secondary">🔄 Refresh Table</button>
-        </div>
-      </div>
 
       <!-- Toolbox Table Section -->
       <div class="toolbox-table-section">
-        <h2 style="color: #2c3e50; margin-bottom: 20px; text-align: center;">📋 All Submitted Toolbox Forms</h2>
-        
+
+        <h1 style="color: #2c3e50; margin-bottom: 20px; text-align: center;">📋 My Toolbox Forms</h1>
+
         <!-- Search and Filter Controls -->
         <div class="table-controls">
-          <input type="text" id="searchToolbox" placeholder="Search by activity, location, or company..." 
-                 style="flex: 1; min-width: 250px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-          
+
+          <input type="text" id="searchToolbox"
+            placeholder="Search by activity, location, company, tools, or personnel..."
+            style="flex: 1; min-width: 250px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+
           <select id="statusFilter" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
             <option value="">All Status</option>
             <option value="draft">Draft</option>
             <option value="completed">Completed</option>
           </select>
-          
-          <button onclick="refreshToolboxTable()" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            🔄 Refresh
-          </button>
+
+
         </div>
 
         <!-- Toolbox Table -->
         <div class="table-container">
-          <table id="toolboxTable">
+          <table class="data-table">
             <thead>
               <tr>
                 <th>Work Activity</th>
                 <th>Date</th>
-                <th>Location</th>
-                <th>Company</th>
-                <th>Status</th>
+                <th>Work Location</th>
+                <th>Name/Company</th>
+                <th>Tools Used</th>
+                <th>Prepared By</th>
+                <th>Verified By</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="toolboxTableBody">
               <tr>
-                <td colspan="6" style="padding: 40px; text-align: center; color: #7f8c8d;">
+                <td colspan="8" style="padding: 40px; text-align: center; color: #7f8c8d;">
                   <div style="font-size: 16px;">📋 Loading toolbox forms...</div>
                 </td>
               </tr>
@@ -483,47 +411,10 @@
       return toolbox.id || toolbox._id || toolbox.toolboxId;
     }
 
-    // Load submitted form details from URL parameters
-    function loadSubmittedFormDetails() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const submittedData = urlParams.get('data');
-      
-      if (submittedData) {
-        try {
-          const data = JSON.parse(decodeURIComponent(submittedData));
-          
-          // Populate the submitted form details
-          document.getElementById('submittedWorkActivity').textContent = data.workActivity || 'N/A';
-          document.getElementById('submittedDate').textContent = data.date || 'N/A';
-          document.getElementById('submittedLocation').textContent = data.workLocation || 'N/A';
-          document.getElementById('submittedCompany').textContent = data.nameCompany || 'N/A';
-          document.getElementById('submittedTools').textContent = data.toolsUsed || 'N/A';
-          document.getElementById('submittedTime').textContent = new Date().toLocaleString();
-          
-        } catch (error) {
-          console.error('Error parsing submitted data:', error);
-          // Set default values if parsing fails
-          document.getElementById('submittedWorkActivity').textContent = 'Form submitted successfully';
-          document.getElementById('submittedDate').textContent = new Date().toLocaleDateString();
-          document.getElementById('submittedLocation').textContent = 'N/A';
-          document.getElementById('submittedCompany').textContent = 'N/A';
-          document.getElementById('submittedTools').textContent = 'N/A';
-          document.getElementById('submittedTime').textContent = new Date().toLocaleString();
-        }
-      } else {
-        // No data in URL, set default values
-        document.getElementById('submittedWorkActivity').textContent = 'Form submitted successfully';
-        document.getElementById('submittedDate').textContent = new Date().toLocaleDateString();
-        document.getElementById('submittedLocation').textContent = 'N/A';
-        document.getElementById('submittedCompany').textContent = 'N/A';
-        document.getElementById('submittedTools').textContent = 'N/A';
-        document.getElementById('submittedTime').textContent = new Date().toLocaleString();
-      }
-    }
+
 
     // Load toolbox data on page load
     document.addEventListener('DOMContentLoaded', async () => {
-      loadSubmittedFormDetails();
       await loadToolboxData();
       setupSearchAndFilter();
       initializeSocketConnection();
@@ -606,10 +497,13 @@
       const statusFilter = document.getElementById('statusFilter').value;
 
       filteredToolboxes = allToolboxes.filter(toolbox => {
-        const matchesSearch = 
+        const matchesSearch =
           (toolbox.workActivity && toolbox.workActivity.toLowerCase().includes(searchTerm)) ||
           (toolbox.workLocation && toolbox.workLocation.toLowerCase().includes(searchTerm)) ||
-          (toolbox.nameCompany && toolbox.nameCompany.toLowerCase().includes(searchTerm));
+          (toolbox.nameCompany && toolbox.nameCompany.toLowerCase().includes(searchTerm)) ||
+          (toolbox.toolsUsed && toolbox.toolsUsed.toLowerCase().includes(searchTerm)) ||
+          (toolbox.preparedBy && toolbox.preparedBy.toLowerCase().includes(searchTerm)) ||
+          (toolbox.verifiedBy && toolbox.verifiedBy.toLowerCase().includes(searchTerm));
 
         const matchesStatus = !statusFilter || toolbox.status === statusFilter;
 
@@ -632,43 +526,53 @@
 
       if (pageItems.length === 0) {
         tbody.innerHTML = `
-          <tr>
-            <td colspan="6" style="padding: 40px; text-align: center; color: #7f8c8d;">
-              <div style="font-size: 16px;">📋 No toolbox forms found</div>
-            </td>
-          </tr>
-        `;
+            <tr>
+              <td colspan="8" style="padding: 40px; text-align: center; color: #7f8c8d;">
+                <div style="font-size: 16px;">📋 No toolbox forms found</div>
+              </td>
+            </tr>
+          `;
         return;
       }
 
       pageItems.forEach(toolbox => {
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td>
-            <div class="truncate-text" title="${toolbox.workActivity || 'N/A'}">
-              ${toolbox.workActivity || 'N/A'}
-            </div>
-          </td>
-          <td>${formatDate(toolbox.date)}</td>
-          <td>
-            <div class="truncate-text" title="${toolbox.workLocation || 'N/A'}">
-              ${toolbox.workLocation || 'N/A'}
-            </div>
-          </td>
-          <td>
-            <div class="truncate-text" title="${toolbox.nameCompany || 'N/A'}">
-              ${toolbox.nameCompany || 'N/A'}
-            </div>
-          </td>
-          <td>
-            <span class="status-badge ${getStatusClass(toolbox.status)}">
-              ${toolbox.status || 'draft'}
-            </span>
-          </td>
-          <td>
-            ${getActionButtons(toolbox)}
-          </td>
-        `;
+            <td>
+              <div class="truncate-text" title="${toolbox.workActivity || 'N/A'}">
+                ${toolbox.workActivity || 'N/A'}
+              </div>
+            </td>
+            <td>${formatDate(toolbox.date)}</td>
+            <td>
+              <div class="truncate-text" title="${toolbox.workLocation || 'N/A'}">
+                ${toolbox.workLocation || 'N/A'}
+              </div>
+            </td>
+            <td>
+              <div class="truncate-text" title="${toolbox.nameCompany || 'N/A'}">
+                ${toolbox.nameCompany || 'N/A'}
+              </div>
+            </td>
+            <td>
+              <div class="truncate-text" title="${toolbox.toolsUsed || 'N/A'}">
+                ${toolbox.toolsUsed || 'N/A'}
+              </div>
+            </td>
+            <td>
+              <div class="truncate-text" title="${toolbox.preparedBy || 'N/A'}">
+                ${toolbox.preparedBy || 'N/A'}
+              </div>
+            </td>
+            <td>
+              <div class="truncate-text" title="${toolbox.verifiedBy || 'N/A'}">
+                ${toolbox.verifiedBy || 'N/A'}
+              </div>
+            </td>
+            <td>
+              ${getActionButtons(toolbox)}
+            </td>
+          `;
         tbody.appendChild(row);
       });
     }
@@ -676,7 +580,7 @@
     // Get action buttons based on toolbox status and edit mode
     function getActionButtons(toolbox) {
       const toolboxId = getToolboxId(toolbox);
-      
+
       if (editingToolboxId === toolboxId) {
         // Edit mode - show save and delete buttons
         return `
@@ -726,7 +630,7 @@
       if (!toolbox) return;
 
       editingToolboxId = toolboxId;
-      
+
       // Redirect to toolbox form page with edit data
       const editData = encodeURIComponent(JSON.stringify(toolbox));
       window.location.href = `./tool_box.html?edit=${toolboxId}&data=${editData}`;
@@ -767,7 +671,7 @@
 
           // Refresh table
           await loadToolboxData();
-          
+
           alert('✅ Toolbox form marked as completed!');
         } else {
           throw new Error('Failed to update toolbox form');
@@ -811,7 +715,7 @@
           // Refresh table
           updateToolboxTable();
           updatePagination();
-          
+
           alert('✅ Toolbox form deleted successfully!');
         } else {
           throw new Error('Failed to delete toolbox form');

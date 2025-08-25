@@ -98,47 +98,38 @@ function initializeTables() {
     }
   );
 
-  // Drop and recreate toolbox table to ensure correct schema
-  db.run(`DROP TABLE IF EXISTS toolbox`, (err) => {
-    if (err) {
-      console.error("Error dropping toolbox table:", err.message);
-    } else {
-      console.log("🗑️ Old toolbox table dropped");
-
-      // Create toolbox table with correct schema
-      db.run(
-        `
-        CREATE TABLE toolbox (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_id INTEGER NOT NULL,
-          work_activity TEXT NOT NULL,
-          date TEXT NOT NULL,
-          work_location TEXT NOT NULL,
-          name_company TEXT NOT NULL,
-          sign TEXT NOT NULL,
-          ppe_no TEXT NOT NULL,
-          tools_used TEXT NOT NULL,
-          hazards TEXT NOT NULL,
-          circulars TEXT,
-          risk_assessment TEXT,
-          permit TEXT,
-          remarks TEXT,
-          prepared_by TEXT NOT NULL,
-          verified_by TEXT NOT NULL,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (user_id) REFERENCES users(id)
-        )
-      `,
-        (err) => {
-          if (err) {
-            console.error("Error creating toolbox table:", err.message);
-          } else {
-            console.log("✅ Toolbox table created with correct schema");
-          }
-        }
-      );
+  // Create toolbox table if it doesn't exist
+  db.run(
+    `
+    CREATE TABLE IF NOT EXISTS toolbox (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      work_activity TEXT NOT NULL,
+      date TEXT NOT NULL,
+      work_location TEXT NOT NULL,
+      name_company TEXT NOT NULL,
+      sign TEXT NOT NULL,
+      ppe_no TEXT NOT NULL,
+      tools_used TEXT NOT NULL,
+      hazards TEXT NOT NULL,
+      circulars TEXT,
+      risk_assessment TEXT,
+      permit TEXT,
+      remarks TEXT,
+      prepared_by TEXT NOT NULL,
+      verified_by TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+    `,
+    (err) => {
+      if (err) {
+        console.error("Error creating toolbox table:", err.message);
+      } else {
+        console.log("✅ Toolbox table created/verified");
+      }
     }
-  });
+  );
 
   // Create settings table
   db.run(
@@ -183,13 +174,13 @@ function updateTableSchemas() {
     const addColumns = [
       "ALTER TABLE inventory ADD COLUMN item_name TEXT",
       "ALTER TABLE inventory ADD COLUMN category TEXT",
-      "ALTER TABLE inventory ADD COLUMN quantity INTEGER DEFAULT 1",
-      "ALTER TABLE inventory ADD COLUMN unit TEXT DEFAULT 'piece'",
+      "ALTER TABLE inventory ADD COLUMN quantity INTEGER",
+      "ALTER TABLE inventory ADD COLUMN unit TEXT",
       "ALTER TABLE inventory ADD COLUMN supplier TEXT",
       "ALTER TABLE inventory ADD COLUMN purchase_date TEXT",
       "ALTER TABLE inventory ADD COLUMN expiry_date TEXT",
       "ALTER TABLE inventory ADD COLUMN notes TEXT",
-      "ALTER TABLE inventory ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+      "ALTER TABLE inventory ADD COLUMN updated_at DATETIME"
     ];
 
     addColumns.forEach((sql, index) => {

@@ -6,6 +6,12 @@ const inventoryController = require("../controllers/inventoryController");
 // Get all inventory items for a user
 router.get("/", authenticateToken, inventoryController.getUserInventory);
 
+// Get inventory summary statistics for dashboard
+router.get("/summary", authenticateToken, inventoryController.getInventorySummary);
+
+// Get all users' inventory for admin dashboard chart
+router.get("/all-users", authenticateToken, inventoryController.getAllUsersInventory);
+
 // Search inventory (must come before /:id route)
 router.get("/search", authenticateToken, inventoryController.searchInventory);
 

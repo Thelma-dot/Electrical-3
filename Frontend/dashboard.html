@@ -166,6 +166,76 @@
       font-size: 18px;
       font-weight: 600;
     }
+
+    /* Inventory breakdown styles */
+    .inventory-breakdown {
+      margin-top: 10px;
+      font-size: 0.85em;
+      color: #7f8c8d;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .breakdown-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 2px 0;
+      padding: 2px 0;
+      transition: all 0.2s ease;
+    }
+
+    .breakdown-item:hover {
+      background-color: rgba(52, 152, 219, 0.1);
+      border-radius: 4px;
+      padding-left: 8px;
+    }
+
+    .breakdown-item .label {
+      font-weight: 500;
+    }
+
+    .breakdown-item .value {
+      font-weight: bold;
+      color: #3498db;
+    }
+
+    .card-hint {
+      transition: color 0.2s ease;
+    }
+
+    .card-hint:hover {
+      color: #3498db !important;
+    }
+
+    /* Enhanced inventory card styling */
+    .stats .card:has(.inventory-breakdown) {
+      transition: all 0.3s ease;
+    }
+
+    .stats .card:has(.inventory-breakdown):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .inventory-breakdown {
+        font-size: 0.8em;
+      }
+    }
   </style>
 </head>
 
@@ -178,7 +248,7 @@
         <a href="./dashboard.html">📊 Dashboard</a>
         <a href="./generate_report.html">📄 Generate Report</a>
         <a href="./tool_box.html">🛠️ Toolbox</a>
-        <a href="./toolbox-submitted.html">📋 My Toolbox Forms</a>
+
         <a href="./inventory.html">📦 Inventory</a>
         <a href="./settings.html">⚙️ Settings</a>
         <a href="./profile.html">👤 Profile</a>
@@ -206,6 +276,28 @@
           <h3>Inventory</h3>
           <p id="inventoryCount">0</p>
 
+          <div class="inventory-breakdown" id="inventoryBreakdown" style="display: none;">
+            <div class="breakdown-item">
+              <span class="label">UPS:</span>
+              <span class="value" id="upsCount">0</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="label">AVR:</span>
+              <span class="value" id="avrCount">0</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="label">New:</span>
+              <span class="value" id="newCount">0</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="label">Replaced:</span>
+              <span class="value" id="replacedCount">0</span>
+            </div>
+          </div>
+          <div class="card-hint" style="font-size: 0.8em; color: #7f8c8d; margin-top: 5px; cursor: pointer;"
+            onclick="toggleInventoryBreakdown()">
+            Click to show details
+          </div>
         </div>
         <div class="card">
           <h3>In Progress</h3>
@@ -215,6 +307,10 @@
           <h3>Completed Tasks</h3>
           <p id="completedCount">0</p>
         </div>
+
+
+
+
       </section>
 
       <!-- Test Section - REMOVED -->
@@ -226,6 +322,7 @@
           <div class="chart-container">
             <canvas id="systemBarChart"></canvas>
           </div>
+
         </div>
         <div class="chart" id="revenueChart">
           <h3>Reports Performance</h3>
@@ -250,18 +347,7 @@
         </div>
         <div id="deadlineReminders"></div>
 
-        <div style="margin-top: 15px; text-align: center;">
-          <button id="testAlarmBtn" onclick="testAlarmSound()"
-            style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 10px;">
-            🔊 Test Alarm
-          </button>
-          <button id="resetAlarmsBtn" onclick="resetAllTaskAlarms()"
-            style="padding: 8px 16px; background: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
-            🔄 Reset All Alarms
-          </button>
-          <small style="display: block; margin-top: 5px; color: #666;">Test the alarm sound or reset alarm states for
-            testing</small>
-        </div>
+
 
         <audio id="beepSound" src="./alarm/beep-beep.mp3" preload="auto"></audio>
       </section>
@@ -282,7 +368,7 @@
             <input type="checkbox" id="showCompletedTasks" style="margin: 0;">
             Show Completed Tasks
           </label>
-          <button id="myTasksRefreshBtn">Refresh</button>
+
         </div>
         <div id="myTasksEmpty" style="display:none; color: gray;">No tasks assigned yet.</div>
         <div class="table-container">
@@ -364,25 +450,51 @@
 
         socket.on('connect', () => {
           console.log('🔌 Connected to server for real-time updates');
+          console.log('🔌 Socket ID:', socket.id);
+          console.log('🔌 Socket connected:', socket.connected);
+
+          // Test emit to verify connection is working
+          socket.emit('test:connection', { message: 'Frontend connected', timestamp: new Date().toISOString() });
         });
 
         socket.on('disconnect', () => {
           console.log('🔌 Disconnected from server');
         });
 
+        socket.on('connect_error', (error) => {
+          console.error('🔌 Socket.IO connection error:', error);
+        });
+
+        socket.on('error', (error) => {
+          console.error('🔌 Socket.IO error:', error);
+        });
+
+        // Listen for test connection response
+        socket.on('test:connection:response', (data) => {
+          console.log('✅ Test connection response received:', data);
+          // Socket.IO popup removed - no more notification when connecting
+        });
+
         // Listen for inventory updates
         socket.on('inventory:created', (data) => {
-          console.log('📦 Inventory created:', data);
+          console.log('📦 Inventory created event received:', data);
+          console.log('🔍 Calling updateInventoryCountInRealTime...');
+          console.log('🔍 Socket connection status:', socket.connected);
+          console.log('🔍 Current inventory count before update:', document.getElementById('inventoryCount').textContent);
+          console.log('🔍 Socket ID when event received:', socket.id);
+          console.log('🔍 Event data received:', JSON.stringify(data, null, 2));
           updateInventoryCountInRealTime();
         });
 
         socket.on('inventory:updated', (data) => {
-          console.log('📦 Inventory updated:', data);
+          console.log('📦 Inventory updated event received:', data);
+          console.log('🔍 Calling updateInventoryCountInRealTime...');
           updateInventoryCountInRealTime();
         });
 
         socket.on('inventory:deleted', (data) => {
-          console.log('📦 Inventory deleted:', data);
+          console.log('📦 Inventory deleted event received:', data);
+          console.log('🔍 Calling updateInventoryCountInRealTime...');
           updateInventoryCountInRealTime();
         });
 
@@ -423,32 +535,92 @@
         // Choose the appropriate endpoint based on toggle state
         const tasksEndpoint = showCompleted ? 'http://localhost:5000/api/tasks/my/completed' : 'http://localhost:5000/api/tasks/my';
 
-        const [summary, inventoryList, myTasks, chartData, toolboxList] = await Promise.all([
+        const [summary, inventoryList, myTasks, chartData, toolboxList, inventorySummary] = await Promise.all([
           fetch('http://localhost:5000/api/reports/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()),
           fetch('http://localhost:5000/api/inventory', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []),
           fetch(tasksEndpoint, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []),
           fetch('http://localhost:5000/api/reports/chart-data', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()),
-          fetch('http://localhost:5000/api/toolbox', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : [])
+          fetch('http://localhost:5000/api/toolbox', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []),
+          fetch('http://localhost:5000/api/inventory/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : null).catch(() => null)
         ]);
 
-        // Compute inventory stats
-        const inventoryTotal = Array.isArray(inventoryList) ? inventoryList.length : 0;
+        // Compute inventory stats - calculate total quantity instead of just counting items
+        const inventoryTotal = Array.isArray(inventoryList) ?
+          inventoryList.reduce((total, item) => total + (parseInt(item.quantity) || 1), 0) : 0;
         const toolboxTotal = Array.isArray(toolboxList) ? toolboxList.length : 0;
         const tasksInProgress = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'in_progress' || (t.status || '').toLowerCase() === 'in progress').length;
         const tasksCompleted = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'completed').length;
 
+        // Create fallback inventory summary if the endpoint fails
+        let finalInventorySummary = inventorySummary;
+        if (!inventorySummary && Array.isArray(inventoryList)) {
+          finalInventorySummary = {
+            total: inventoryTotal, // This now represents total quantity, not item count
+            byProductType: {
+              UPS: inventoryList.filter(item => item.product_type === 'UPS').length,
+              AVR: inventoryList.filter(item => item.product_type === 'AVR').length
+            },
+            byStatus: {
+              New: inventoryList.filter(item => item.status === 'New').length,
+              Replaced: inventoryList.filter(item => item.status === 'Replaced').length
+            },
+            bySize: {
+              '1.5kva': inventoryList.filter(item => item.size === '1.5kva').length,
+              '3kva': inventoryList.filter(item => item.size === '3kva').length,
+              '6kva': inventoryList.filter(item => item.size === '6kva').length,
+              '10kva': inventoryList.filter(item => item.size === '10kva').length,
+              '20kva': inventoryList.filter(item => item.size === '20kva').length,
+              '30kva': inventoryList.filter(item => item.size === '30kva').length,
+              '40kva': inventoryList.filter(item => item.size === '40kva').length,
+              '60kva': inventoryList.filter(item => item.size === '60kva').length
+            },
+            active: inventoryList.filter(item => item.status === 'New').length,
+            uniqueLocations: new Set(inventoryList.map(item => item.location)).size,
+            recentItems: inventoryList
+              .sort((a, b) => new Date(b.date) - new Date(a.date))
+              .slice(0, 5)
+              .map(item => ({
+                id: item.id,
+                productType: item.product_type,
+                status: item.status,
+                size: item.size,
+                location: item.location,
+                date: item.date
+              }))
+          };
+        }
+
         const currentData = {
           reports: summary.total || 0,
           toolbox: toolboxTotal,
-          inventory: inventoryTotal,
+          inventory: inventoryTotal, // Current user's inventory for stats card and chart
           inProgress: tasksInProgress,
           completed: tasksCompleted,
-          monthlyData: chartData || []
+          monthlyData: chartData || [],
+          inventorySummary: finalInventorySummary || {}
         };
 
         updateDashboardStats(currentData);
+        updateInventoryBreakdown(currentData.inventorySummary);
         initOrUpdateCharts(currentData);
         updatePerformanceIndicator(currentData);
+
+        // Debug logging
+        console.log('📊 Dashboard Data:', {
+          inventoryTotal, // Current user's inventory total quantity
+          inventoryItemCount: inventoryList.length, // Current user's inventory item count
+          inventorySummary: currentData.inventorySummary,
+          systemOverviewData: [currentData.reports, currentData.inventory, currentData.toolbox, currentData.inProgress, currentData.completed]
+        });
+
+        // Additional debugging for inventory
+        if (inventoryList && inventoryList.length > 0) {
+          console.log('📦 Sample inventory item:', inventoryList[0]);
+          console.log('📦 Inventory product types:', [...new Set(inventoryList.map(item => item.product_type))]);
+          console.log('📦 Inventory statuses:', [...new Set(inventoryList.map(item => item.status))]);
+        } else {
+          console.log('⚠️ No inventory data found');
+        }
 
         // Store current data for comparison
         previousData = currentData;
@@ -465,12 +637,89 @@
     // Make refreshDashboard globally accessible
     window.refreshDashboard = refreshDashboard;
 
+    // Function to manually refresh the chart
+    function refreshChart() {
+      console.log('🔄 Manually refreshing chart...');
+      if (systemBarChartInstance) {
+        console.log('🔍 Current chart data:', systemBarChartInstance.data.datasets[0].data);
+        console.log('🔍 Chart instance exists:', !!systemBarChartInstance);
+        systemBarChartInstance.update('active');
+        console.log('✅ Chart refreshed manually');
+      } else {
+        console.log('⚠️ Chart instance not found');
+        // Try to recreate the chart
+        refreshDashboard();
+      }
+    }
+
     function updateDashboardStats(data) {
+      console.log('🔧 Updating dashboard stats with data:', data);
+
       document.getElementById('reportsCount').textContent = data.reports;
       document.getElementById('inventoryCount').textContent = data.inventory;
       document.getElementById('inProgressCount').textContent = data.inProgress;
       document.getElementById('completedCount').textContent = data.completed;
       document.getElementById('toolboxCount').textContent = data.toolbox;
+    }
+
+    // Update inventory breakdown in stats card
+    function updateInventoryBreakdown(inventorySummary) {
+      console.log('🔍 Updating inventory breakdown with:', inventorySummary);
+
+      if (!inventorySummary || !inventorySummary.total) {
+        console.log('⚠️ No inventory summary, hiding breakdown');
+        document.getElementById('inventoryBreakdown').style.display = 'none';
+        return;
+      }
+
+      // Get saved state from localStorage
+      const savedExpandedState = localStorage.getItem('inventoryBreakdownExpanded') === 'true';
+
+      // Show breakdown but respect saved state
+      const inventoryBreakdown = document.getElementById('inventoryBreakdown');
+      const cardHint = document.querySelector('.card-hint');
+
+      if (savedExpandedState) {
+        inventoryBreakdown.style.display = 'block';
+        cardHint.textContent = 'Click to hide details';
+      } else {
+        inventoryBreakdown.style.display = 'none';
+        cardHint.textContent = 'Click to show details';
+      }
+
+      // Update counts
+      const upsCount = inventorySummary.byProductType?.UPS || 0;
+      const avrCount = inventorySummary.byProductType?.AVR || 0;
+      const newCount = inventorySummary.byStatus?.New || 0;
+      const replacedCount = inventorySummary.byStatus?.Replaced || 0;
+
+      console.log('🔍 Breakdown counts:', { upsCount, avrCount, newCount, replacedCount });
+
+      document.getElementById('upsCount').textContent = upsCount;
+      document.getElementById('avrCount').textContent = avrCount;
+      document.getElementById('newCount').textContent = newCount;
+      document.getElementById('replacedCount').textContent = replacedCount;
+
+      // Also update the main inventory count to ensure consistency
+      const mainInventoryCount = document.getElementById('inventoryCount');
+      if (mainInventoryCount && inventorySummary.total !== undefined) {
+        console.log('🔍 Updating main inventory count to:', inventorySummary.total);
+        mainInventoryCount.textContent = inventorySummary.total;
+      }
+
+      console.log('✅ Inventory breakdown updated:', { upsCount, avrCount, newCount, replacedCount });
+    }
+
+    // Toggle inventory breakdown visibility
+    function toggleInventoryBreakdown() {
+      const inventoryBreakdown = document.getElementById('inventoryBreakdown');
+      const cardHint = document.querySelector('.card-hint');
+
+      if (inventoryBreakdown && cardHint) {
+        const isVisible = inventoryBreakdown.style.display !== 'none';
+        inventoryBreakdown.style.display = isVisible ? 'none' : 'block';
+        cardHint.textContent = isVisible ? 'Click to show details' : 'Click to hide details';
+      }
     }
 
     function updatePerformanceIndicator(currentData) {
@@ -526,21 +775,21 @@
         systemBarChartInstance = new Chart(systemBarCtx, {
           type: 'bar',
           data: {
-            labels: ['Reports', 'Inventory', 'Toolbox', 'In Progress', 'Completed'],
+            labels: ['Reports', 'Toolbox', 'Inventory', 'In Progress', 'Completed'],
             datasets: [{
               label: 'Count',
-              data: [data.reports, data.inventory, data.toolbox, data.inProgress, data.completed],
+              data: [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed],
               backgroundColor: [
                 'rgba(231, 76, 60, 0.8)',   // Reports - Red
-                'rgba(52, 152, 219, 0.8)',  // Inventory - Blue
                 'rgba(155, 89, 182, 0.8)',  // Toolbox - Purple
+                'rgba(52, 152, 219, 0.8)',  // Inventory - Blue
                 'rgba(243, 156, 18, 0.8)',  // In Progress - Orange
                 'rgba(46, 204, 113, 0.8)'   // Completed - Green
               ],
               borderColor: [
                 'rgba(231, 76, 60, 1)',
-                'rgba(52, 152, 219, 1)',
                 'rgba(155, 89, 182, 1)',
+                'rgba(52, 152, 219, 1)',
                 'rgba(243, 156, 18, 1)',
                 'rgba(46, 204, 113, 1)'
               ],
@@ -607,6 +856,19 @@
             }
           }
         });
+
+        console.log('📊 System Overview Chart created with data:', {
+          reports: data.reports,
+          toolbox: data.toolbox,
+          inventory: data.inventory,
+          inProgress: data.inProgress,
+          completed: data.completed
+        });
+
+        // Debug chart data array
+        console.log('🔍 Chart data array:', [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed]);
+        console.log('🔍 Inventory value for chart:', data.inventory);
+        console.log('🔍 Chart instance created:', !!systemBarChartInstance);
 
         // Make systemBarChartInstance globally accessible
         window.systemBarChartInstance = systemBarChartInstance;
@@ -718,21 +980,35 @@
     // Real-time inventory count update function
     async function updateInventoryCountInRealTime() {
       try {
+        console.log('📦 updateInventoryCountInRealTime function called');
         console.log('📦 Updating inventory count in real-time...');
 
-        // Fetch latest inventory count
-        const response = await fetch('http://localhost:5000/api/inventory', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
+        // Fetch latest inventory count and summary
+        const [inventoryResponse, summaryResponse] = await Promise.all([
+          fetch('http://localhost:5000/api/inventory', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          }),
+          fetch('http://localhost:5000/api/inventory/summary', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          })
+        ]);
 
-        if (response.ok) {
-          const inventoryList = await response.json();
-          const inventoryTotal = Array.isArray(inventoryList) ? inventoryList.length : 0;
+        if (inventoryResponse.ok && summaryResponse.ok) {
+          const inventoryList = await inventoryResponse.json();
+          const inventorySummary = await summaryResponse.json();
+
+          const inventoryTotal = Array.isArray(inventoryList) ?
+            inventoryList.reduce((total, item) => total + (parseInt(item.quantity) || 1), 0) : 0;
 
           // Update dashboard stats
           const inventoryCountElement = document.getElementById('inventoryCount');
+          console.log('🔍 Found inventoryCount element:', inventoryCountElement);
+          console.log('🔍 Current text content:', inventoryCountElement?.textContent);
+          console.log('🔍 New inventory total:', inventoryTotal);
+
           if (inventoryCountElement) {
             inventoryCountElement.textContent = inventoryTotal;
+            console.log('🔍 Updated inventoryCount to:', inventoryCountElement.textContent);
 
             // Add visual feedback
             inventoryCountElement.style.color = '#3498db';
@@ -743,13 +1019,25 @@
             }, 2000);
           }
 
+          // Update inventory breakdown
+          updateInventoryBreakdown(inventorySummary);
+
           // Update system overview chart
           if (systemBarChartInstance) {
-            systemBarChartInstance.data.datasets[0].data[2] = inventoryTotal;
+            console.log('🔍 Updating chart with inventory total:', inventoryTotal);
+            console.log('🔍 Chart data before update:', systemBarChartInstance.data.datasets[0].data);
+            systemBarChartInstance.data.datasets[0].data[2] = inventoryTotal; // Index 2 for inventory (third position)
+            console.log('🔍 Chart data after update:', systemBarChartInstance.data.datasets[0].data);
             systemBarChartInstance.update('active');
+            console.log('✅ Chart updated successfully');
+          } else {
+            console.log('⚠️ Chart instance not found for update');
           }
 
-          console.log('✅ Inventory count updated in real-time');
+          console.log('✅ Inventory count and details updated in real-time', {
+            inventoryTotal, // Total quantity across all items
+            inventoryItemCount: inventoryList.length // Number of inventory items
+          });
         }
       } catch (error) {
         console.error('❌ Error updating inventory count:', error);
@@ -786,7 +1074,7 @@
 
           // Update system overview chart
           if (systemBarChartInstance) {
-            systemBarChartInstance.data.datasets[0].data[2] = toolboxTotal;
+            systemBarChartInstance.data.datasets[0].data[1] = toolboxTotal; // Index 1 for toolbox (second position)
             systemBarChartInstance.update('active');
           }
 
@@ -876,6 +1164,10 @@
 
       return toast;
     }
+
+
+
+
   </script>
 
   <script src="./dark-mode.js"></script>

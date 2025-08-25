@@ -637,7 +637,12 @@
         <input type="text" id="ppeNo" name="ppeNo" required>
 
         <label for="toolsUsed">Tools and Equipment to be Used:</label>
-        <input type="text" id="toolsUsed" name="toolsUsed" placeholder="Enter tools used" list="tool-list">
+        <p style="font-size: 12px; color: #666; margin-bottom: 8px; font-style: italic;">
+          💡 Tip: You can either select from the dropdown list below or type tools manually.
+          If typing manually, separate multiple tools with commas.
+        </p>
+        <input type="text" id="toolsUsed" name="toolsUsed"
+          placeholder="Enter tools used (e.g., Hammer, Screwdriver, Wrench)" list="tool-list">
         <datalist id="tool-list">
           <option value="Set of Rachet">
           <option value="Mallet">
@@ -708,6 +713,14 @@
         <input type="text" id="verifiedBy" name="verifiedBy" required>
 
         <button type="submit" id="submitBtn">Submit</button>
+
+        <!-- Add View Toolbox button under submit button -->
+        <div style="margin-top: 20px; text-align: center;">
+          <a href="./toolbox-submitted.html" class="btn-secondary"
+            style="display: inline-block; padding: 12px 24px; background: #6c757d; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; transition: background-color 0.3s ease; margin-right: 10px;">
+            👁️ View My Toolbox
+          </a>
+        </div>
 
         <div id="editModeButtons" style="display: none; margin-top: 20px; text-align: center;">
           <button type="button"
@@ -975,13 +988,28 @@
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        console.log('Form submission started');
+        console.log('🎯 Form submission event triggered!');
+        console.log('Form element:', form);
+        console.log('Submit button:', form.querySelector('button[type="submit"]'));
 
-        // Validate that at least one tool is selected
-        if (selectedTools.length === 0) {
-          showMessage('❌ Please select at least one tool before submitting the form', 'error');
+        // Check if tools are selected or if there's direct input
+        let toolsToUse = selectedTools;
+        const directToolInput = document.getElementById('toolsUsed').value.trim();
+
+        console.log('Debug - selectedTools:', selectedTools);
+        console.log('Debug - directToolInput:', directToolInput);
+
+        if (selectedTools.length === 0 && !directToolInput) {
+          showMessage('❌ Please select at least one tool or enter tools manually before submitting the form', 'error');
           return;
         }
+
+        // If no tools are selected but there's direct input, use that
+        if (selectedTools.length === 0 && directToolInput) {
+          toolsToUse = [directToolInput];
+        }
+
+        console.log('Debug - final toolsToUse:', toolsToUse);
 
         // Get form data - using snake_case to match backend expectations
         const formData = {
@@ -991,7 +1019,7 @@
           nameCompany: document.getElementById('nameCompany').value,
           sign: document.getElementById('sign').value,
           ppeNo: document.getElementById('ppeNo').value,
-          toolsUsed: selectedTools.join(', '), // Use selectedTools array with proper formatting
+          toolsUsed: toolsToUse.join(', '), // Use toolsToUse array with proper formatting
           hazards: document.getElementById('hazards').value,
           circulars: document.getElementById('circulars').value,
           riskAssessment: document.getElementById('riskAssessment').value,
@@ -1069,7 +1097,7 @@
                 date: document.getElementById('date').value,
                 workLocation: document.getElementById('workLocation').value,
                 nameCompany: document.getElementById('nameCompany').value,
-                toolsUsed: selectedTools.join(', ')
+                toolsUsed: toolsToUse.join(', ')
               };
 
               // Encode the form data and redirect

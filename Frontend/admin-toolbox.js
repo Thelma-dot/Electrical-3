@@ -354,6 +354,14 @@ function exportToolbox() {
     // You can add CSV/Excel export functionality here
 }
 
+// Close delete modal
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
 // Utility functions
 function formatDate(dateString) {
     if (!dateString) return 'N/A';

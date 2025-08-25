@@ -67,7 +67,7 @@ class Task {
             WHERE t.assigned_to = ? AND t.status = 'completed'
             ORDER BY t.updated_at DESC
         `;
-        
+
         try {
             return await all(sql, [userId]);
         } catch (error) {
@@ -75,7 +75,7 @@ class Task {
         }
     }
 
-        static async findAll() {
+    static async findAll() {
         const sql = `
             SELECT t.*, 
                    ua.staff_id as assigned_by_staff,
@@ -85,7 +85,7 @@ class Task {
             LEFT JOIN users uu ON uu.id = t.assigned_to
             ORDER BY t.created_at DESC
         `;
-        
+
         try {
             return await all(sql);
         } catch (error) {
@@ -103,7 +103,7 @@ class Task {
             LEFT JOIN users uu ON uu.id = t.assigned_to
             ORDER BY t.created_at DESC
         `;
-        
+
         try {
             return await all(sql);
         } catch (error) {
@@ -180,6 +180,25 @@ class Task {
             return await get(sql, [userId]);
         } catch (error) {
             throw new Error(`Failed to get task counts: ${error.message}`);
+        }
+    }
+
+    static async getStats() {
+        const sql = `
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
+                SUM(CASE WHEN hidden_from_user = 1 THEN 1 ELSE 0 END) as hidden
+            FROM tasks
+        `;
+
+        try {
+            return await get(sql);
+        } catch (error) {
+            throw new Error(`Failed to get task stats: ${error.message}`);
         }
     }
 }

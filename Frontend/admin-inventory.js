@@ -60,13 +60,17 @@ function initializeSocketConnection() {
 function handleInventoryUpdate(type, data) {
     console.log(`📦 Handling inventory ${type} update:`, data);
 
+    // Show notification
+    showNotification(`Inventory item ${type} successfully!`, 'success');
+
     // Flash the stats to show update
     flashStats();
 
-    // Reload inventory data
-    setTimeout(() => {
-        loadInventory();
-    }, 500);
+    // Reload inventory data immediately
+    loadInventory();
+
+    // Also update stats specifically
+    updateInventoryStats();
 }
 
 // Real-time event listeners
@@ -76,6 +80,8 @@ function initializeEventListeners() {
 
     // Other event listeners can be added here
 }
+
+
 
 // Real-time flash effects
 function flashStats() {
@@ -98,6 +104,8 @@ function flashInventoryTable() {
     }
 }
 
+
+
 // Load inventory data
 async function loadInventory() {
     console.log('🔄 Loading inventory data...');
@@ -109,12 +117,12 @@ async function loadInventory() {
     }
 
     try {
-        const adminToken = localStorage.getItem('adminToken');
-        console.log('🔑 Admin token exists:', !!adminToken);
+        const token = localStorage.getItem('token');
+        console.log('🔑 Token exists:', !!token);
 
         const response = await fetch('http://localhost:5000/api/admin/inventory', {
             headers: {
-                'Authorization': `Bearer ${adminToken}`
+                'Authorization': `Bearer ${token}`
             }
         });
 
@@ -123,8 +131,12 @@ async function loadInventory() {
         if (response.ok) {
             allInventory = await response.json();
             console.log('📦 Loaded inventory items:', allInventory.length);
+            console.log('🔍 Sample inventory item:', allInventory[0]);
+            console.log('🔍 All inventory IDs:', allInventory.map(item => ({ id: item.id, type: typeof item.id, productType: item.productType })));
             filteredInventory = [...allInventory];
             updateInventoryTable();
+
+            // Update stats immediately after loading inventory
             updateInventoryStats();
 
             // Update last refresh timestamp
@@ -169,19 +181,19 @@ function updateInventoryTable() {
             <td>${formatDate(item.dateAdded)}</td>
             <td>${item.location || 'N/A'}</td>
             <td>${item.issuedBy || 'N/A'}</td>
-            <td>${item.staffName || item.staffId || 'N/A'}</td>
+            <td>${item.staffId || 'N/A'}</td>
             <td>${formatDate(item.lastUpdated)}</td>
-            <td>
-                <button class="btn btn-sm primary" onclick="viewItemDetails('${item._id}')">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn btn-sm secondary" onclick="editItem('${item._id}')">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-sm danger" onclick="deleteItem('${item._id}', '${item.productType} - ${item.serialNumber}')">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
+                         <td class="action-buttons">
+                 <button class="btn btn-sm primary" onclick="viewItemDetails('${item.id}')">
+                     <i class="fas fa-eye"></i>
+                 </button>
+                 <button class="btn btn-sm secondary" onclick="editItem('${item.id}')">
+                     <i class="fas fa-edit"></i>
+                 </button>
+                 <button class="btn btn-sm danger" onclick="deleteItem('${item.id}', '${item.productType} - ${item.serialNumber}')">
+                     <i class="fas fa-trash"></i>
+                 </button>
+             </td>
         `;
         tbody.appendChild(row);
     });
@@ -206,10 +218,35 @@ async function updateInventoryStats() {
             displayInventoryStats(stats);
         } else {
             console.error('❌ Failed to fetch updated inventory stats:', response.status);
+            // Fallback: calculate stats from loaded inventory data
+            calculateAndDisplayLocalStats();
         }
     } catch (error) {
         console.error('❌ Error updating inventory stats:', error);
+        // Fallback: calculate stats from loaded inventory data
+        calculateAndDisplayLocalStats();
     }
+}
+
+// Calculate stats locally from loaded inventory data
+function calculateAndDisplayLocalStats() {
+    if (!allInventory || allInventory.length === 0) {
+        console.log('⚠️ No inventory data available for local stats calculation');
+        return;
+    }
+
+    console.log('🔄 Calculating local inventory stats...');
+
+    const stats = {
+        totalInventory: allInventory.length,
+        upsCount: allInventory.filter(item => item.productType === 'UPS').length,
+        avrCount: allInventory.filter(item => item.productType === 'AVR').length,
+        newCount: allInventory.filter(item => item.status === 'New').length,
+        replacedCount: allInventory.filter(item => item.status === 'Replaced').length
+    };
+
+    console.log('📊 Local stats calculated:', stats);
+    displayInventoryStats(stats);
 }
 
 // Display inventory statistics
@@ -298,67 +335,149 @@ function filterInventory() {
 
 // Show edit inventory modal
 function editItem(itemId) {
-    const item = allInventory.find(i => i._id === itemId);
-    if (!item) return;
+    console.log('🔧 Edit item called with ID:', itemId);
+    console.log('🔍 Current allInventory array:', allInventory);
+    console.log('🔍 Looking for item with ID:', itemId);
+    console.log('🔍 Available IDs:', allInventory.map(i => ({ id: i.id, _id: i._id, productType: i.productType })));
 
+    // Try multiple ID fields
+    let item = allInventory.find(i => i.id === itemId);
+    if (!item) {
+        item = allInventory.find(i => i._id === itemId);
+    }
+    if (!item) {
+        item = allInventory.find(i => String(i.id) === String(itemId));
+    }
+    if (!item) {
+        item = allInventory.find(i => String(i._id) === String(itemId));
+    }
+
+    if (!item) {
+        console.error('❌ Item not found with ID:', itemId);
+        console.error('❌ Available items:', allInventory);
+        showNotification('Item not found. Please refresh the page.', 'error');
+        return;
+    }
+
+    console.log('📦 Found item for editing:', item);
     editingInventoryId = itemId;
-    document.getElementById('modalTitle').textContent = 'Edit Inventory Item';
+
+    const modalTitle = document.getElementById('editModalTitle');
+    if (modalTitle) {
+        modalTitle.textContent = `Edit Inventory Item - ${item.productType} ${item.serialNumber}`;
+    }
 
     // Populate form fields
-    document.getElementById('productType').value = item.productType || '';
-    document.getElementById('status').value = item.status || '';
-    document.getElementById('size').value = item.size || '';
-    document.getElementById('serialNumber').value = item.serialNumber || '';
-    document.getElementById('dateAdded').value = item.dateAdded ? item.dateAdded.split('T')[0] : '';
-    document.getElementById('location').value = item.location || '';
-    document.getElementById('issuedBy').value = item.issuedBy || '';
-    document.getElementById('notes').value = item.notes || '';
+    const formFields = {
+        'editProductType': item.productType || '',
+        'editStatus': item.status || '',
+        'editSize': item.size || '',
+        'editSerialNumber': item.serialNumber || '',
+        'editDateAdded': item.dateAdded ? item.dateAdded.split('T')[0] : '',
+        'editLocation': item.location || '',
+        'editIssuedBy': item.issuedBy || '',
+        'editNotes': item.notes || ''
+    };
 
-    document.getElementById('inventoryModal').style.display = 'block';
+    // Set each form field value
+    Object.entries(formFields).forEach(([fieldId, value]) => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.value = value;
+            console.log(`✅ Set ${fieldId} to:`, value);
+        } else {
+            console.error(`❌ Form field not found: ${fieldId}`);
+        }
+    });
+
+    const modal = document.getElementById('editInventoryModal');
+    if (modal) {
+        modal.style.display = 'block';
+        console.log('✅ Edit modal displayed');
+    } else {
+        console.error('❌ Edit modal not found');
+    }
 }
 
 // View item details
 async function viewItemDetails(itemId) {
-    const item = allInventory.find(i => i._id === itemId);
-    if (!item) return;
+    console.log('👁️ View item details called with ID:', itemId);
+    console.log('🔍 Current allInventory array:', allInventory);
+    console.log('🔍 Looking for item with ID:', itemId);
+    console.log('🔍 Available IDs:', allInventory.map(i => ({ id: i.id, _id: i._id, productType: i.productType })));
+
+    // Try multiple ID fields (same logic as editItem)
+    let item = allInventory.find(i => i.id === itemId);
+    if (!item) {
+        item = allInventory.find(i => i._id === itemId);
+    }
+    if (!item) {
+        item = allInventory.find(i => String(i.id) === String(itemId));
+    }
+    if (!item) {
+        item = allInventory.find(i => String(i._id) === String(itemId));
+    }
+
+    if (!item) {
+        console.error('❌ Item not found with ID:', itemId);
+        console.error('❌ Available items:', allInventory);
+        showNotification('Item not found. Please refresh the page.', 'error');
+        return;
+    }
+
+    console.log('📦 Found item for viewing:', item);
+
+    // Set current item ID for edit functionality
+    window.currentItemId = itemId;
 
     const content = document.getElementById('itemDetailsContent');
-    content.innerHTML = `
-        <div class="item-details">
-            <div class="detail-row">
-                <strong>Product Type:</strong> ${item.productType || 'N/A'}
+    if (content) {
+        content.innerHTML = `
+            <div class="item-details">
+                <div class="detail-row">
+                    <strong>Product Type:</strong> ${item.productType || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Status:</strong> <span class="status-badge ${getStatusClass(item.status)}">${item.status || 'N/A'}</span>
+                </div>
+                <div class="detail-row">
+                    <strong>Size:</strong> ${item.size || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Serial Number:</strong> ${item.serialNumber || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Date Added:</strong> ${formatDate(item.dateAdded)}
+                </div>
+                <div class="detail-row">
+                    <strong>Location:</strong> ${item.location || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Issued By:</strong> ${item.issuedBy || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Staff ID:</strong> ${item.staffId || 'N/A'}
+                </div>
+                <div class="detail-row">
+                    <strong>Last Updated:</strong> ${formatDate(item.lastUpdated)}
+                </div>
+                <div class="detail-row">
+                    <strong>Notes:</strong> ${item.notes || 'No notes'}
+                </div>
             </div>
-            <div class="detail-row">
-                <strong>Status:</strong> <span class="status-badge ${getStatusClass(item.status)}">${item.status || 'N/A'}</span>
-            </div>
-            <div class="detail-row">
-                <strong>Size:</strong> ${item.size || 'N/A'}
-            </div>
-            <div class="detail-row">
-                <strong>Serial Number:</strong> ${item.serialNumber || 'N/A'}
-            </div>
-            <div class="detail-row">
-                <strong>Date Added:</strong> ${formatDate(item.dateAdded)}
-            </div>
-            <div class="detail-row">
-                <strong>Location:</strong> ${item.location || 'N/A'}
-            </div>
-            <div class="detail-row">
-                <strong>Issued By:</strong> ${item.issuedBy || 'N/A'}
-            </div>
-            <div class="detail-row">
-                <strong>User:</strong> ${item.staffName || item.staffId || 'N/A'}
-            </div>
-            <div class="detail-row">
-                <strong>Last Updated:</strong> ${formatDate(item.lastUpdated)}
-            </div>
-            <div class="detail-row">
-                <strong>Notes:</strong> ${item.notes || 'No notes'}
-            </div>
-        </div>
-    `;
+        `;
+        console.log('✅ Item details content populated');
+    } else {
+        console.error('❌ Item details content element not found');
+    }
 
-    document.getElementById('itemDetailsModal').style.display = 'block';
+    const modal = document.getElementById('itemDetailsModal');
+    if (modal) {
+        modal.style.display = 'block';
+        console.log('✅ View modal displayed');
+    } else {
+        console.error('❌ View modal not found');
+    }
 }
 
 // Delete item
@@ -376,7 +495,7 @@ async function confirmDeleteItem() {
         const response = await fetch(`http://localhost:5000/api/admin/inventory/${window.deleteItemId}`, {
             method: 'DELETE',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
         });
 
@@ -403,11 +522,163 @@ function closeItemDetailsModal() {
     document.getElementById('itemDetailsModal').style.display = 'none';
 }
 
+function closeEditModal() {
+    document.getElementById('editInventoryModal').style.display = 'none';
+    editingInventoryId = null;
+}
+
+// Print item details
+function printItemDetails() {
+    const printWindow = window.open('', '_blank');
+    const item = allInventory.find(i => i.id === window.currentItemId) ||
+        allInventory.find(i => i._id === window.currentItemId) ||
+        allInventory.find(i => String(i.id) === String(window.currentItemId)) ||
+        allInventory.find(i => String(i._id) === String(window.currentItemId));
+
+    if (!item) {
+        showNotification('Item not found for printing', 'error');
+        return;
+    }
+
+    const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Inventory Item - ${item.productType} ${item.serialNumber}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                .detail-row { margin: 10px 0; padding: 5px 0; border-bottom: 1px solid #eee; }
+                .label { font-weight: bold; color: #333; }
+                .value { margin-left: 10px; }
+                .status-badge { 
+                    background: #3498db; 
+                    color: white; 
+                    padding: 2px 8px; 
+                    border-radius: 12px; 
+                    font-size: 12px; 
+                }
+                @media print { body { margin: 0; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Inventory Item Details</h1>
+                <h2>${item.productType} - ${item.serialNumber}</h2>
+                <p>Printed on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Product Type:</span>
+                <span class="value">${item.productType || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Status:</span>
+                <span class="value"><span class="status-badge">${item.status || 'N/A'}</span></span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Size:</span>
+                <span class="value">${item.size || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Serial Number:</span>
+                <span class="value">${item.serialNumber || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Date Added:</span>
+                <span class="value">${formatDate(item.dateAdded)}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Location:</span>
+                <span class="value">${item.location || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Issued By:</span>
+                <span class="value">${item.issuedBy || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Staff ID:</span>
+                <span class="value">${item.staffId || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Last Updated:</span>
+                <span class="value">${formatDate(item.lastUpdated)}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Notes:</span>
+                <span class="value">${item.notes || 'No notes'}</span>
+            </div>
+        </body>
+        </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+
+    // Wait for content to load then print
+    printWindow.onload = function () {
+        printWindow.print();
+        printWindow.close();
+    };
+}
+
 // Edit current item from details modal
 function editCurrentItem() {
     closeItemDetailsModal();
     if (window.currentItemId) {
         editItem(window.currentItemId);
+    }
+}
+
+// Save inventory changes
+async function saveInventoryChanges() {
+    if (!editingInventoryId) {
+        showNotification('No item selected for editing', 'error');
+        return;
+    }
+
+    try {
+        const formData = {
+            productType: document.getElementById('editProductType').value,
+            status: document.getElementById('editStatus').value,
+            size: document.getElementById('editSize').value,
+            serialNumber: document.getElementById('editSerialNumber').value,
+            date: document.getElementById('editDateAdded').value,
+            location: document.getElementById('editLocation').value,
+            issuedBy: document.getElementById('editIssuedBy').value,
+            notes: document.getElementById('editNotes').value
+        };
+
+        console.log('🔄 Saving inventory changes:', formData);
+        console.log('🔑 Editing inventory ID:', editingInventoryId);
+        console.log('🔑 Token exists:', !!localStorage.getItem('token'));
+
+        const response = await fetch(`http://localhost:5000/api/admin/inventory/${editingInventoryId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(formData)
+        });
+
+        console.log('📡 Response status:', response.status);
+        console.log('📡 Response headers:', response.headers);
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log('✅ Update successful:', result);
+            showNotification('Inventory item updated successfully!', 'success');
+            closeEditModal();
+            loadInventory(); // Refresh the inventory data
+        } else {
+            const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+            console.error('❌ Update failed:', errorData);
+            showNotification(`Failed to update: ${errorData.error || 'Unknown error'}`, 'error');
+        }
+    } catch (error) {
+        console.error('❌ Error saving inventory changes:', error);
+        showNotification(`Error saving changes: ${error.message}`, 'error');
     }
 }
 
@@ -458,7 +729,7 @@ function exportInventory() {
 }
 
 function generateCSV(data) {
-    const headers = ['Product Type', 'Status', 'Size', 'Serial Number', 'Date Added', 'Location', 'Issued By', 'User', 'Last Updated', 'Notes'];
+    const headers = ['Product Type', 'Status', 'Size', 'Serial Number', 'Date Added', 'Location', 'Issued By', 'Staff ID', 'Last Updated', 'Notes'];
     const rows = data.map(item => [
         item.productType || '',
         item.status || '',
@@ -467,7 +738,7 @@ function generateCSV(data) {
         formatDate(item.dateAdded),
         item.location || '',
         item.issuedBy || '',
-        item.staffName || item.staffId || '',
+        item.staffId || '',
         formatDate(item.lastUpdated),
         item.notes || ''
     ]);
@@ -490,20 +761,55 @@ function showNotification(message, type = 'info') {
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
-    notification.textContent = message;
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    // Style the notification
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        max-width: 300px;
+        font-family: Arial, sans-serif;
+    `;
 
     // Add to page
     document.body.appendChild(notification);
 
+    // Show notification with animation
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+
     // Remove after 3 seconds
     setTimeout(() => {
-        notification.remove();
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
     }, 3000);
 }
+
+
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize real-time functionality
     initializeEventListeners();
     setActiveNavLink();
+
+    // Load initial inventory data
+    loadInventory();
 });
