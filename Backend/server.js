@@ -1,5 +1,6 @@
 const app = require("./app");
-const { initializeDatabase } = require("./config/database");
+// Use Vercel-compatible database configuration
+const { initializeDatabase } = require("./config/database-vercel");
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, "config.env") });
 

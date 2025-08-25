@@ -4,6 +4,10 @@
     {
       "src": "Backend/server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "Frontend/**/*",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -12,11 +16,28 @@
       "dest": "Backend/server.js"
     },
     {
+      "src": "/images/(.*)",
+      "dest": "Frontend/images/$1"
+    },
+    {
+      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|mp3|wav))",
+      "dest": "Frontend/$1"
+    },
+    {
+      "src": "/(.*\\.html)",
+      "dest": "Frontend/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "Backend/server.js"
+      "dest": "Frontend/index.html"
     }
   ],
   "env": {
     "NODE_ENV": "production"
+  },
+  "functions": {
+    "Backend/server.js": {
+      "maxDuration": 30
+    }
   }
 }
