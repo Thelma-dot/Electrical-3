@@ -14,12 +14,12 @@ const config = {
     socketUrl: 'https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app'
   },
   netlify: {
-    apiBaseUrl: 'https://electrical-3-y99h.onrender.com/api',
-    socketUrl: 'https://electrical-3-y99h.onrender.com'
+    apiBaseUrl: 'https://electrical-management-system.onrender.com/api',
+    socketUrl: 'https://electrical-management-system.onrender.com'
   },
   render: {
-    apiBaseUrl: 'https://electrical-3-y99h.onrender.com/api',
-    socketUrl: 'https://electrical-3-y99h.onrender.com'
+    apiBaseUrl: 'https://electrical-management-system.onrender.com/api',
+    socketUrl: 'https://electrical-management-system.onrender.com'
   },
   railway: {
     apiBaseUrl: 'https://electrical-3-production.up.railway.app/api',

@@ -1,5 +1,5 @@
 // Test Backend Connection
-const backendUrl = 'https://electrical-3-y99h.onrender.com';
+const backendUrl = 'https://electrical-management-system.onrender.com';
 
 console.log('🧪 Testing Backend Connection...\n');
 

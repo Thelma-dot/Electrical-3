@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: electrical-3-y99h
+    name: derelectrical-3-y99h
     env: node
     buildCommand: |
       echo "Forcing npm usage and preventing yarn..."

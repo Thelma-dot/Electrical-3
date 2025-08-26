@@ -24,7 +24,7 @@ git push origin main
 4. Select the repository with your backend code
 
 ### 3. Configure the Service
-- **Name**: `electrical-3-y99h`
+- **Name**: `derelectrical-3-y99h`
 - **Environment**: `Node`
 - **Build Command**: `npm install`
 - **Start Command**: `npm start`
@@ -96,7 +96,7 @@ With `autoDeploy: true` in your `render.yaml`, every push to your main branch wi
 ## 🎉 Success!
 
 Once deployed, your backend will be available at:
-`https://electrical-3-y99h.onrender.com`
+`https://electrical-management-system.onrender.com`
 
 Your Netlify frontend will automatically connect to this backend!
 
