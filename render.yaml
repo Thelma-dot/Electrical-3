@@ -3,12 +3,10 @@ services:
     name: electrical-3-y99h
     env: node
     buildCommand: |
-      echo "Forcing npm usage..."
-      echo "Disabling yarn completely..."
-      rm -f yarn.lock
-      rm -rf .yarn
-      npm --version
-      npm ci --only=production --no-optional
+      echo "Working with yarn but forcing npm..."
+      yarn config set package-manager npm@8.0.0
+      yarn install --ignore-engines
+      echo "Build completed with yarn using npm"
     startCommand: npm start
     envVars:
       - key: NODE_ENV
