@@ -3,15 +3,17 @@ services:
     name: derelectrical-3-y99h
     env: node
     buildCommand: |
-      echo "Forcing npm usage and preventing yarn..."
+      echo "Forcing clean npm install..."
       rm -f yarn.lock
       rm -rf .yarn
       rm -f .yarnrc
       rm -f .yarnrc.yml
+      rm -f package-lock.json
+      rm -rf node_modules
       echo "Clearing npm cache..."
       npm cache clean --force
       echo "Installing dependencies with npm..."
-      npm ci --only=production
+      npm install --only=production --no-package-lock
       echo "Build completed successfully"
     startCommand: npm start
     envVars:
