@@ -19,7 +19,8 @@ module.exports = async (req, res) => {
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'production',
         url: req.url,
-        method: req.method
+        method: req.method,
+        version: '1.0.1 - Auto-deploy test'
       });
     }
 
@@ -29,7 +30,8 @@ module.exports = async (req, res) => {
         status: "UP",
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || "production",
-        message: "Electrical Management System API is running on Vercel!"
+        message: "Electrical Management System API is running on Vercel!",
+        version: '1.0.1 - Auto-deploy test'
       });
     }
 
@@ -37,7 +39,7 @@ module.exports = async (req, res) => {
     if (req.url === '/' || req.url === '/api') {
       return res.status(200).json({
         message: "🚀 Electrical Management System API",
-        version: "1.0.0",
+        version: "1.0.1 - Auto-deploy test",
         status: "Deployed on Vercel",
         endpoints: [
           "/api/test - Test endpoint",
