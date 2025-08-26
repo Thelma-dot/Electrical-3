@@ -1,0 +1,12 @@
+# Exclude yarn-related files
+yarn.lock
+.yarn
+.yarnrc
+.yarnrc.yml
+.yarn-integrity
+
+# Exclude development files
+node_modules
+.git
+.vscode
+*.log
