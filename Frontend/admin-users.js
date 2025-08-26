@@ -244,20 +244,21 @@ function assignTask(userId) {
                 </div>
                 <div class="form-group">
                     <label for="taskPriority">Priority</label>
-                    <select id="taskPriority">
-                        <option value="low">Low</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
-                    </select>
+                                         <select id="taskPriority">
+                         <option value="low">Low</option>
+                         <option value="medium" selected>Medium</option>
+                         <option value="high">High</option>
+                     </select>
                 </div>
                 <div class="form-group">
                     <label for="taskDueDate">Due Date</label>
                     <input type="datetime-local" id="taskDueDate">
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn secondary" onclick="closeTaskAssignmentModal()">Cancel</button>
                     <button type="submit" class="btn primary">Assign Task</button>
+                    <button type="button" class="btn danger" onclick="closeTaskAssignmentModal()" style="background-color: #e74c3c; color: white;">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
                 </div>
             </form>
         </div>
@@ -553,12 +554,11 @@ async function editTask(id) {
                 </div>
                 <div class="form-group">
                     <label for="editTaskPriority">Priority</label>
-                    <select id="editTaskPriority">
-                        <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Low</option>
-                        <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Medium</option>
-                        <option value="high" ${task.priority === 'high' ? 'selected' : ''}>High</option>
-                        <option value="urgent" ${task.priority === 'urgent' ? 'selected' : ''}>Urgent</option>
-                    </select>
+                                         <select id="editTaskPriority">
+                         <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Low</option>
+                         <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Medium</option>
+                         <option value="high" ${task.priority === 'high' ? 'selected' : ''}>High</option>
+                     </select>
                 </div>
                 <div class="form-group">
                     <label for="editTaskStatus">Status</label>
@@ -574,8 +574,10 @@ async function editTask(id) {
                     <input type="datetime-local" id="editTaskDueDate" value="${task.due_date ? task.due_date.slice(0, 16) : ''}">
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn secondary" onclick="closeEditTaskModal()">Cancel</button>
                     <button type="submit" class="btn primary">Update Task</button>
+                    <button type="button" class="btn danger" onclick="closeEditTaskModal()" style="background-color: #e74c3c; color: white;">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
                 </div>
             </form>
         </div>

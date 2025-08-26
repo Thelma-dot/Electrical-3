@@ -1,6 +1,7 @@
 // Dashboard Tasks Management
 class DashboardTasks {
     constructor() {
+        this.tasks = []; // Add tasks property to store task data
         this.init();
     }
 
@@ -51,6 +52,7 @@ class DashboardTasks {
             }
 
             const tasks = await response.json();
+            this.tasks = tasks; // Store tasks in the instance property
             this.displayMyTasks(tasks, statusFilter);
         } catch (error) {
             console.error('Error loading my tasks:', error);
@@ -93,25 +95,30 @@ class DashboardTasks {
                     </span>
                 </td>
                 <td>
-                                    <span class="status-badge status-${(task.status || 'pending').toLowerCase().replace(/[^a-z0-9]/g, '-')}">
-                    ${task.status || 'Pending'}
-                </span>
+                    <span class="status-badge status-${(task.status || 'pending').toLowerCase().replace(/[^a-z0-9]/g, '-')}">
+                        ${task.status || 'Pending'}
+                    </span>
                 </td>
                 <td>${task.due_date ? new Date(task.due_date).toLocaleDateString() : 'N/A'}</td>
                 <td>
-                    <button class="btn btn-primary btn-sm" onclick="dashboardTasks.viewTaskDetails(${task.id})">
-                            View
+                    <div class="action-buttons">
+                        <button class="btn btn-primary btn-sm" onclick="dashboardTasks.viewTaskDetails(${task.id})">
+                            <i class="fas fa-eye"></i> View
                         </button>
-                    ${task.status === 'pending' ? `
-                        <button class="btn btn-success btn-sm" onclick="dashboardTasks.startTask(${task.id})">
-                            Start
-                        </button>
-                    ` : ''}
-                    ${task.status === 'in_progress' ? `
-                        <button class="btn btn-success btn-sm" onclick="dashboardTasks.completeTask(${task.id})">
-                            Complete
-                        </button>
-                    ` : ''}
+                        ${task.status === 'pending' ? `
+                            <button class="btn btn-success btn-sm" onclick="dashboardTasks.startTask(${task.id})">
+                                <i class="fas fa-play"></i> Start
+                            </button>
+                        ` : ''}
+                        ${task.status === 'in_progress' ? `
+                            <button class="btn btn-success btn-sm" onclick="dashboardTasks.completeTask(${task.id})">
+                                <i class="fas fa-check"></i> Complete
+                            </button>
+                        ` : ''}
+                        ${task.status === 'completed' ? `
+                            <span class="completed-status">✅ Completed</span>
+                        ` : ''}
+                    </div>
                 </td>
             </tr>
         `).join('');
@@ -172,10 +179,243 @@ class DashboardTasks {
     }
 
     viewTaskDetails(taskId) {
-        // This could open a modal or navigate to a detailed view
-        console.log('Viewing task details for ID:', taskId);
-        // For now, just show an alert
-        alert('Task details view - to be implemented');
+        // Find the task data
+        const task = this.tasks.find(t => t.id === taskId);
+        if (!task) {
+            this.showTaskError('Task not found');
+            return;
+        }
+
+        // Create and display task details modal with print functionality
+        this.showTaskDetailsModal(task);
+    }
+
+    showTaskDetailsModal(task) {
+        // Remove existing modal if any
+        const existingModal = document.querySelector('.task-details-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Create modal HTML
+        const modalHTML = `
+            <div class="task-details-modal" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            ">
+                <div class="modal-content" style="
+                    background: white;
+                    padding: 30px;
+                    border-radius: 8px;
+                    max-width: 600px;
+                    width: 90%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    position: relative;
+                ">
+                    <button class="close-btn" onclick="this.closest('.task-details-modal').remove()" style="
+                        position: absolute;
+                        top: 15px;
+                        right: 20px;
+                        background: none;
+                        border: none;
+                        font-size: 24px;
+                        cursor: pointer;
+                        color: #666;
+                    ">&times;</button>
+                    
+                    <div class="task-header" style="margin-bottom: 20px;">
+                        <h2 style="margin: 0 0 10px 0; color: #2c3e50;">${task.title || 'Untitled Task'}</h2>
+                        <div class="task-meta" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            <span class="priority-badge priority-${(task.priority || 'medium').toLowerCase()}" style="
+                                padding: 4px 12px;
+                                border-radius: 20px;
+                                font-size: 12px;
+                                font-weight: bold;
+                                text-transform: uppercase;
+                            ">${task.priority || 'Medium'}</span>
+                            <span class="status-badge status-${(task.status || 'pending').toLowerCase().replace(/[^a-z0-9]/g, '-')}" style="
+                                padding: 4px 12px;
+                                border-radius: 20px;
+                                font-size: 12px;
+                                font-weight: bold;
+                                text-transform: capitalize;
+                            ">${task.status || 'Pending'}</span>
+                        </div>
+                    </div>
+
+                    <div class="task-details" style="margin-bottom: 25px;">
+                        <div class="detail-row" style="margin-bottom: 15px;">
+                            <strong style="display: inline-block; width: 120px; color: #34495e;">Description:</strong>
+                            <span>${task.description || 'No description provided'}</span>
+                        </div>
+                        <div class="detail-row" style="margin-bottom: 15px;">
+                            <strong style="display: inline-block; width: 120px; color: #34495e;">Assigned To:</strong>
+                            <span>${task.assigned_to || 'Unassigned'}</span>
+                        </div>
+                        <div class="detail-row" style="margin-bottom: 15px;">
+                            <strong style="display: inline-block; width: 120px; color: #34495e;">Due Date:</strong>
+                            <span>${task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}</span>
+                        </div>
+                        <div class="detail-row" style="margin-bottom: 15px;">
+                            <strong style="display: inline-block; width: 120px; color: #34495e;">Created:</strong>
+                            <span>${task.created_at ? new Date(task.created_at).toLocaleDateString() : 'Unknown'}</span>
+                        </div>
+                        ${task.updated_at ? `
+                            <div class="detail-row" style="margin-bottom: 15px;">
+                                <strong style="display: inline-block; width: 120px; color: #34495e;">Last Updated:</strong>
+                                <span>${new Date(task.updated_at).toLocaleDateString()}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="task-actions" style="
+                        display: flex;
+                        gap: 10px;
+                        justify-content: center;
+                        border-top: 1px solid #eee;
+                        padding-top: 20px;
+                    ">
+                        <button class="btn btn-primary" onclick="dashboardTasks.printTaskDetails(${task.id})" style="
+                            padding: 10px 20px;
+                            border: none;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            font-weight: bold;
+                            background: #3498db;
+                            color: white;
+                            transition: background-color 0.3s;
+                        ">
+                            <i class="fas fa-print"></i> Print Task
+                        </button>
+                        <button class="btn btn-secondary" onclick="this.closest('.task-details-modal').remove()" style="
+                            padding: 10px 20px;
+                            border: 1px solid #bdc3c7;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            font-weight: bold;
+                            background: white;
+                            color: #7f8c8d;
+                            transition: all 0.3s;
+                        ">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    printTaskDetails(taskId) {
+        const task = this.tasks.find(t => t.id === taskId);
+        if (!task) {
+            this.showTaskError('Task not found for printing');
+            return;
+        }
+
+        // Create print-friendly content
+        const printContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Task Details - ${task.title}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                    .task-title { font-size: 24px; font-weight: bold; color: #2c3e50; }
+                    .task-meta { margin: 20px 0; }
+                    .meta-item { margin: 10px 0; }
+                    .label { font-weight: bold; color: #34495e; }
+                    .priority-badge, .status-badge { 
+                        display: inline-block; 
+                        padding: 4px 12px; 
+                        border-radius: 20px; 
+                        font-size: 12px; 
+                        font-weight: bold; 
+                        text-transform: uppercase; 
+                        margin-left: 10px;
+                    }
+                    .priority-medium { background: #f39c12; color: white; }
+                    .priority-high { background: #e74c3c; color: white; }
+                    .priority-urgent { background: #c0392b; color: white; }
+                    .status-pending { background: #f39c12; color: white; }
+                    .status-in-progress { background: #3498db; color: white; }
+                    .status-completed { background: #27ae60; color: white; }
+                    .status-cancelled { background: #95a5a6; color: white; }
+                    .description { margin: 20px 0; line-height: 1.6; }
+                    .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #7f8c8d; }
+                    @media print { body { margin: 0; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="task-title">${task.title || 'Untitled Task'}</div>
+                    <div class="task-meta">
+                        <span class="label">Priority:</span>
+                        <span class="priority-badge priority-${(task.priority || 'medium').toLowerCase()}">${task.priority || 'Medium'}</span>
+                        <span class="label" style="margin-left: 20px;">Status:</span>
+                        <span class="status-badge status-${(task.status || 'pending').toLowerCase().replace(/[^a-z0-9]/g, '-')}">${task.status || 'Pending'}</span>
+                    </div>
+                </div>
+                
+                <div class="meta-item">
+                    <span class="label">Description:</span>
+                    <span>${task.description || 'No description provided'}</span>
+                </div>
+                
+                <div class="meta-item">
+                    <span class="label">Assigned To:</span>
+                    <span>${task.assigned_to || 'Unassigned'}</span>
+                </div>
+                
+                <div class="meta-item">
+                    <span class="label">Due Date:</span>
+                    <span>${task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}</span>
+                </div>
+                
+                <div class="meta-item">
+                    <span class="label">Created:</span>
+                    <span>${task.created_at ? new Date(task.created_at).toLocaleDateString() : 'Unknown'}</span>
+                </div>
+                
+                ${task.updated_at ? `
+                    <div class="meta-item">
+                        <span class="label">Last Updated:</span>
+                        <span>${new Date(task.updated_at).toLocaleDateString()}</span>
+                    </div>
+                ` : ''}
+                
+                <div class="footer">
+                    <p>Printed on ${new Date().toLocaleString()}</p>
+                    <p>Electrical Management System</p>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // Create a new window for printing
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+
+        // Wait for content to load then print
+        printWindow.onload = function () {
+            printWindow.print();
+            printWindow.close();
+        };
     }
 
     showTaskSuccess(message) {
@@ -284,178 +524,32 @@ class DashboardTasks {
         deadlineReminders.innerHTML = upcomingTasks.map(task => {
             const dueDate = new Date(task.due_date);
             const daysUntilDue = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
-            const isUrgent = daysUntilDue <= 1;
-            const isWarning = daysUntilDue <= 3;
+            const urgencyClass = daysUntilDue <= 1 ? 'urgent' : daysUntilDue <= 3 ? 'warning' : 'normal';
 
             return `
-                <div class="deadline-item ${isUrgent ? 'urgent' : isWarning ? 'warning' : 'normal'}">
-                    <div class="deadline-header">
-                        <span class="deadline-title">${task.title}</span>
-                        <span class="deadline-days ${isUrgent ? 'urgent' : isWarning ? 'warning' : 'normal'}">
-                            ${daysUntilDue === 0 ? 'Due today' : daysUntilDue === 1 ? 'Due tomorrow' : `Due in ${daysUntilDue} days`}
-                        </span>
-                    </div>
-                    <div class="deadline-details">
-                        <span class="deadline-date">${dueDate.toLocaleDateString()}</span>
-                        <span class="deadline-priority priority-${(task.priority || 'medium').toLowerCase()}">
-                            ${task.priority || 'Medium'}
-                        </span>
+                <div class="deadline-item ${urgencyClass}" style="
+                    padding: 10px;
+                    margin: 5px 0;
+                    border-radius: 4px;
+                    border-left: 4px solid;
+                    background: white;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                ">
+                    <div style="font-weight: bold; color: #2c3e50;">${task.title}</div>
+                    <div style="font-size: 0.9em; color: #7f8c8d;">
+                        Due: ${dueDate.toLocaleDateString()} (${daysUntilDue} day${daysUntilDue !== 1 ? 's' : ''} left)
                     </div>
                 </div>
             `;
         }).join('');
 
-        // Add CSS for deadline items
-        this.addDeadlineStyles();
-    }
-
-    addDeadlineStyles() {
-        if (document.getElementById('deadline-styles')) return;
-
+        // Add CSS for urgency classes
         const style = document.createElement('style');
-        style.id = 'deadline-styles';
         style.textContent = `
-            .deadline-item {
-                background: white;
-                border-radius: 8px;
-                padding: 15px;
-                margin: 10px 0;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                border-left: 4px solid #3498db;
-            }
-
-            .deadline-item.urgent {
-                border-left-color: #e74c3c;
-                background: #fdf2f2;
-            }
-
-            .deadline-item.warning {
-                border-left-color: #f39c12;
-                background: #fef9e7;
-            }
-
-            .deadline-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 8px;
-            }
-
-            .deadline-title {
-                font-weight: 600;
-                color: #2c3e50;
-            }
-
-            .deadline-days {
-                font-size: 0.9em;
-                font-weight: 500;
-            }
-
-            .deadline-days.urgent {
-                color: #e74c3c;
-            }
-
-            .deadline-days.warning {
-                color: #f39c12;
-            }
-
-            .deadline-days.normal {
-                color: #3498db;
-            }
-
-            .deadline-details {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                font-size: 0.85em;
-                color: #7f8c8d;
-            }
-
-            .deadline-priority {
-                padding: 2px 8px;
-                border-radius: 12px;
-                font-size: 0.8em;
-                font-weight: 500;
-            }
-
-            .priority-high {
-                background: #e74c3c;
-                color: white;
-            }
-
-            .priority-medium {
-                background: #f39c12;
-                color: white;
-            }
-
-            .priority-low {
-                background: #27ae60;
-                color: white;
-            }
-
-            .priority-badge, .status-badge {
-                padding: 4px 8px;
-                border-radius: 12px;
-                font-size: 0.8em;
-                font-weight: 500;
-            }
-
-            .status-pending {
-                background: #f39c12;
-                color: white;
-            }
-
-            .status-in_progress {
-                background: #3498db;
-                color: white;
-            }
-
-            .status-completed {
-                background: #27ae60;
-            color: white;
-            }
-
-            .status-cancelled {
-                background: #95a5a6;
-                color: white;
-            }
-
-            .btn {
-                padding: 6px 12px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 0.85em;
-                margin: 0 2px;
-            }
-
-            .btn-primary {
-                background: #3498db;
-                color: white;
-            }
-
-            .btn-success {
-                background: #27ae60;
-                color: white;
-            }
-
-            .btn-sm {
-                padding: 4px 8px;
-                font-size: 0.8em;
-            }
-
-            @keyframes slideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
+            .deadline-item.urgent { border-left-color: #e74c3c; background: #fdf2f2; }
+            .deadline-item.warning { border-left-color: #f39c12; background: #fef9e7; }
+            .deadline-item.normal { border-left-color: #3498db; background: #f0f8ff; }
         `;
-
         document.head.appendChild(style);
     }
 }
@@ -464,10 +558,3 @@ class DashboardTasks {
 document.addEventListener('DOMContentLoaded', () => {
     window.dashboardTasks = new DashboardTasks();
 });
-
-// Make functions globally accessible
-window.updateTaskDeadlineReminders = function () {
-    if (window.dashboardTasks) {
-        window.dashboardTasks.updateTaskDeadlineReminders();
-    }
-};

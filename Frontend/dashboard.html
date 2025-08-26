@@ -376,6 +376,7 @@
             <thead>
               <tr>
                 <th>Title</th>
+                <th>Description</th>
                 <th>Priority</th>
                 <th>Status</th>
                 <th>Due Date</th>
@@ -544,9 +545,8 @@
           fetch('http://localhost:5000/api/inventory/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : null).catch(() => null)
         ]);
 
-        // Compute inventory stats - calculate total quantity instead of just counting items
-        const inventoryTotal = Array.isArray(inventoryList) ?
-          inventoryList.reduce((total, item) => total + (parseInt(item.quantity) || 1), 0) : 0;
+        // Compute inventory stats - count the number of inventory items (not quantities)
+        const inventoryTotal = Array.isArray(inventoryList) ? inventoryList.length : 0;
         const toolboxTotal = Array.isArray(toolboxList) ? toolboxList.length : 0;
         const tasksInProgress = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'in_progress' || (t.status || '').toLowerCase() === 'in progress').length;
         const tasksCompleted = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'completed').length;
@@ -612,6 +612,17 @@
           inventorySummary: currentData.inventorySummary,
           systemOverviewData: [currentData.reports, currentData.inventory, currentData.toolbox, currentData.inProgress, currentData.completed]
         });
+
+        // Debug inventory data structure
+        if (inventoryList && inventoryList.length > 0) {
+          console.log('📦 Sample inventory item structure:', inventoryList[0]);
+          console.log('📦 Available inventory fields:', Object.keys(inventoryList[0]));
+          console.log('📦 Inventory count calculation:', {
+            arrayLength: inventoryList.length,
+            calculatedTotal: inventoryTotal,
+            isArray: Array.isArray(inventoryList)
+          });
+        }
 
         // Additional debugging for inventory
         if (inventoryList && inventoryList.length > 0) {
@@ -869,9 +880,36 @@
         console.log('🔍 Chart data array:', [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed]);
         console.log('🔍 Inventory value for chart:', data.inventory);
         console.log('🔍 Chart instance created:', !!systemBarChartInstance);
+        console.log('🔍 Chart instance details:', {
+          instance: systemBarChartInstance,
+          data: systemBarChartInstance?.data,
+          datasets: systemBarChartInstance?.data?.datasets,
+          canvas: systemBarChartInstance?.canvas,
+          ctx: systemBarChartInstance?.ctx
+        });
 
         // Make systemBarChartInstance globally accessible
         window.systemBarChartInstance = systemBarChartInstance;
+
+        // Add a test button to manually refresh the chart (for debugging)
+        const chartContainer = document.getElementById('systemOverview');
+        if (chartContainer && !chartContainer.querySelector('.debug-refresh-btn')) {
+          const debugBtn = document.createElement('button');
+          debugBtn.className = 'debug-refresh-btn';
+          debugBtn.textContent = '🔄 Refresh Chart';
+          debugBtn.style.cssText = 'position: absolute; top: 10px; right: 10px; padding: 5px 10px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; z-index: 10;';
+          debugBtn.onclick = () => {
+            console.log('🔄 Manual chart refresh requested');
+            if (systemBarChartInstance) {
+              systemBarChartInstance.update('active');
+              console.log('✅ Manual chart refresh completed');
+            } else {
+              console.log('⚠️ No chart instance to refresh');
+            }
+          };
+          chartContainer.style.position = 'relative';
+          chartContainer.appendChild(debugBtn);
+        }
       }
 
       // Create Reports Performance Line Chart
@@ -997,8 +1035,7 @@
           const inventoryList = await inventoryResponse.json();
           const inventorySummary = await summaryResponse.json();
 
-          const inventoryTotal = Array.isArray(inventoryList) ?
-            inventoryList.reduce((total, item) => total + (parseInt(item.quantity) || 1), 0) : 0;
+          const inventoryTotal = Array.isArray(inventoryList) ? inventoryList.length : 0;
 
           // Update dashboard stats
           const inventoryCountElement = document.getElementById('inventoryCount');
@@ -1023,20 +1060,41 @@
           updateInventoryBreakdown(inventorySummary);
 
           // Update system overview chart
-          if (systemBarChartInstance) {
+          if (systemBarChartInstance && systemBarChartInstance.data && systemBarChartInstance.data.datasets && systemBarChartInstance.data.datasets[0]) {
             console.log('🔍 Updating chart with inventory total:', inventoryTotal);
             console.log('🔍 Chart data before update:', systemBarChartInstance.data.datasets[0].data);
             systemBarChartInstance.data.datasets[0].data[2] = inventoryTotal; // Index 2 for inventory (third position)
             console.log('🔍 Chart data after update:', systemBarChartInstance.data.datasets[0].data);
-            systemBarChartInstance.update('active');
-            console.log('✅ Chart updated successfully');
+
+            try {
+              systemBarChartInstance.update('active');
+              console.log('✅ Chart updated successfully');
+            } catch (error) {
+              console.error('❌ Error updating chart:', error);
+              // Try to recreate the chart if update fails
+              console.log('🔄 Attempting to recreate chart...');
+              refreshDashboard();
+            }
           } else {
-            console.log('⚠️ Chart instance not found for update');
+            console.log('⚠️ Chart instance not found or invalid for update');
+            console.log('🔍 Chart instance:', systemBarChartInstance);
+            console.log('🔍 Chart data:', systemBarChartInstance?.data);
+            console.log('🔍 Chart datasets:', systemBarChartInstance?.data?.datasets);
+            // Try to refresh the dashboard to recreate the chart
+            console.log('🔄 Attempting to refresh dashboard to recreate chart...');
+            setTimeout(() => refreshDashboard(), 1000);
           }
 
           console.log('✅ Inventory count and details updated in real-time', {
             inventoryTotal, // Total quantity across all items
             inventoryItemCount: inventoryList.length // Number of inventory items
+          });
+
+          // Debug inventory data in real-time update
+          console.log('📦 Real-time inventory data:', {
+            inventoryList: inventoryList,
+            inventoryTotal: inventoryTotal,
+            chartData: systemBarChartInstance?.data?.datasets?.[0]?.data
           });
         }
       } catch (error) {
@@ -1165,10 +1223,60 @@
       return toast;
     }
 
+    // Task Modal Functions
+    function closeTaskModal() {
+      document.getElementById('taskDetailsModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function (event) {
+      const modal = document.getElementById('taskDetailsModal');
+      if (event.target === modal) {
+        closeTaskModal();
+      }
+    }
+
 
 
 
   </script>
+
+  <!-- Task Details Modal -->
+  <div id="taskDetailsModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTaskTitle">Task Details</h2>
+        <span class="close" onclick="closeTaskModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="task-details-grid">
+          <div class="task-detail-item">
+            <label>Title:</label>
+            <span id="modalTaskTitleText"></span>
+          </div>
+          <div class="task-detail-item">
+            <label>Description:</label>
+            <span id="modalTaskDescription"></span>
+          </div>
+          <div class="task-detail-item">
+            <label>Priority:</label>
+            <span id="modalTaskPriority"></span>
+          </div>
+          <div class="task-detail-item">
+            <label>Status:</label>
+            <span id="modalTaskStatus"></span>
+          </div>
+          <div class="task-detail-item">
+            <label>Due Date:</label>
+            <span id="modalTaskDueDate"></span>
+          </div>
+        </div>
+        <div class="task-actions">
+          <button id="modalTaskActionBtn" class="btn btn-primary" style="display: none;"></button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="./dark-mode.js"></script>
   <script src="./script.js"></script>

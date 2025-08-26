@@ -378,7 +378,7 @@
                     </div>
                     <button class="generate-btn" onclick="generateReport()">Generate Report</button>
                     <button id="cancelEditBtn" class="cancel-btn" onclick="cancelEdit()"
-                        style="display: none; margin-left: 10px; padding: 10px 20px; background: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel
+                        style="display: none; margin-left: 10px; padding: 10px 20px; background: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer; text-align: center;">Cancel
                         Edit</button>
                 </div>
 
@@ -414,6 +414,61 @@
         <script src="./script.js"></script>
         <script src="./generate_report.js"></script>
         <script src="./user-greeting.js"></script>
+
+        <style>
+            /* Tool selection styling */
+            #selectedToolsContainer {
+                margin: 10px 0;
+            }
+
+            #selectedToolsList {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            #selectedToolsList li {
+                display: inline-flex;
+                align-items: center;
+                padding: 4px 12px;
+                font-size: 12px;
+                color: #000000;
+                max-width: 200px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .remove-tool {
+                background: #f44336;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 18px;
+                height: 18px;
+                margin-left: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                line-height: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                transition: background-color 0.2s ease;
+            }
+
+            .remove-tool:hover {
+                background: #d32f2f;
+            }
+
+            /* Make the tool input more compact */
+            #toolsUsed {
+                margin-bottom: 10px;
+            }
+        </style>
 </body>
 
 </html>

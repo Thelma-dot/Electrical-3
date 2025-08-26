@@ -4,7 +4,7 @@
 function setActiveNavLink() {
     const currentPage = window.location.pathname.split('/').pop();
     const navLinks = document.querySelectorAll('.nav-link');
-    
+
     navLinks.forEach(link => {
         link.classList.remove('active');
         if (link.getAttribute('href') === currentPage) {
@@ -149,13 +149,13 @@ function renderReportsTable() {
             <td>${formatDate(report.report_date || report.reportDate || report.created_at)}</td>
             <td>${report.tools_used || report.toolsUsed || 'N/A'}</td>
             <td>
-                <button class="btn small" onclick="viewReportDetails(${report.id})" title="View Details">
-                    <i class="fas fa-eye"></i>
+                <button class="btn" onclick="viewReportDetails(${report.id})" title="View Details" style="background-color: #3498db; color: white; padding: 0.5rem 1rem; font-size: 0.9rem;">
+                    <i class="fas fa-eye" style="color: white;"></i>
                 </button>
-                <button class="btn small warning" onclick="editReportStatus(${report.id})" title="Edit Status">
+                <button class="btn secondary" onclick="editReportStatus(${report.id})" title="Edit Status" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn small danger" onclick="deleteReport(${report.id}, '${report.title || 'Untitled'}')" title="Delete Report">
+                <button class="btn danger" onclick="deleteReport(${report.id}, '${report.title || 'Untitled'}')" title="Delete Report" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
@@ -468,12 +468,12 @@ function generateCSV(reports) {
         const user = allUsers.find(u => u.id === report.user_id);
         return [
             report.title || '',
-                            report.job_description || report.jobDescription || '',
+            report.job_description || report.jobDescription || '',
             report.location || '',
             user ? user.staff_id : '',
             report.status || '',
             formatDate(report.report_date || report.reportDate || report.created_at),
-                            report.tools_used || report.toolsUsed || '',
+            report.tools_used || report.toolsUsed || '',
             report.remarks || ''
         ];
     });

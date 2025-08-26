@@ -1,6 +1,7 @@
 // Dashboard Tasks Management
 class DashboardTasks {
     constructor() {
+        this.tasks = []; // Add tasks property to store task data
         this.init();
     }
 
@@ -51,6 +52,7 @@ class DashboardTasks {
             }
 
             const tasks = await response.json();
+            this.tasks = tasks; // Store tasks in the instance property
             this.displayMyTasks(tasks, statusFilter);
         } catch (error) {
             console.error('Error loading my tasks:', error);
@@ -87,6 +89,7 @@ class DashboardTasks {
         tbody.innerHTML = filteredTasks.map(task => `
             <tr>
                 <td>${task.title || 'N/A'}</td>
+                <td>${task.description || 'No description'}</td>
                 <td>
                     <span class="priority-badge priority-${(task.priority || 'medium').toLowerCase()}">
                         ${task.priority || 'Medium'}
@@ -171,11 +174,165 @@ class DashboardTasks {
         }
     }
 
-    viewTaskDetails(taskId) {
-        // This could open a modal or navigate to a detailed view
-        console.log('Viewing task details for ID:', taskId);
-        // For now, just show an alert
-        alert('Task details view - to be implemented');
+    async viewTaskDetails(taskId) {
+        try {
+            // Fetch the specific task details
+            const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch task details');
+            }
+
+            const task = await response.json();
+            this.showTaskDetailsModal(task);
+        } catch (error) {
+            console.error('Error fetching task details:', error);
+            this.showTaskError('Failed to load task details. Please try again.');
+        }
+    }
+
+    showTaskDetailsModal(task) {
+        // Populate modal with task data
+        document.getElementById('modalTaskTitle').textContent = 'Task Details';
+        document.getElementById('modalTaskTitleText').textContent = task.title || 'N/A';
+        document.getElementById('modalTaskDescription').textContent = task.description || 'No description provided';
+
+        // Set priority with badge styling
+        const priorityElement = document.getElementById('modalTaskPriority');
+        priorityElement.innerHTML = `<span class="priority-badge priority-${(task.priority || 'medium').toLowerCase()}">${task.priority || 'Medium'}</span>`;
+
+        // Set status with badge styling
+        const statusElement = document.getElementById('modalTaskStatus');
+        const statusClass = (task.status || 'pending').toLowerCase().replace(/[^a-z0-9]/g, '-');
+        statusElement.innerHTML = `<span class="status-badge status-${statusClass}">${task.status || 'Pending'}</span>`;
+
+        document.getElementById('modalTaskDueDate').textContent = task.due_date ? new Date(task.due_date).toLocaleDateString() : 'N/A';
+
+        // Show/hide action button based on task status
+        const actionBtn = document.getElementById('modalTaskActionBtn');
+        if (task.status === 'pending') {
+            actionBtn.textContent = 'Start Task';
+            actionBtn.onclick = () => {
+                this.startTask(task.id);
+                closeTaskModal();
+            };
+            actionBtn.style.display = 'inline-block';
+        } else if (task.status === 'in_progress') {
+            actionBtn.textContent = 'Complete Task';
+            actionBtn.onclick = () => {
+                this.completeTask(task.id);
+                closeTaskModal();
+            };
+            actionBtn.style.display = 'inline-block';
+        } else {
+            actionBtn.style.display = 'none';
+        }
+
+        // Show the modal
+        document.getElementById('taskDetailsModal').style.display = 'block';
+    }
+
+    printTaskDetails(taskId) {
+        const task = this.tasks.find(t => t.id === taskId);
+        if (!task) {
+            this.showTaskError('Task not found for printing');
+            return;
+        }
+
+        // Create print-friendly content
+        const printContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Task Details - ${task.title}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                    .task-title { font-size: 24px; font-weight: bold; color: #2c3e50; }
+                    .task-meta { margin: 20px 0; }
+                    .meta-item { margin: 10px 0; }
+                    .label { font-weight: bold; color: #34495e; }
+                    .priority-badge, .status-badge { 
+                        display: inline-block; 
+                        padding: 4px 12px; 
+                        border-radius: 20px; 
+                        font-size: 12px; 
+                        font-weight: bold; 
+                        text-transform: uppercase; 
+                        margin-left: 10px;
+                    }
+                    .priority-medium { background: #f39c12; color: white; }
+                    .priority-high { background: #e74c3c; color: white; }
+                    .priority-urgent { background: #c0392b; color: white; }
+                    .status-pending { background: #f39c12; color: white; }
+                    .status-in-progress { background: #3498db; color: white; }
+                    .status-completed { background: #27ae60; color: white; }
+                    .status-cancelled { background: #95a5a6; color: white; }
+                    .description { margin: 20px 0; line-height: 1.6; }
+                    .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #7f8c8d; }
+                    @media print { body { margin: 0; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="task-title">${task.title || 'Untitled Task'}</div>
+                    <div class="task-meta">
+                        <span class="label">Priority:</span>
+                        <span class="priority-badge priority-${(task.priority || 'medium').toLowerCase()}">${task.priority || 'Medium'}</span>
+                        <span class="label" style="margin-left: 20px;">Status:</span>
+                        <span class="status-badge status-${(task.status || 'pending').toLowerCase().replace(/[^a-z0-9]/g, '-')}">${task.status || 'Pending'}</span>
+                    </div>
+                </div>
+                
+                <div class="meta-item">
+                    <span class="label">Description:</span>
+                    <span>${task.description || 'No description provided'}</span>
+                </div>
+                
+                <div class="meta-item">
+                    <span class="label">Assigned To:</span>
+                    <span>${task.assigned_to || 'Unassigned'}</span>
+                </div>
+                
+                <div class="meta-item">
+                    <span class="label">Due Date:</span>
+                    <span>${task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}</span>
+                </div>
+                
+                <div class="meta-item">
+                    <span class="label">Created:</span>
+                    <span>${task.created_at ? new Date(task.created_at).toLocaleDateString() : 'Unknown'}</span>
+                </div>
+                
+                ${task.updated_at ? `
+                    <div class="meta-item">
+                        <span class="label">Last Updated:</span>
+                        <span>${new Date(task.updated_at).toLocaleDateString()}</span>
+                    </div>
+                ` : ''}
+                
+                <div class="footer">
+                    <p>Printed on ${new Date().toLocaleString()}</p>
+                    <p>Electrical Management System</p>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // Create a new window for printing
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+
+        // Wait for content to load then print
+        printWindow.onload = function () {
+            printWindow.print();
+            printWindow.close();
+        };
     }
 
     showTaskSuccess(message) {

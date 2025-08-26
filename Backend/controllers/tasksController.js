@@ -66,6 +66,28 @@ class TasksController {
         }
     }
 
+    // Get a single task by ID
+    static async getTaskById(req, res) {
+        try {
+            const { id } = req.params;
+            const task = await Task.findById(id);
+            
+            if (!task) {
+                return res.status(404).json({ error: 'Task not found' });
+            }
+
+            // Check if user has access to this task (either assigned to them or they're admin)
+            if (task.assigned_to !== req.user.userId && req.user.role !== 'admin') {
+                return res.status(403).json({ error: 'Access denied' });
+            }
+
+            res.json(task);
+        } catch (error) {
+            console.error('Get task by ID error:', error);
+            res.status(500).json({ error: 'Failed to fetch task' });
+        }
+    }
+
     // Get tasks for a specific user (admin function)
     static async getUserTasks(req, res) {
         try {

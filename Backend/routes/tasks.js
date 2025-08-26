@@ -15,12 +15,6 @@ router.get("/my/completed", authenticateToken, TasksController.getMyCompletedTas
 // List tasks for a user (admin UI uses this for counts)
 router.get("/user/:userId", authenticateToken, TasksController.getUserTasks);
 
-// Update task status/details
-router.put('/:id', authenticateToken, TasksController.updateTask);
-
-// Delete task
-router.delete('/:id', authenticateToken, TasksController.deleteTask);
-
 // Get task counts for dashboard
 router.get("/counts", authenticateToken, TasksController.getTaskCounts);
 
@@ -29,6 +23,15 @@ router.get('/', authenticateToken, requireAdmin, TasksController.getAllTasks);
 
 // List all tasks including completed ones (admin only)
 router.get('/admin/all', authenticateToken, requireAdmin, TasksController.getAllTasks);
+
+// Get a single task by ID
+router.get("/:id", authenticateToken, TasksController.getTaskById);
+
+// Update task status/details
+router.put('/:id', authenticateToken, TasksController.updateTask);
+
+// Delete task
+router.delete('/:id', authenticateToken, TasksController.deleteTask);
 
 module.exports = router;
 

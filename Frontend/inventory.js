@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     loadInventory();
     setupEventListeners();
-    
+
     // Check for recently updated items to restore their completed status
     setTimeout(() => {
         checkRecentlyUpdatedItems();
@@ -121,20 +121,20 @@ function showResults(items) {
     items.forEach(item => {
         const row = document.createElement('tr');
         row.setAttribute('data-inventory-id', item.id);
-        
+
         // Check if this item was recently updated
         const updateKey = `inventory_updated_${item.id}`;
         const updateTimestamp = localStorage.getItem(updateKey);
         const isRecentlyUpdated = updateTimestamp && (Date.now() - parseInt(updateTimestamp)) < 24 * 60 * 60 * 1000;
-        
+
         if (isRecentlyUpdated) {
-            console.log('🔄 [showResults] Found recently updated item:', item.id, 'showing completed status');
+            console.log('🔄 [showResults] Found recently updated item:', item.id, 'showing view button');
         }
-        
+
         // Determine action column content
         let actionColumn;
         if (isRecentlyUpdated) {
-            actionColumn = '<span class="completed-action">✓ Completed</span>';
+            actionColumn = '<button class="view-button" onclick="viewInventory(\'' + item.id + '\')">View</button>';
             row.classList.add('updated');
         } else {
             actionColumn = `
@@ -143,7 +143,7 @@ function showResults(items) {
                 <button class="cancel-button" onclick="cancelEdit('${item.id}', this)" style="display: none;">Cancel</button>
             `;
         }
-        
+
         row.innerHTML = `
             <td class="editable-cell" data-field="product_type" data-value="${item.product_type || ''}">${item.product_type || 'N/A'}</td>
             <td class="editable-cell" data-field="status" data-value="${item.status || ''}">${item.status || 'N/A'}</td>
@@ -509,20 +509,20 @@ function displayInventory(inventory) {
     inventory.forEach(item => {
         const row = document.createElement('tr');
         row.setAttribute('data-inventory-id', item.id);
-        
+
         // Check if this item was recently updated
         const updateKey = `inventory_updated_${item.id}`;
         const updateTimestamp = localStorage.getItem(updateKey);
         const isRecentlyUpdated = updateTimestamp && (Date.now() - parseInt(updateTimestamp)) < 24 * 60 * 60 * 1000;
-        
+
         if (isRecentlyUpdated) {
-            console.log('🔄 [displayInventory] Found recently updated item:', item.id, 'showing completed status');
+            console.log('🔄 [displayInventory] Found recently updated item:', item.id, 'showing view button');
         }
-        
+
         // Determine action column content
         let actionColumn;
         if (isRecentlyUpdated) {
-            actionColumn = '<span class="completed-action">✓ Completed</span>';
+            actionColumn = '<button class="view-button" onclick="viewInventory(\'' + item.id + '\')">View</button>';
             row.classList.add('updated');
         } else {
             actionColumn = `
@@ -531,7 +531,7 @@ function displayInventory(inventory) {
                 <button class="cancel-button" onclick="cancelEdit('${item.id}', this)" style="display: none;">Cancel</button>
             `;
         }
-        
+
         row.innerHTML = `
             <td class="editable-cell" data-field="product_type" data-value="${item.product_type || ''}">${item.product_type || 'N/A'}</td>
             <td class="editable-cell" data-field="status" data-value="${item.status || ''}">${item.status || 'N/A'}</td>
@@ -750,11 +750,11 @@ async function saveInventoryChanges(inventoryId, row, button) {
             // Exit edit mode
             exitEditMode(row, button);
 
-            // Clear the action column and show "Completed"
+            // Clear the action column and show "View" button
             const actionCell = row.querySelector('td:last-child');
             if (actionCell) {
-                actionCell.innerHTML = '<span class="completed-action">✓ Completed</span>';
-                console.log('✅ Action column updated to show Completed for inventory ID:', inventoryId);
+                actionCell.innerHTML = '<button class="view-button" onclick="viewInventory(\'' + inventoryId + '\')">View</button>';
+                console.log('✅ Action column updated to show View button for inventory ID:', inventoryId);
             }
 
             // Add updated class to the row for CSS styling
@@ -1075,10 +1075,10 @@ function checkRecentlyUpdatedItems() {
                 // Add updated class
                 row.classList.add('updated');
 
-                // Show completed action
+                // Show view button
                 const actionCell = row.querySelector('td:last-child');
                 if (actionCell) {
-                    actionCell.innerHTML = '<span class="completed-action">✓ Completed</span>';
+                    actionCell.innerHTML = '<button class="view-button" onclick="viewInventory(\'' + inventoryId + '\')">View</button>';
                 }
             } else {
                 // Remove old update records (older than 24 hours)
@@ -1105,4 +1105,172 @@ function cleanupOldUpdateRecords() {
             }
         }
     });
+}
+
+// View inventory details
+function viewInventory(inventoryId) {
+    console.log('🔍 Viewing inventory item:', inventoryId);
+
+    // Find the inventory item data
+    const row = document.querySelector(`tr[data-inventory-id="${inventoryId}"]`);
+    if (!row) {
+        alert('Inventory item not found.');
+        return;
+    }
+
+    // Extract data from the row
+    const productType = row.querySelector('[data-field="product_type"]').textContent;
+    const status = row.querySelector('[data-field="status"]').textContent;
+    const size = row.querySelector('[data-field="size"]').textContent;
+    const serialNumber = row.querySelector('[data-field="serial_number"]').textContent;
+    const date = row.querySelector('[data-field="date"]').textContent;
+    const location = row.querySelector('[data-field="location"]').textContent;
+    const issuedBy = row.querySelector('[data-field="issued_by"]').textContent;
+
+    // Create and show modal with inventory details
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="main-title">
+                <h2>📦 Inventory Details</h2>
+                <button onclick="this.closest('.modal').remove()" class="close-button">×</button>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <p><strong>Product Type:</strong> ${productType}</p>
+                <p><strong>Status:</strong> ${status}</p>
+                <p><strong>Size:</strong> ${size}</p>
+                <p><strong>Serial Number:</strong> ${serialNumber}</p>
+                <p><strong>Date:</strong> ${date}</p>
+                <p><strong>Location:</strong> ${location}</p>
+                <p><strong>Issued By:</strong> ${issuedBy}</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="printInventoryDetails('${inventoryId}')" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-right: 10px;">
+                    🖨️ Print
+                </button>
+                <button onclick="this.closest('.modal').remove()" style="background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
+                    ❌ Close
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// Print inventory details
+function printInventoryDetails(inventoryId) {
+    console.log('🖨️ Printing inventory details for ID:', inventoryId);
+
+    // Get the inventory data from the table row
+    const row = document.querySelector(`tr[data-inventory-id="${inventoryId}"]`);
+    if (!row) {
+        console.error('Inventory row not found for printing:', inventoryId);
+        alert('Inventory item not found for printing.');
+        return;
+    }
+
+    // Extract data from the row (same method as viewInventory)
+    const productType = row.querySelector('[data-field="product_type"]').textContent;
+    const status = row.querySelector('[data-field="status"]').textContent;
+    const size = row.querySelector('[data-field="size"]').textContent;
+    const serialNumber = row.querySelector('[data-field="serial_number"]').textContent;
+    const date = row.querySelector('[data-field="date"]').textContent;
+    const location = row.querySelector('[data-field="location"]').textContent;
+    const issuedBy = row.querySelector('[data-field="issued_by"]').textContent;
+
+    // Create print-friendly HTML
+    const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Inventory Details - Print</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #0055aa; padding-bottom: 10px; }
+                .header h1 { color: #0055aa; margin: 0; }
+                .details { margin: 20px 0; }
+                .detail-row { margin: 15px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+                .label { font-weight: bold; color: #0055aa; }
+                .value { margin-left: 10px; }
+                .footer { text-align: center; margin-top: 40px; color: #666; font-size: 12px; }
+                @media print {
+                    body { margin: 0; }
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🛠️ Inventory Details Report</h1>
+                <p>Generated on: ${new Date().toLocaleString()}</p>
+            </div>
+            
+            <div class="details">
+                <div class="detail-row">
+                    <span class="label">Product Type:</span>
+                    <span class="value">${productType}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Status:</span>
+                    <span class="value">${status}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Size:</span>
+                    <span class="value">${size}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Serial Number:</span>
+                    <span class="value">${serialNumber}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Date:</span>
+                    <span class="value">${date}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Location:</span>
+                    <span class="value">${location}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Issued By:</span>
+                    <span class="value">${issuedBy}</span>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p>Electrical Management System - Inventory Report</p>
+            </div>
+        </body>
+        </html>
+    `;
+
+    // Use the same method as reports and toolbox - open new window and auto-print
+    try {
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        printWindow.focus();
+
+        // Wait for content to load then print (same as reports and toolbox)
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 500);
+
+    } catch (error) {
+        console.error('Print error:', error);
+        alert('Print failed. Please try again.');
+    }
 }
