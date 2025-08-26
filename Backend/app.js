@@ -8,7 +8,9 @@ require("dotenv").config({ path: path.join(__dirname, "config.env") });
 const app = express();
 
 // ====================== Middleware ======================
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for development
+}));
 app.use(compression());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
@@ -34,6 +36,10 @@ app.use((req, res, next) => {
   next();
 });
 
+// ====================== Static Files ======================
+// Serve frontend files
+app.use(express.static(path.join(__dirname, "..", "Frontend")));
+
 // ====================== Routes ======================
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/reports", require("./routes/reports"));
@@ -57,10 +63,15 @@ app.get("/api/test", (req, res) => {
   res.json({ message: "Backend is working!" });
 });
 
+// ====================== Root Route ======================
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "Frontend", "index.html"));
+});
+
 // ====================== Error Handling ======================
-// 404 Handler
-app.use((req, res) => {
-  res.status(404).json({ error: "Endpoint not found" });
+// 404 Handler - only for API routes
+app.use("/api/*", (req, res) => {
+  res.status(404).json({ error: "API endpoint not found" });
 });
 
 // Global error handler
