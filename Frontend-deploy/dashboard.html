@@ -775,21 +775,19 @@
         systemBarChartInstance = new Chart(systemBarCtx, {
           type: 'bar',
           data: {
-            labels: ['Reports', 'Toolbox', 'Inventory', 'In Progress', 'Completed'],
+            labels: ['Reports', 'Toolbox', 'In Progress', 'Completed'],
             datasets: [{
               label: 'Count',
-              data: [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed],
+              data: [data.reports, data.toolbox, data.inProgress, data.completed],
               backgroundColor: [
                 'rgba(231, 76, 60, 0.8)',   // Reports - Red
                 'rgba(155, 89, 182, 0.8)',  // Toolbox - Purple
-                'rgba(52, 152, 219, 0.8)',  // Inventory - Blue
                 'rgba(243, 156, 18, 0.8)',  // In Progress - Orange
                 'rgba(46, 204, 113, 0.8)'   // Completed - Green
               ],
               borderColor: [
                 'rgba(231, 76, 60, 1)',
                 'rgba(155, 89, 182, 1)',
-                'rgba(52, 152, 219, 1)',
                 'rgba(243, 156, 18, 1)',
                 'rgba(46, 204, 113, 1)'
               ],

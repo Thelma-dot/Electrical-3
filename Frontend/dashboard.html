@@ -786,21 +786,19 @@
         systemBarChartInstance = new Chart(systemBarCtx, {
           type: 'bar',
           data: {
-            labels: ['Reports', 'Toolbox', 'Inventory', 'In Progress', 'Completed'],
+            labels: ['Reports', 'Toolbox', 'In Progress', 'Completed'],
             datasets: [{
               label: 'Count',
-              data: [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed],
+              data: [data.reports, data.toolbox, data.inProgress, data.completed],
               backgroundColor: [
                 'rgba(231, 76, 60, 0.8)',   // Reports - Red
                 'rgba(155, 89, 182, 0.8)',  // Toolbox - Purple
-                'rgba(52, 152, 219, 0.8)',  // Inventory - Blue
                 'rgba(243, 156, 18, 0.8)',  // In Progress - Orange
                 'rgba(46, 204, 113, 0.8)'   // Completed - Green
               ],
               borderColor: [
                 'rgba(231, 76, 60, 1)',
                 'rgba(155, 89, 182, 1)',
-                'rgba(52, 152, 219, 1)',
                 'rgba(243, 156, 18, 1)',
                 'rgba(46, 204, 113, 1)'
               ],
@@ -871,14 +869,12 @@
         console.log('📊 System Overview Chart created with data:', {
           reports: data.reports,
           toolbox: data.toolbox,
-          inventory: data.inventory,
           inProgress: data.inProgress,
           completed: data.completed
         });
 
         // Debug chart data array
-        console.log('🔍 Chart data array:', [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed]);
-        console.log('🔍 Inventory value for chart:', data.inventory);
+        console.log('🔍 Chart data array:', [data.reports, data.toolbox, data.inProgress, data.completed]);
         console.log('🔍 Chart instance created:', !!systemBarChartInstance);
         console.log('🔍 Chart instance details:', {
           instance: systemBarChartInstance,
@@ -1041,31 +1037,8 @@
           // Update inventory breakdown
           updateInventoryBreakdown(inventorySummary);
 
-          // Update system overview chart
-          if (systemBarChartInstance && systemBarChartInstance.data && systemBarChartInstance.data.datasets && systemBarChartInstance.data.datasets[0]) {
-            console.log('🔍 Updating chart with inventory total:', inventoryTotal);
-            console.log('🔍 Chart data before update:', systemBarChartInstance.data.datasets[0].data);
-            systemBarChartInstance.data.datasets[0].data[2] = inventoryTotal; // Index 2 for inventory (third position)
-            console.log('🔍 Chart data after update:', systemBarChartInstance.data.datasets[0].data);
-
-            try {
-              systemBarChartInstance.update('active');
-              console.log('✅ Chart updated successfully');
-            } catch (error) {
-              console.error('❌ Error updating chart:', error);
-              // Try to recreate the chart if update fails
-              console.log('🔄 Attempting to recreate chart...');
-              refreshDashboard();
-            }
-          } else {
-            console.log('⚠️ Chart instance not found or invalid for update');
-            console.log('🔍 Chart instance:', systemBarChartInstance);
-            console.log('🔍 Chart data:', systemBarChartInstance?.data);
-            console.log('🔍 Chart datasets:', systemBarChartInstance?.data?.datasets);
-            // Try to refresh the dashboard to recreate the chart
-            console.log('🔄 Attempting to refresh dashboard to recreate chart...');
-            setTimeout(() => refreshDashboard(), 1000);
-          }
+          // Note: Inventory is no longer displayed in the system overview chart
+          console.log('📊 Inventory count updated but not reflected in chart (removed from chart)');
 
           console.log('✅ Inventory count and details updated in real-time', {
             inventoryTotal, // Total quantity across all items
