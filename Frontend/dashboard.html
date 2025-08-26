@@ -891,25 +891,7 @@
         // Make systemBarChartInstance globally accessible
         window.systemBarChartInstance = systemBarChartInstance;
 
-        // Add a test button to manually refresh the chart (for debugging)
-        const chartContainer = document.getElementById('systemOverview');
-        if (chartContainer && !chartContainer.querySelector('.debug-refresh-btn')) {
-          const debugBtn = document.createElement('button');
-          debugBtn.className = 'debug-refresh-btn';
-          debugBtn.textContent = '🔄 Refresh Chart';
-          debugBtn.style.cssText = 'position: absolute; top: 10px; right: 10px; padding: 5px 10px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; z-index: 10;';
-          debugBtn.onclick = () => {
-            console.log('🔄 Manual chart refresh requested');
-            if (systemBarChartInstance) {
-              systemBarChartInstance.update('active');
-              console.log('✅ Manual chart refresh completed');
-            } else {
-              console.log('⚠️ No chart instance to refresh');
-            }
-          };
-          chartContainer.style.position = 'relative';
-          chartContainer.appendChild(debugBtn);
-        }
+
       }
 
       // Create Reports Performance Line Chart
