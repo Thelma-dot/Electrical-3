@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: electrical-management-system
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_TYPE
+        value: sqlite
+      - key: DB_PATH
+        value: ./electrical_management.db
+    healthCheckPath: /health
+    autoDeploy: true
+    branch: main
