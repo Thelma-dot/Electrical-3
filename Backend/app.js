@@ -18,6 +18,7 @@ app.use(
   cors({
     origin: [
       process.env.FRONTEND_URL || "http://127.0.0.1:5500",
+      "https://super-paprenjak-d9ab2f.netlify.app",
       "http://localhost:5500",
       "http://localhost:3000",
       "http://localhost:8080",
@@ -37,7 +38,7 @@ app.use((req, res, next) => {
 });
 
 // ====================== Static Files ======================
-// Serve frontend files
+// Serve frontend files for Railway deployment
 app.use(express.static(path.join(__dirname, "..", "Frontend")));
 
 // ====================== Routes ======================

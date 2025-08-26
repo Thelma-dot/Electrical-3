@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: electrical-management-system
+    name: electrical-3-y99h
     env: node
     buildCommand: npm install
     startCommand: npm start
@@ -15,6 +15,9 @@ services:
         value: sqlite
       - key: DB_PATH
         value: ./electrical_management.db
+      - key: FRONTEND_URL
+        value: https://super-paprenjak-d9ab2f.netlify.app
     healthCheckPath: /health
     autoDeploy: true
     branch: main
+    plan: free
