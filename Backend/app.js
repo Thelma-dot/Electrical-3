@@ -71,7 +71,7 @@ app.get("/", (req, res) => {
 
 // ====================== Error Handling ======================
 // 404 Handler - only for API routes
-app.use("/api/*", (req, res) => {
+app.use("/api/:path", (req, res) => {
   res.status(404).json({ error: "API endpoint not found" });
 });
 
