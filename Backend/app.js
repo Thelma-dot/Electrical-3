@@ -18,7 +18,7 @@ app.use(
   cors({
     origin: [
       process.env.FRONTEND_URL || "http://127.0.0.1:5500",
-      "https://super-paprenjak-d9ab2f.netlify.app",
+      "https://electrical-3.netlify.app",
       "http://localhost:5500",
       "http://localhost:3000",
       "http://localhost:8080",

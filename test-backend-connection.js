@@ -43,7 +43,7 @@ async function testCORS() {
         const response = await fetch(`${backendUrl}/api/test`, {
             method: 'OPTIONS',
             headers: {
-                'Origin': 'https://super-paprenjak-d9ab2f.netlify.app'
+                'Origin': 'https://electrical-3.netlify.app'
             }
         });
         console.log('✅ CORS Preflight Status:', response.status);
