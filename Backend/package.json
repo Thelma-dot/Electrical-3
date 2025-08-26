@@ -2,10 +2,10 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server-production.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
+    "start": "node server-production.js",
     "start:production": "node server-production.js",
     "start:minimal": "node server-minimal.js",
     "start:simple": "node server-simple.js",
