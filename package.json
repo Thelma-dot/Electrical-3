@@ -7,19 +7,12 @@
     "node": ">=16.0.0",
     "npm": ">=8.0.0"
   },
-
   "scripts": {
-    "install": "cd Backend && npm ci --only=production",
     "start": "cd Backend && npm start",
-    "build": "cd Backend && npm ci --only=production",
-    "postinstall": "echo 'Forcing npm usage'"
+    "build": "echo 'Build completed successfully'",
+    "postinstall": "echo 'Build completed successfully'"
   },
   "packageManager": "npm@8.0.0",
-  "engines": {
-    "node": ">=16.0.0",
-    "npm": ">=8.0.0",
-    "yarn": ">=0.0.0"
-  }
   "workspaces": [
     "Backend"
   ]

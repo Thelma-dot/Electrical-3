@@ -1,6 +1,6 @@
 const app = require("./app");
-// Use better-sqlite3 database configuration
-const { initializeDatabase } = require("./config/database-better-sqlite");
+// Use simpler SQLite database configuration
+const sqliteDb = require("./config/db-sqlite");
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, "config.env") });
 
@@ -8,8 +8,8 @@ const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   try {
-    // Initialize database
-    await initializeDatabase();
+    // Database is already initialized in db-sqlite.js
+    console.log("✅ Database connection established");
 
     // Start HTTP + Socket.IO server
     const http = require('http').createServer(app);

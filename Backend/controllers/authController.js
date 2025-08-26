@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { run, get } = require("../config/database");
+const { run, get } = require("../config/db-sqlite");
 const { generateResetToken } = require("../utils/passwordReset");
 const { validatePassword, validateEmail } = require("../utils/validators");
 require("dotenv").config({ path: require("path").join(__dirname, "..", "config.env") });

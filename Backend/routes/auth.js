@@ -1,5 +1,11 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const { validatePassword, validateEmail } = require("../utils/validators");
+const { generateResetToken } = require("../utils/passwordReset");
+const { sendResetEmail } = require("../utils/emailService");
+const { run, get, all } = require("../config/db-sqlite");
 const authController = require("../controllers/authController");
 const { authenticateToken, requireAdmin } = require("../middleware/auth");
 
@@ -15,7 +21,6 @@ router.put("/profile", authenticateToken, authController.updateProfile);
 // Admin-only: list users (basic info)
 router.get("/users", authenticateToken, requireAdmin, async (req, res) => {
     try {
-        const { all } = require("../config/database");
         const users = await all(
             "SELECT id, staff_id, email, role, created_at FROM users ORDER BY created_at DESC"
         );

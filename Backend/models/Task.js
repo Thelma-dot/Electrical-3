@@ -1,4 +1,4 @@
-const { run, get, all } = require("../config/database");
+const { run, get, all } = require("../config/db-sqlite");
 
 class Task {
     static async create(taskData) {
