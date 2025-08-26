@@ -6,8 +6,8 @@ const config = {
     socketUrl: 'http://localhost:5000'
   },
   production: {
-    apiBaseUrl: 'https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app/api',
-    socketUrl: 'https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app'
+    apiBaseUrl: 'https://electrical-3-production.up.railway.app/api',
+    socketUrl: 'https://electrical-3-production.up.railway.app'
   },
   vercel: {
     apiBaseUrl: 'https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app/api',
@@ -20,6 +20,10 @@ const config = {
   render: {
     apiBaseUrl: 'https://electrical-3-y99h.onrender.com/api',
     socketUrl: 'https://electrical-3-y99h.onrender.com'
+  },
+  railway: {
+    apiBaseUrl: 'https://electrical-3-production.up.railway.app/api',
+    socketUrl: 'https://electrical-3-production.up.railway.app'
   }
 };
 
@@ -28,10 +32,13 @@ const isDevelopment = window.location.hostname === 'localhost' || window.locatio
 const isVercel = window.location.hostname.includes('vercel.app');
 const isNetlify = window.location.hostname.includes('netlify.app') || window.location.hostname.includes('netlify.com');
 const isRender = window.location.hostname.includes('onrender.com');
+const isRailway = window.location.hostname.includes('railway.app') || window.location.hostname.includes('up.railway.app');
 
 // Get current configuration
 function getCurrentConfig() {
-  if (isNetlify) {
+  if (isRailway) {
+    return config.railway;
+  } else if (isNetlify) {
     return config.netlify;
   } else if (isRender) {
     return config.render;
@@ -51,6 +58,7 @@ window.appConfig = {
   isVercel,
   isNetlify,
   isRender,
+  isRailway,
   getApiUrl: (endpoint) => {
     const config = getCurrentConfig();
     return `${config.apiBaseUrl}${endpoint}`;
@@ -67,5 +75,6 @@ console.log('🌐 Current Environment:', {
   isVercel,
   isNetlify,
   isRender,
+  isRailway,
   hostname: window.location.hostname
 });

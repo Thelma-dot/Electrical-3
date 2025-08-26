@@ -5,6 +5,8 @@
   },
   "deploy": {
     "startCommand": "npm start",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   },
@@ -14,7 +16,8 @@
         "NODE_ENV": "production",
         "PORT": "8080",
         "DB_TYPE": "sqlite",
-        "DB_PATH": "./electrical_management.db"
+        "DB_PATH": "./Backend/electrical_management.db",
+        "JWT_SECRET": "your_super_secret_jwt_key_change_this_in_production"
       }
     }
   }
