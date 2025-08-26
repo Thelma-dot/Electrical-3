@@ -2,7 +2,7 @@ services:
   - type: web
     name: electrical-3-y99h
     env: node
-    buildCommand: chmod +x build.sh && ./build.sh
+    buildCommand: npm ci --only=production
     startCommand: npm start
     envVars:
       - key: NODE_ENV

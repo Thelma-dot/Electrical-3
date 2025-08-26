@@ -1,49 +1,19 @@
 {
   "name": "electrical-management-system",
   "version": "1.0.0",
-  "description": "A comprehensive electrical management system with real-time inventory, toolbox management, and admin dashboard",
-  "main": "Backend/server.js",
-  "scripts": {
-    "start": "node Backend/server.js",
-    "dev": "nodemon Backend/server.js",
-    "build": "echo 'No build step required for Node.js app'",
-    "setup": "node Backend/setup-db.js",
-    "test": "echo 'No tests specified'",
-    "heroku-postbuild": "echo 'Post-build completed'",
-    "vercel-build": "echo 'Vercel build completed'"
-  },
-  "keywords": [
-    "electrical",
-    "management",
-    "inventory",
-    "toolbox",
-    "real-time",
-    "admin-dashboard"
-  ],
-  "author": "Your Name",
-  "license": "MIT",
+  "description": "Electrical Management System with Backend and Frontend",
+  "private": true,
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=8.0.0"
   },
-  "dependencies": {
-    "bcrypt": "^6.0.0",
-    "body-parser": "^2.2.0",
-    "colors": "^1.4.0",
-    "compression": "^1.8.1",
-    "cors": "^2.8.5",
-    "dotenv": "17.2.1",
-    "express": "^5.1.0",
-    "express-session": "^1.17.3",
-    "helmet": "^8.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.14.3",
-    "nodemailer": "^7.0.5",
-    "pg": "^8.11.3",
-    "socket.io": "^4.8.1",
-    "sqlite3": "^5.1.7"
+  "packageManager": "npm@8.0.0",
+  "scripts": {
+    "install": "cd Backend && npm ci --only=production",
+    "start": "cd Backend && npm start",
+    "build": "cd Backend && npm ci --only=production"
   },
-  "devDependencies": {
-    "nodemon": "^3.0.0"
-  }
+  "workspaces": [
+    "Backend"
+  ]
 }

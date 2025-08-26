@@ -1,4 +1,4 @@
-const sqlite3 = require("sqlite3").verbose();
+const Database = require("better-sqlite3");
 const path = require("path");
 const bcrypt = require("bcrypt");
 require("dotenv").config({ path: path.join(__dirname, "..", "config.env") });
@@ -7,13 +7,14 @@ require("dotenv").config({ path: path.join(__dirname, "..", "config.env") });
 const dbPath = path.join(__dirname, "..", process.env.DB_PATH || "electrical_management.db");
 
 // Create database connection
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error("❌ Error opening database:", err.message);
-  } else {
-    console.log("✅ Connected to SQLite database");
-  }
-});
+let db;
+try {
+  db = new Database(dbPath);
+  console.log("✅ Connected to SQLite database");
+} catch (err) {
+  console.error("❌ Error opening database:", err.message);
+  process.exit(1);
+}
 
 // Initialize database tables
 async function initializeDatabase() {

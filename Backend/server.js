@@ -1,6 +1,6 @@
 const app = require("./app");
-// Use Vercel-compatible database configuration
-const { initializeDatabase } = require("./config/database-vercel");
+// Use better-sqlite3 database configuration
+const { initializeDatabase } = require("./config/database-better-sqlite");
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, "config.env") });
 
