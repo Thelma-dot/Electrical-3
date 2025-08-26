@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { authenticateToken, requireAdmin } = require("../middleware/auth");
-const { run, get, all } = require("../config/db-sqlite");
+const { run, get, all } = require("../config/database-switcher");
 
 // List users
 router.get("/users", authenticateToken, requireAdmin, async (req, res) => {

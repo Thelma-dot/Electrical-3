@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { authenticateToken } = require("../middleware/auth");
-const { db, run, get, all } = require("../config/db-sqlite");
+const { db, run, get, all } = require("../config/database-switcher");
 
 // Get all reports for a user
 router.get("/", authenticateToken, async (req, res) => {

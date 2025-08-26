@@ -1,6 +1,6 @@
 const app = require("./app");
-// Use simpler SQLite database configuration
-const sqliteDb = require("./config/db-sqlite");
+// Use database switcher to automatically choose between SQLite and PostgreSQL
+const db = require("./config/database-switcher");
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, "config.env") });
 
@@ -97,7 +97,7 @@ async function startServer() {
       console.log(`📍 Port: ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
       console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || "http://127.0.0.1:5500"}`);
-      console.log(`💾 Database: SQLite (${process.env.DB_PATH || "electrical_management.db"})`);
+      console.log(`💾 Database: ${process.env.DB_TYPE === 'postgresql' ? 'PostgreSQL' : 'SQLite'} (${process.env.DB_TYPE === 'postgresql' ? process.env.DB_NAME : process.env.DB_PATH || "electrical_management.db"})`);
       console.log(`📊 Health Check: http://localhost:${PORT}/health`);
       console.log('🔌 Socket.IO enabled for real-time updates');
     });
