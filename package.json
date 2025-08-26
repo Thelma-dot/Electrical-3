@@ -2,9 +2,9 @@
   "name": "electrical-management-system",
   "version": "1.0.0",
   "description": "Electrical Management System - Full Stack Application",
-  "main": "server.js",
+  "main": "Backend/server-production.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node start.js",
     "dev": "nodemon server.js",
     "build": "echo 'No build step required for this project'",
     "test": "echo 'No tests specified'",

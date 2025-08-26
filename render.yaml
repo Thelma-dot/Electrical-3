@@ -17,9 +17,10 @@ services:
       echo "Verifying Express version..."
       npm list express
       echo "Testing server startup..."
+      cd Backend
       timeout 30s node server-production.js || echo "Server test completed"
       echo "=== BUILD COMPLETED ==="
-    startCommand: npm run start:production
+    startCommand: cd Backend && npm run start:production
     envVars:
       - key: NODE_ENV
         value: production
