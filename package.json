@@ -11,8 +11,10 @@
   "scripts": {
     "install": "cd Backend && npm ci --only=production",
     "start": "cd Backend && npm start",
-    "build": "cd Backend && npm ci --only=production"
+    "build": "cd Backend && npm ci --only=production",
+    "postinstall": "echo 'Forcing npm usage'"
   },
+  "packageManager": "npm@8.0.0",
   "workspaces": [
     "Backend"
   ]

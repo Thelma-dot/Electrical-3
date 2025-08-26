@@ -4,6 +4,9 @@ services:
     env: node
     buildCommand: |
       echo "Forcing npm usage..."
+      echo "Disabling yarn completely..."
+      rm -f yarn.lock
+      rm -rf .yarn
       npm --version
       npm ci --only=production --no-optional
     startCommand: npm start
