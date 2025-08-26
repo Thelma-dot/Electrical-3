@@ -6,9 +6,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
+    "start:production": "node server-production.js",
     "start:minimal": "node server-minimal.js",
     "start:simple": "node server-simple.js",
     "start:debug": "node start-debug.js",
+    "test:production": "node server-production.js",
+    "test:deployment": "node test-deployment.js",
     "dev": "nodemon server.js",
     "setup": "node -e \"require('./config/db-sqlite').initializeTables()\"",
     "setup-postgresql": "node -e \"require('./config/database-postgresql').initializeDatabase()\"",

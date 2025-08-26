@@ -1,4 +1,4 @@
-const app = require("./app");
+const app = require("./app-robust");
 // Use database switcher to automatically choose between SQLite and PostgreSQL
 const db = require("./config/database-switcher");
 const path = require("path");

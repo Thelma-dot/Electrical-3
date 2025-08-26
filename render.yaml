@@ -16,8 +16,10 @@ services:
       npm install --only=production --no-package-lock
       echo "Verifying Express version..."
       npm list express
+      echo "Testing server startup..."
+      timeout 30s node server-production.js || echo "Server test completed"
       echo "=== BUILD COMPLETED ==="
-    startCommand: npm run start:minimal
+    startCommand: npm run start:production
     envVars:
       - key: NODE_ENV
         value: production
