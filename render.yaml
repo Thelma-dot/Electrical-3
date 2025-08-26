@@ -2,7 +2,10 @@ services:
   - type: web
     name: electrical-3-y99h
     env: node
-    buildCommand: npm ci --only=production
+    buildCommand: |
+      echo "Forcing npm usage..."
+      npm --version
+      npm ci --only=production --no-optional
     startCommand: npm start
     envVars:
       - key: NODE_ENV

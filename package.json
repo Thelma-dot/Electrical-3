@@ -7,7 +7,7 @@
     "node": ">=16.0.0",
     "npm": ">=8.0.0"
   },
-  "packageManager": "npm@8.0.0",
+
   "scripts": {
     "install": "cd Backend && npm ci --only=production",
     "start": "cd Backend && npm start",

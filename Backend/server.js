@@ -65,8 +65,8 @@ async function startServer() {
         console.log('🧪 Test connection event received:', data);
         console.log('🔌 Client socket ID:', socket.id);
         console.log('🔌 Total connected clients:', io.engine.clientsCount);
-        socket.emit('test:connection:response', { 
-          message: 'Connection test successful', 
+        socket.emit('test:connection:response', {
+          message: 'Connection test successful',
           socketId: socket.id,
           clientCount: io.engine.clientsCount,
           timestamp: new Date().toISOString()
