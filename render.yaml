@@ -3,19 +3,21 @@ services:
     name: derelectrical-3-y99h
     env: node
     buildCommand: |
-      echo "Forcing clean npm install..."
-      rm -f yarn.lock
-      rm -rf .yarn
-      rm -f .yarnrc
-      rm -f .yarnrc.yml
-      rm -f package-lock.json
-      rm -rf node_modules
-      echo "Clearing npm cache..."
+      echo "=== FORCING COMPLETE CLEAN INSTALL ==="
+      echo "Removing all cached files..."
+      rm -f yarn.lock package-lock.json
+      rm -rf .yarn node_modules
+      rm -f .yarnrc .yarnrc.yml
+      echo "Clearing npm cache completely..."
       npm cache clean --force
-      echo "Installing dependencies with npm..."
+      echo "Installing Express 4.18.2 specifically..."
+      npm install express@4.18.2 --save --no-package-lock
+      echo "Installing other dependencies..."
       npm install --only=production --no-package-lock
-      echo "Build completed successfully"
-    startCommand: npm start
+      echo "Verifying Express version..."
+      npm list express
+      echo "=== BUILD COMPLETED ==="
+    startCommand: npm run start:minimal
     envVars:
       - key: NODE_ENV
         value: production

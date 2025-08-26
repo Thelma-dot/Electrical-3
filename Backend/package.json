@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
+    "start:minimal": "node server-minimal.js",
     "start:simple": "node server-simple.js",
     "start:debug": "node start-debug.js",
     "dev": "nodemon server.js",
