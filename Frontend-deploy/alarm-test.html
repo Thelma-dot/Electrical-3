@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alarm Test - Task Deadline Reminders</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .deadline-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .deadline-item.overdue {
+            background: #fff5f5;
+            border-color: #feb2b2;
+            border-left: 4px solid #e53e3e;
+        }
+
+        .deadline-item.upcoming {
+            background: #f0fff4;
+            border-color: #9ae6b4;
+            border-left: 4px solid #38a169;
+        }
+
+        .countdown {
+            font-weight: 600;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+
+        .countdown.urgent {
+            color: #e53e3e;
+            animation: pulse 1s infinite;
+        }
+
+        .countdown.warning {
+            color: #d69e2e;
+        }
+
+        .countdown.overdue {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔔 Task Deadline Alarm Test</h1>
+
+        <div class="info-box">
+            <h3>How the Alarm System Works:</h3>
+            <ul>
+                <li><strong>Alarm plays only once</strong> when a task deadline is reached</li>
+                <li>Alarm state is stored in localStorage to prevent repeated playing</li>
+                <li>Use "Reset Alarm" buttons to test the alarm again</li>
+                <li>Alarms automatically reset when tasks are completed or updated</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>Test Task 1: Overdue Task</h3>
+            <div class="deadline-item overdue" data-task-id="test1">
+                <div class="countdown overdue" id="countdown-test1">🚨 OVERDUE!</div>
+                <button class="btn-danger" onclick="resetTaskAlarm('test1')">🔊 Reset Alarm</button>
+                <button class="btn-secondary" onclick="startCountdown('test1', new Date(Date.now() - 60000))">Set to 1
+                    min ago</button>
+                <button class="btn-secondary" onclick="startCountdown('test1', new Date(Date.now() + 60000))">Set to 1
+                    min from now</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test Task 2: Upcoming Task</h3>
+            <div class="deadline-item upcoming" data-task-id="test2">
+                <div class="countdown" id="countdown-test2">Loading...</div>
+                <button class="btn-primary" onclick="startCountdown('test2', new Date(Date.now() + 5000))">Set to 5
+                    seconds from now</button>
+                <button class="btn-primary" onclick="startCountdown('test2', new Date(Date.now() + 30000))">Set to 30
+                    seconds from now</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Alarm Controls</h3>
+            <button class="btn-primary" onclick="testAlarmSound()">🔊 Test Alarm Sound</button>
+            <button class="btn-secondary" onclick="resetAllTaskAlarms()">🔄 Reset All Alarms</button>
+            <button class="btn-secondary" onclick="clearAllCountdowns()">⏹️ Stop All Countdowns</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Current Alarm States</h3>
+            <div id="alarmStates">Loading...</div>
+        </div>
+
+        <audio id="beepSound" src="./alarm/beep-beep.mp3" preload="auto"></audio>
+    </div>
+
+    <script>
+        let countdownIntervals = {};
+
+        // Test alarm sound
+        function testAlarmSound() {
+            const beep = document.getElementById('beepSound');
+            if (beep) {
+                beep.play().catch(e => console.log('Audio play failed:', e));
+                console.log('Test alarm sound played');
+            }
+        }
+
+        // Reset alarm for specific task
+        function resetTaskAlarm(taskId) {
+            const alarmKey = `alarm_played_${taskId}`;
+            localStorage.removeItem(alarmKey);
+            console.log(`Alarm reset for task ${taskId}`);
+            updateAlarmStates();
+        }
+
+        // Reset all alarms
+        function resetAllTaskAlarms() {
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith('alarm_played_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            console.log('All task alarms have been reset');
+            updateAlarmStates();
+        }
+
+        // Start countdown for a test task
+        function startCountdown(taskId, dueDate) {
+            // Clear existing countdown
+            if (countdownIntervals[taskId]) {
+                clearInterval(countdownIntervals[taskId]);
+            }
+
+            const countdownElement = document.getElementById(`countdown-${taskId}`);
+            if (!countdownElement) return;
+
+            // Reset alarm state for this task
+            resetTaskAlarm(taskId);
+
+            function updateCountdown() {
+                const now = new Date();
+                const deadlineDate = new Date(dueDate);
+                const timeDiff = deadlineDate - now;
+
+                if (timeDiff <= 0) {
+                    countdownElement.innerHTML = '🚨 OVERDUE!';
+                    countdownElement.className = 'countdown overdue';
+
+                    // Play sound only once when deadline is first reached
+                    const alarmKey = `alarm_played_${taskId}`;
+                    const alarmPlayed = localStorage.getItem(alarmKey) === 'true';
+
+                    if (!alarmPlayed) {
+                        const beep = document.getElementById('beepSound');
+                        if (beep) {
+                            beep.play().catch(e => console.log('Audio play failed:', e));
+                            localStorage.setItem(alarmKey, 'true');
+                            console.log(`Alarm played for task ${taskId}`);
+                            updateAlarmStates();
+                        }
+                    }
+
+                    clearInterval(countdownIntervals[taskId]);
+                    return;
+                }
+
+                const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
+                const seconds = Math.floor((timeDiff / 1000) % 60);
+
+                // Add warning colors for urgent deadlines
+                let timeClass = '';
+                if (days === 0 && hours < 24) {
+                    timeClass = 'urgent';
+                } else if (days === 0 && hours < 48) {
+                    timeClass = 'warning';
+                }
+
+                countdownElement.innerHTML = `<span class="${timeClass}">⏳ ${days}d ${hours}h ${minutes}m ${seconds}s</span>`;
+                countdownElement.className = `countdown ${timeClass}`;
+            }
+
+            updateCountdown();
+            countdownIntervals[taskId] = setInterval(updateCountdown, 1000);
+        }
+
+        // Clear all countdowns
+        function clearAllCountdowns() {
+            Object.values(countdownIntervals).forEach(interval => {
+                clearInterval(interval);
+            });
+            countdownIntervals = {};
+            console.log('All countdowns stopped');
+        }
+
+        // Update alarm states display
+        function updateAlarmStates() {
+            const statesDiv = document.getElementById('alarmStates');
+            const keys = Object.keys(localStorage);
+            const alarmKeys = keys.filter(key => key.startsWith('alarm_played_'));
+
+            if (alarmKeys.length === 0) {
+                statesDiv.innerHTML = '<p>No alarms have been played yet.</p>';
+            } else {
+                const statesList = alarmKeys.map(key => {
+                    const taskId = key.replace('alarm_played_', '');
+                    return `<li>Task ${taskId}: Alarm played</li>`;
+                }).join('');
+                statesDiv.innerHTML = `<p>Alarms played for:</p><ul>${statesList}</ul>`;
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAlarmStates();
+
+            // Set initial countdown for test task 2 (30 seconds from now)
+            startCountdown('test2', new Date(Date.now() + 30000));
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Test - Electrical Management System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 20px; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Frontend Integration Test</h1>
+    
+    <div class="test-section">
+        <h2>Configuration Test</h2>
+        <div id="configStatus">Loading...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>API Test</h2>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <div id="healthStatus">Click button to test</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Login Test</h2>
+        <button onclick="testLogin()">Test Login Endpoint</button>
+        <div id="loginStatus">Click button to test</div>
+    </div>
+
+    <!-- Load configuration first -->
+    <script src="./config.js"></script>
+    <!-- Load URL utilities -->
+    <script src="./update-urls.js"></script>
+    
+    <script>
+        // Test configuration loading
+        function testConfig() {
+            const configStatus = document.getElementById('configStatus');
+            try {
+                if (window.appConfig) {
+                    configStatus.innerHTML = `
+                        <div class="success">
+                            ✅ Configuration loaded successfully!<br>
+                            API Base: ${window.appConfig.apiBaseUrl}<br>
+                            Socket URL: ${window.appConfig.socketUrl}<br>
+                            Environment: ${window.appConfig.isVercel ? 'Vercel' : 'Local'}
+                        </div>
+                    `;
+                } else {
+                    configStatus.innerHTML = '<div class="error">❌ Configuration not loaded</div>';
+                }
+            } catch (error) {
+                configStatus.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Test health endpoint
+        async function testHealth() {
+            const healthStatus = document.getElementById('healthStatus');
+            try {
+                const response = await fetch(window.appConfig.getApiUrl('/health'));
+                if (response.ok) {
+                    const data = await response.json();
+                    healthStatus.innerHTML = `
+                        <div class="success">
+                            ✅ Health check successful!<br>
+                            Status: ${data.status}<br>
+                            Message: ${data.message}<br>
+                            Version: ${data.version}
+                        </div>
+                    `;
+                } else {
+                    healthStatus.innerHTML = `<div class="error">❌ Health check failed: ${response.status}</div>`;
+                }
+            } catch (error) {
+                healthStatus.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Test login endpoint
+        async function testLogin() {
+            const loginStatus = document.getElementById('loginStatus');
+            try {
+                const response = await fetch(window.appConfig.getApiUrl('/auth/login'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        staffid: 'test',
+                        password: 'test'
+                    })
+                });
+                
+                if (response.status === 401) {
+                    loginStatus.innerHTML = `
+                        <div class="success">
+                            ✅ Login endpoint working! (Expected 401 for invalid credentials)<br>
+                            Status: ${response.status}<br>
+                            This is normal - the endpoint is rejecting invalid credentials
+                        </div>
+                    `;
+                } else {
+                    loginStatus.innerHTML = `<div class="error">❌ Unexpected response: ${response.status}</div>`;
+                }
+            } catch (error) {
+                loginStatus.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(testConfig, 1000); // Wait for config to load
+        });
+    </script>
+</body>
+</html>

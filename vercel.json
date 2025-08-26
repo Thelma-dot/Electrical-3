@@ -2,41 +2,30 @@
   "version": 2,
   "builds": [
     {
-      "src": "Backend/api/index.js",
+      "src": "Backend/api/vercel.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/Backend/api/index.js"
+      "dest": "/Backend/api/vercel.js"
     },
     {
       "src": "/health",
-      "dest": "/Backend/api/index.js"
+      "dest": "/Backend/api/vercel.js"
     },
     {
       "src": "/test",
-      "dest": "/Backend/api/index.js"
+      "dest": "/Backend/api/vercel.js"
     },
     {
-      "src": "/images/(.*)",
-      "dest": "/Frontend/images/$1"
-    },
-    {
-      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|mp3|wav))",
-      "dest": "/Frontend/$1"
-    },
-    {
-      "src": "/(.*\\.html)",
-      "dest": "/Frontend/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/Frontend/index.html"
+      "src": "/",
+      "dest": "/index.html"
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "VERCEL": "1"
   }
 }

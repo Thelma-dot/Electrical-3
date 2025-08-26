@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Completed Action</title>
+    <link rel="stylesheet" href="./inventory.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .debug-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .debug-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .debug-controls {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .debug-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .debug-table th,
+        .debug-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .debug-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .debug-button {
+            padding: 8px 16px;
+            margin: 2px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .edit-button {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .delete-button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .log-output {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="debug-container">
+        <h1>🐛 Debug Completed Action Functionality</h1>
+
+        <div class="debug-info">
+            <h3>📋 Debug Information:</h3>
+            <p>This page helps debug the completed action functionality. Check the console and log output below for
+                debugging information.</p>
+        </div>
+
+        <div class="debug-controls">
+            <h3>🔧 Debug Controls:</h3>
+            <button onclick="testCompletedAction()" class="debug-button"
+                style="background-color: #17a2b8; color: white;">
+                🧪 Test Completed Action
+            </button>
+            <button onclick="clearLocalStorage()" class="debug-button" style="background-color: #6c757d; color: white;">
+                🗑️ Clear localStorage
+            </button>
+            <button onclick="showLocalStorage()" class="debug-button" style="background-color: #28a745; color: white;">
+                📊 Show localStorage
+            </button>
+            <button onclick="addTestItem()" class="debug-button" style="background-color: #ffc107; color: #212529;">
+                ➕ Add Test Item
+            </button>
+        </div>
+
+        <div class="log-output" id="logOutput">
+            <div>Log output will appear here...</div>
+        </div>
+
+        <table class="debug-table">
+            <thead>
+                <tr>
+                    <th>Product Type</th>
+                    <th>Status</th>
+                    <th>Size</th>
+                    <th>Serial Number</th>
+                    <th>Date</th>
+                    <th>Location</th>
+                    <th>Issued By</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="debugTableBody">
+                <tr data-inventory-id="test1">
+                    <td class="editable-cell" data-field="product_type" data-value="UPS">UPS</td>
+                    <td class="editable-cell" data-field="status" data-value="New">New</td>
+                    <td class="editable-cell" data-field="size" data-value="3kva">3kva</td>
+                    <td class="editable-cell" data-field="serial_number" data-value="TEST001">TEST001</td>
+                    <td class="editable-cell" data-field="date" data-value="2024-01-15">2024-01-15</td>
+                    <td class="editable-cell" data-field="location" data-value="Test Room">Test Room</td>
+                    <td class="editable-cell" data-field="issued_by" data-value="Debug User">Debug User</td>
+                    <td>
+                        <button class="edit-button debug-button" onclick="toggleEditMode('test1', this)">Edit</button>
+                        <button class="delete-button debug-button" onclick="deleteInventory('test1')">Delete</button>
+                        <button class="cancel-button debug-button" onclick="cancelEdit('test1', this)"
+                            style="display: none;">Cancel</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Debug logging function
+        function log(message) {
+            const logOutput = document.getElementById('logOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            logOutput.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+            console.log(message);
+        }
+
+        // Test completed action functionality
+        function testCompletedAction() {
+            log('🧪 Testing completed action functionality...');
+
+            // Simulate updating an item
+            const updateKey = 'inventory_updated_test1';
+            localStorage.setItem(updateKey, Date.now().toString());
+            log('✅ Set localStorage update key: ' + updateKey);
+
+            // Refresh the display
+            refreshTable();
+        }
+
+        // Clear localStorage
+        function clearLocalStorage() {
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith('inventory_updated_')) {
+                    localStorage.removeItem(key);
+                    log('🗑️ Removed: ' + key);
+                }
+            });
+            refreshTable();
+        }
+
+        // Show localStorage contents
+        function showLocalStorage() {
+            log('📊 localStorage contents:');
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith('inventory_updated_')) {
+                    const value = localStorage.getItem(key);
+                    const timestamp = new Date(parseInt(value));
+                    log(`  ${key}: ${timestamp.toLocaleString()}`);
+                }
+            });
+        }
+
+        // Add test item
+        function addTestItem() {
+            const tbody = document.getElementById('debugTableBody');
+            const newId = 'test' + (tbody.children.length + 1);
+
+            const newRow = document.createElement('tr');
+            newRow.setAttribute('data-inventory-id', newId);
+            newRow.innerHTML = `
+                <td class="editable-cell" data-field="product_type" data-value="AVR">AVR</td>
+                <td class="editable-cell" data-field="status" data-value="New">New</td>
+                <td class="editable-cell" data-field="size" data-value="6kva">6kva</td>
+                <td class="editable-cell" data-field="serial_number" data-value="TEST${newId}">TEST${newId}</td>
+                <td class="editable-cell" data-field="date" data-value="2024-01-20">2024-01-20</td>
+                <td class="editable-cell" data-field="location" data-value="Test Room ${newId}">Test Room ${newId}</td>
+                <td class="editable-cell" data-field="issued_by" data-value="Debug User">Debug User</td>
+                <td>
+                    <button class="edit-button debug-button" onclick="toggleEditMode('${newId}', this)">Edit</button>
+                    <button class="delete-button debug-button" onclick="deleteInventory('${newId}')">Delete</button>
+                    <button class="cancel-button debug-button" onclick="cancelEdit('${newId}', this)" style="display: none;">Cancel</button>
+                </td>
+            `;
+            tbody.appendChild(newRow);
+            log('➕ Added test item: ' + newId);
+        }
+
+        // Refresh table display
+        function refreshTable() {
+            log('🔄 Refreshing table display...');
+            const rows = document.querySelectorAll('#debugTableBody tr');
+
+            rows.forEach(row => {
+                const inventoryId = row.getAttribute('data-inventory-id');
+                const updateKey = `inventory_updated_${inventoryId}`;
+                const updateTimestamp = localStorage.getItem(updateKey);
+                const isRecentlyUpdated = updateTimestamp && (Date.now() - parseInt(updateTimestamp)) < 24 * 60 * 60 * 1000;
+
+                if (isRecentlyUpdated) {
+                    log(`🔄 Item ${inventoryId} was recently updated, showing completed status`);
+                    const actionCell = row.querySelector('td:last-child');
+                    if (actionCell) {
+                        actionCell.innerHTML = '<span class="completed-action">✓ Completed</span>';
+                        row.classList.add('updated');
+                    }
+                }
+            });
+        }
+
+        // Simplified version of the inventory editing functions for testing
+        function toggleEditMode(inventoryId, button) {
+            log(`🔄 toggleEditMode called with ID: ${inventoryId}`);
+            const row = button.closest('tr');
+            const isEditing = row.classList.contains('editing');
+
+            if (isEditing) {
+                // Save changes
+                log('💾 Saving changes...');
+                saveInventoryChanges(inventoryId, row, button);
+            } else {
+                // Enter edit mode
+                log('✏️ Entering edit mode...');
+                enterEditMode(inventoryId, row, button);
+            }
+        }
+
+        function enterEditMode(inventoryId, row, button) {
+            log(`✏️ enterEditMode called for inventory ID: ${inventoryId}`);
+
+            // Add editing class to row
+            row.classList.add('editing');
+            log('✅ Added editing class to row');
+
+            // Change button to Save
+            button.textContent = 'Save';
+            button.classList.remove('edit-button');
+            button.classList.add('save-button');
+            log('✅ Changed button to Save');
+
+            // Show cancel button
+            const cancelButton = row.querySelector('.cancel-button');
+            if (cancelButton) {
+                cancelButton.style.display = 'inline-block';
+                log('✅ Cancel button displayed');
+            }
+
+            // Make cells editable
+            const editableCells = row.querySelectorAll('.editable-cell');
+            editableCells.forEach(cell => {
+                const field = cell.getAttribute('data-field');
+                const currentValue = cell.getAttribute('data-value');
+
+                if (field === 'product_type' || field === 'status' || field === 'size') {
+                    // Create select dropdown for these fields
+                    const select = document.createElement('select');
+                    select.className = 'edit-field';
+
+                    if (field === 'product_type') {
+                        select.innerHTML = `
+                            <option value="UPS" ${currentValue === 'UPS' ? 'selected' : ''}>UPS</option>
+                            <option value="AVR" ${currentValue === 'AVR' ? 'selected' : ''}>AVR</option>
+                        `;
+                    } else if (field === 'status') {
+                        select.innerHTML = `
+                            <option value="New" ${currentValue === 'New' ? 'selected' : ''}>New</option>
+                            <option value="Replaced" ${currentValue === 'Replaced' ? 'selected' : ''}>Replaced</option>
+                        `;
+                    } else if (field === 'size') {
+                        select.innerHTML = `
+                            <option value="1.5kva" ${currentValue === '1.5kva' ? 'selected' : ''}>1.5kva</option>
+                            <option value="3kva" ${currentValue === '3kva' ? 'selected' : ''}>3kva</option>
+                            <option value="6kva" ${currentValue === '6kva' ? 'selected' : ''}>6kva</option>
+                        `;
+                    }
+
+                    cell.innerHTML = '';
+                    cell.appendChild(select);
+                } else {
+                    // Create text input for other fields
+                    const textInput = document.createElement('input');
+                    textInput.type = 'text';
+                    textInput.className = 'edit-field';
+                    textInput.value = currentValue;
+                    cell.innerHTML = '';
+                    cell.appendChild(textInput);
+                }
+            });
+
+            // Store original values for cancel functionality
+            row.setAttribute('data-original-values', JSON.stringify({
+                product_type: row.querySelector('[data-field="product_type"]').getAttribute('data-value'),
+                status: row.querySelector('[data-field="status"]').getAttribute('data-value'),
+                size: row.querySelector('[data-field="size"]').getAttribute('data-value'),
+                serial_number: row.querySelector('[data-field="serial_number"]').getAttribute('data-value'),
+                date: row.querySelector('[data-field="date"]').getAttribute('data-value'),
+                location: row.querySelector('[data-field="location"]').getAttribute('data-value'),
+                issued_by: row.querySelector('[data-field="issued_by"]').getAttribute('data-value')
+            }));
+        }
+
+        function saveInventoryChanges(inventoryId, row, button) {
+            log(`💾 saveInventoryChanges called for inventory ID: ${inventoryId}`);
+
+            // Collect updated values
+            const updatedData = {};
+            const editableCells = row.querySelectorAll('.editable-cell');
+
+            editableCells.forEach(cell => {
+                const field = cell.getAttribute('data-field');
+                let value;
+
+                if (field === 'product_type' || field === 'status' || field === 'size') {
+                    const select = cell.querySelector('select');
+                    value = select.value;
+                } else {
+                    const textInput = cell.querySelector('input[type="text"]');
+                    value = textInput.value;
+                }
+
+                updatedData[field] = value.trim();
+            });
+
+            log('📝 Updated data:', updatedData);
+
+            // Update the data attributes and display
+            editableCells.forEach(cell => {
+                const field = cell.getAttribute('data-field');
+                const value = updatedData[field];
+
+                // Update data attribute
+                cell.setAttribute('data-value', value);
+
+                // Update display
+                cell.innerHTML = value;
+            });
+
+            // Exit edit mode
+            exitEditMode(row, button);
+
+            // Clear the action column and show "Completed"
+            const actionCell = row.querySelector('td:last-child');
+            if (actionCell) {
+                actionCell.innerHTML = '<span class="completed-action">✓ Completed</span>';
+                log('✅ Action column updated to show Completed');
+            }
+
+            // Add updated class to the row for CSS styling
+            row.classList.add('updated');
+
+            // Store the update timestamp in localStorage for persistence
+            const updateKey = `inventory_updated_${inventoryId}`;
+            localStorage.setItem(updateKey, Date.now().toString());
+            log(`💾 Stored update timestamp in localStorage: ${updateKey}`);
+
+            // Show success message
+            alert('✅ Inventory item updated successfully!');
+        }
+
+        function exitEditMode(row, button) {
+            log('🚪 Exiting edit mode');
+
+            // Remove editing class
+            row.classList.remove('editing');
+
+            // Change button back to Edit
+            button.textContent = 'Edit';
+            button.classList.remove('save-button');
+            button.classList.add('edit-button');
+
+            // Hide cancel button
+            const cancelButton = row.querySelector('.cancel-button');
+            if (cancelButton) {
+                cancelButton.style.display = 'none';
+            }
+        }
+
+        function cancelEdit(inventoryId, button) {
+            log(`❌ Cancelling edit for inventory ID: ${inventoryId}`);
+            const row = button.closest('tr');
+            exitEditMode(row, row.querySelector('.edit-button'));
+        }
+
+        function deleteInventory(inventoryId) {
+            if (confirm('Are you sure you want to delete this inventory item?')) {
+                const row = document.querySelector(`tr[data-inventory-id="${inventoryId}"]`);
+                if (row) {
+                    row.remove();
+                    log(`🗑️ Deleted inventory item: ${inventoryId}`);
+                }
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function () {
+            log('🚀 Debug page loaded');
+            log('🔍 Checking for existing localStorage entries...');
+            showLocalStorage();
+            refreshTable();
+        });
+    </script>
+</body>
+
+</html>

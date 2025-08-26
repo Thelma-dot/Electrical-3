@@ -107,4 +107,12 @@ async function startServer() {
   }
 }
 
-startServer();
+// For Vercel deployment, export the app
+// For local development, start the server
+if (process.env.VERCEL) {
+  // Export for Vercel serverless functions
+  module.exports = app;
+} else {
+  // Start server locally
+  startServer();
+}

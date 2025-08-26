@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dashboard</title>
+  <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+  <link rel="stylesheet" href="./dashboard.css">
+  <link rel="stylesheet" href="./user-greeting.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .search-container {
+      margin: 20px 0;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .search-btn {
+      padding: 10px 20px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .search-btn:hover {
+      background: #2980b9;
+    }
+
+    .report-actions {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .back-btn {
+      padding: 10px 20px;
+      background: #2c3e50;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .back-btn:hover {
+      background: #34495e;
+    }
+
+    /* Toolbox Form Styling */
+    form {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 30px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    form h3 {
+      color: #2c3e50;
+      border-bottom: 2px solid #ecf0f1;
+      padding-bottom: 10px;
+      margin-top: 30px;
+      margin-bottom: 20px;
+    }
+
+    form h3:first-child {
+      margin-top: 0;
+    }
+
+    form label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #34495e;
+    }
+
+    form input[type="text"],
+    form input[type="date"],
+    form textarea,
+    form select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ecf0f1;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      transition: border-color 0.3s ease;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+
+    form input[type="text"]:focus,
+    form input[type="date"]:focus,
+    form textarea:focus,
+    form select:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+    }
+
+    form textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    form button[type="submit"] {
+      background: #3498db;
+      color: white;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    form button[type="submit"]:hover {
+      background: #2980b9;
+    }
+
+    form button[type="submit"]:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+    }
+
+
+
+    /* Tool Selection Styling */
+    #selectedToolsContainer {
+      margin: 15px 0;
+      padding: 15px;
+      background: transparent;
+      border-radius: 0;
+      border: none;
+    }
+
+    #selectedToolsList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    #selectedToolsList li {
+      background: transparent;
+      color: #333;
+      padding: 8px 12px;
+      border-radius: 0;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+    }
+
+    .remove-tool {
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.3s ease;
+    }
+
+    .remove-tool:hover {
+      background: #c82333;
+    }
+
+
+
+    /* Enhanced Mobile Responsive Design */
+    @media (max-width: 1024px) {
+      form {
+        margin: 15px;
+        padding: 25px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        margin-left: 0;
+        padding: 15px;
+      }
+
+      form {
+        margin: 10px;
+        padding: 20px;
+      }
+
+      form input[type="text"],
+      form input[type="date"],
+      form textarea,
+      form select {
+        padding: 15px;
+        font-size: 16px;
+        /* Prevents zoom on iOS */
+        margin-bottom: 15px;
+      }
+
+      .search-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-input {
+        min-width: auto;
+      }
+
+      .report-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .back-btn {
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 24px;
+        text-align: center;
+      }
+
+      .header h5 {
+        font-size: 14px;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      form {
+        margin: 5px;
+        padding: 15px;
+      }
+
+      form h3 {
+        font-size: 18px;
+        margin-top: 25px;
+        margin-bottom: 15px;
+      }
+
+      form label {
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+
+      form input[type="text"],
+      form input[type="date"],
+      form textarea,
+      form select {
+        padding: 12px;
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+
+      form button[type="submit"] {
+        padding: 18px 20px;
+        font-size: 16px;
+      }
+
+      .header h1 {
+        font-size: 20px;
+      }
+
+      .header h5 {
+        font-size: 13px;
+      }
+    }
+
+    /* Touch-friendly interactions */
+    @media (hover: none) and (pointer: coarse) {
+      form button[type="submit"]:active {
+        background: #2980b9;
+        transform: scale(0.98);
+      }
+
+      .search-btn:active,
+      .back-btn:active {
+        transform: scale(0.95);
+      }
+    }
+
+    /* Tool input styling */
+    #toolsUsed {
+      margin-bottom: 10px;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+
+
+
+
+
+
+    @media (max-width: 768px) {
+      .form-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+      }
+
+
+    }
+  </style>
+</head>
+
+<body>
+
+
+  <div class="container">
+    <aside class="sidebar" id="sidebar">
+      <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+
+      <nav>
+        <a href="./dashboard.html">📊 Dashboard</a>
+        <a href="./generate_report.html">📄 Generate Report</a>
+        <a class="active">🛠️ Toolbox</a>
+        <a href="./inventory.html">📦 Inventory</a>
+        <a href="./settings.html">⚙️ Settings</a>
+        <a href="./profile.html">👤 Profile</a>
+        <a href="./index.html">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="header">
+        <h1>TOOLBOX FORM</h1>
+        <h5>A Toolbox Form should be conducted prior to every task, whether it is routine or non-routine.</h5>
+      </header>
+
+      <!-- Success/Error Message Area -->
+      <div id="messageArea"
+        style="display: none; margin: 20px auto; max-width: 800px; padding: 15px; border-radius: 6px; text-align: center; font-weight: 600;">
+      </div>
+
+      <div class="form-header"
+        style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <h2>Toolbox Form</h2>
+      </div>
+
+      <form id="toolboxForm" action="#" method="post">
+        <h3>FACILITY:</h3>
+        <label for="workActivity">Work Activity:</label>
+        <input type="text" id="workActivity" name="workActivity" required>
+
+        <h3>WORK LOCATION(S)</h3>
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required>
+
+        <label for="workLocation">Work Location(s):</label>
+        <input type="text" id="workLocation" name="workLocation" required>
+
+        <h3>PERSONS ATTENDING BRIEFING</h3>
+        <label for="nameCompany">NAME/COMPANY:</label>
+        <input type="text" id="nameCompany" name="nameCompany" required>
+
+        <label for="sign">Sign:</label>
+        <input type="text" id="sign" name="sign" required>
+
+        <label for="ppeNo">PPE NO:</label>
+        <input type="text" id="ppeNo" name="ppeNo" required>
+
+        <label for="toolsUsed">Tools and Equipment to be Used:</label>
+        <p style="font-size: 12px; color: #666; margin-bottom: 8px; font-style: italic;">
+          💡 Tip: You can either select from the dropdown list below or type tools manually.
+          If typing manually, separate multiple tools with commas.
+        </p>
+        <input type="text" id="toolsUsed" name="toolsUsed"
+          placeholder="Enter tools used (e.g., Hammer, Screwdriver, Wrench)" list="tool-list">
+        <datalist id="tool-list">
+          <option value="Set of Rachet">
+          <option value="Mallet">
+          <option value="Hammer">
+          <option value="Box Spanner Set">
+          <option value="Master Screw Driver Bit">
+          <option value="High Spped Steel Ground Flute Jobber Drill">
+          <option value="Precision Eye Loupe">
+          <option value="Spanners(10,11,12,13,14,15,16,17,18,19)">
+          <option value="Double Cut File Set">
+          <option value="Handy Knife for Engineers">
+          <option value="Hacksaw blades">
+          <option value="Scissors">
+          <option value="150mm (6'') Engineer Square">
+          <option value="Tape Measure 5m">
+          <option value="Tap Wrench Big Size">
+          <option value="Tap Wrench Small Size">
+          <option value="Tinsnips - General Purpose Straight">
+          <option value="Magnetic Telescope Pickup Tool">
+          <option value="Heavy Duty Hacksaw">
+          <option value="300mm (12'') Engineer Square">
+          <option value="Screwdriver Set">
+          <option value="Alan Keys Set">
+          <option value="Side Cutter">
+          <option value="Plier">
+          <option value="Long Nose">
+          <option value="Shifting Spanner">
+          <option value="(Ajustable Wrench) Groove Joint Plier ">
+          <option value="Needle File Set">
+          <option value="(Pipe Wrench) Locking Plier">
+          <option value="Wiring Sharp Blade">
+          <option value="Adjustable telescopic inspection mirror">
+          <option value="18 Blade Feeler Gauge">
+          <option value="Pocket Scriber">
+          <option value="Engineers Rule 150mm/6''">
+          <option value="Engineers Rule 150mm/12''">
+          <option value="Set of Screw Drivers">
+          <option value="Chisel">
+          <option value="Meter">
+          <option value="Battery Tester">
+          <option value="Ladder">
+        </datalist>
+
+        <!-- Selected tools display area -->
+        <div id="selectedToolsContainer">
+          <ul id="selectedToolsList"></ul>
+        </div>
+
+        <label for="hazards">Hazards Identified & Preventive Actions:</label>
+        <textarea id="hazards" name="hazards" required></textarea>
+
+        <label for="circulars">Any recent circulars or safety alert on similar issues to be highlighted:</label>
+        <textarea id="circulars" name="circulars"></textarea>
+
+        <label for="riskAssessment">Risk Assessment (if any) Ref No:</label>
+        <input type="text" id="riskAssessment" name="riskAssessment">
+
+        <label for="permit">Permit to Work (if any) Ref No:</label>
+        <input type="text" id="permit" name="permit">
+
+        <label for="remarks">Additional Remarks:</label>
+        <textarea id="remarks" name="remarks"></textarea>
+
+        <label for="preparedBy">Prepared By: <br> Name & Signature:</label>
+        <input type="text" id="preparedBy" name="preparedBy" required>
+
+        <label for="verifiedBy">Verified By: <br> Duty Officer:</label>
+        <input type="text" id="verifiedBy" name="verifiedBy" required>
+
+        <button type="submit" id="submitBtn">Submit</button>
+
+        <!-- Add View Toolbox button under submit button -->
+        <div style="margin-top: 20px; text-align: center;">
+          <a href="./toolbox-submitted.html" class="btn-secondary"
+            style="display: inline-block; padding: 12px 24px; background: #6c757d; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; transition: background-color 0.3s ease; margin-right: 10px;">
+            👁️ View My Toolbox
+          </a>
+        </div>
+
+
+      </form>
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+  <script>
+
+
+    // Global variables for tools selection
+    let selectedTools = [];
+
+    // Initialize Socket.IO connection for real-time updates
+    function initializeSocketConnection() {
+      try {
+        const socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
+
+        // Listen for real-time toolbox events
+        socket.on('connect', () => {
+          console.log('🔌 Connected to real-time toolbox updates');
+        });
+
+        socket.on('disconnect', () => {
+          console.log('🔌 Disconnected from real-time toolbox updates');
+        });
+
+        // Toolbox events for real-time updates
+        socket.on('toolbox:created', (data) => {
+          console.log('🛠️ Toolbox created successfully');
+        });
+
+        socket.on('toolbox:updated', (data) => {
+          console.log('🛠️ Toolbox updated successfully');
+        });
+
+        socket.on('toolbox:deleted', (data) => {
+          console.log('🛠️ Toolbox deleted successfully');
+        });
+
+      } catch (e) {
+        console.warn('Real-time updates unavailable', e);
+      }
+    }
+
+    // Function to show messages
+    function showMessage(message, type = 'success') {
+      const messageArea = document.getElementById('messageArea');
+      messageArea.style.display = 'block';
+      messageArea.style.background = type === 'success' ? '#d4edda' : '#f8d7da';
+      messageArea.style.color = type === 'success' ? '#155724' : '#721c24';
+      messageArea.style.border = `1px solid ${type === 'success' ? '#c3e6cb' : '#f5c6cb'}`;
+      messageArea.innerHTML = message; // Use innerHTML to allow HTML tags
+
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        messageArea.style.display = 'none';
+      }, 5000);
+    }
+
+    // Function to handle tool selection
+    function setupToolSelection() {
+      const toolsInput = document.getElementById('toolsUsed');
+      if (toolsInput) {
+        toolsInput.addEventListener('change', function () {
+          const tool = this.value.trim();
+          if (tool && !selectedTools.includes(tool)) {
+            selectedTools.push(tool);
+            updateSelectedToolsDisplay();
+            this.value = '';
+          }
+        });
+      }
+    }
+
+    // Function to update the selected tools display
+    function updateSelectedToolsDisplay() {
+      const container = document.getElementById('selectedToolsList');
+      if (!container) return;
+
+      container.innerHTML = '';
+
+      selectedTools.forEach((tool, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          ${tool} 
+          <button type="button" onclick="removeTool(${index})" class="remove-tool">×</button>
+        `;
+        container.appendChild(li);
+      });
+
+      // Show/hide container based on whether there are tools
+      const toolsContainer = document.getElementById('selectedToolsContainer');
+      if (toolsContainer) {
+        toolsContainer.style.display = selectedTools.length > 0 ? 'block' : 'none';
+      }
+    }
+
+    // Function to remove a tool
+    function removeTool(index) {
+      selectedTools.splice(index, 1);
+      updateSelectedToolsDisplay();
+    }
+
+    // Test backend connectivity
+    async function testBackendConnection() {
+      try {
+        console.log('🔍 Testing backend connectivity...');
+
+        // Check if user is authenticated
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.log('⚠️ No authentication token found - skipping backend test');
+          return;
+        }
+
+        // Test with authentication
+        const response = await fetch('http://localhost:5000/api/toolbox', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.status === 401) {
+          console.log('⚠️ Authentication expired - user needs to login again');
+          showMessage('⚠️ Authentication expired. Please login again.', 'error');
+        } else if (response.ok) {
+          console.log('✅ Backend is reachable and authenticated. Status:', response.status);
+        } else {
+          console.log('⚠️ Backend responded with status:', response.status);
+        }
+      } catch (error) {
+        console.error('❌ Backend connection failed:', error.message);
+        showMessage('⚠️ Warning: Cannot connect to backend server. Form submission may fail.', 'error');
+      }
+    }
+
+    // Check if we're in edit mode
+    function getEditId() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('edit');
+    }
+
+    // Load existing toolbox data for editing
+    async function loadToolboxForEdit(toolboxId) {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          showMessage('Please login first', 'error');
+          return;
+        }
+
+        console.log('🔍 Loading toolbox for edit, ID:', toolboxId);
+        const response = await fetch(`http://localhost:5000/api/toolbox/${toolboxId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const toolbox = await response.json();
+          console.log('📋 Toolbox data received:', toolbox);
+
+          // Populate form fields - handle both snake_case and camelCase
+          document.getElementById('workActivity').value = toolbox.work_activity || toolbox.workActivity || '';
+          document.getElementById('date').value = toolbox.date || '';
+          document.getElementById('workLocation').value = toolbox.work_location || toolbox.workLocation || '';
+          document.getElementById('nameCompany').value = toolbox.name_company || toolbox.nameCompany || '';
+          document.getElementById('sign').value = toolbox.sign || '';
+          document.getElementById('ppeNo').value = toolbox.ppe_no || toolbox.ppeNo || '';
+
+          // Load selected tools from existing data
+          const toolsUsed = toolbox.tools_used || toolbox.toolsUsed || '';
+          if (toolsUsed) {
+            selectedTools = toolsUsed.split(',').map(tool => tool.trim()).filter(tool => tool);
+            updateSelectedToolsDisplay();
+          }
+
+          document.getElementById('hazards').value = toolbox.hazards || '';
+          document.getElementById('circulars').value = toolbox.circulars || '';
+          document.getElementById('riskAssessment').value = toolbox.risk_assessment || toolbox.riskAssessment || '';
+          document.getElementById('permit').value = toolbox.permit || '';
+          document.getElementById('remarks').value = toolbox.remarks || '';
+          document.getElementById('preparedBy').value = toolbox.prepared_by || toolbox.preparedBy || '';
+          document.getElementById('verifiedBy').value = toolbox.verified_by || toolbox.verifiedBy || '';
+
+          // Update button text and header
+          document.getElementById('submitBtn').textContent = 'Update Toolbox Form';
+          document.querySelector('.header h1').textContent = 'EDIT TOOLBOX FORM';
+          document.querySelector('.header').classList.add('edit-mode');
+
+          showMessage('✅ Toolbox form loaded for editing', 'success');
+        } else {
+          const errorText = await response.text();
+          console.error('❌ Failed to load toolbox form:', response.status, errorText);
+          showMessage('❌ Failed to load toolbox form for editing', 'error');
+        }
+      } catch (error) {
+        console.error('❌ Error loading toolbox for edit:', error);
+        showMessage('❌ Error loading toolbox form', 'error');
+      }
+    }
+
+
+
+
+
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('toolboxForm');
+      if (!form) return;
+
+      // Initialize Socket.IO connection
+      initializeSocketConnection();
+
+      // Test backend connectivity
+      testBackendConnection();
+
+
+
+      // Check if we're in edit mode
+      const editId = getEditId();
+      if (editId) {
+        loadToolboxForEdit(editId);
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        console.log('🎯 Form submission event triggered!');
+        console.log('Form element:', form);
+        console.log('Submit button:', form.querySelector('button[type="submit"]'));
+
+        // Check if tools are selected or if there's direct input
+        let toolsToUse = selectedTools;
+        const directToolInput = document.getElementById('toolsUsed').value.trim();
+
+        console.log('Debug - selectedTools:', selectedTools);
+        console.log('Debug - directToolInput:', directToolInput);
+
+        if (selectedTools.length === 0 && !directToolInput) {
+          showMessage('❌ Please select at least one tool or enter tools manually before submitting the form', 'error');
+          return;
+        }
+
+        // If no tools are selected but there's direct input, use that
+        if (selectedTools.length === 0 && directToolInput) {
+          toolsToUse = [directToolInput];
+        }
+
+        console.log('Debug - final toolsToUse:', toolsToUse);
+
+        // Get form data - using snake_case to match backend expectations
+        const formData = {
+          workActivity: document.getElementById('workActivity').value,
+          date: document.getElementById('date').value,
+          workLocation: document.getElementById('workLocation').value,
+          nameCompany: document.getElementById('nameCompany').value,
+          sign: document.getElementById('sign').value,
+          ppeNo: document.getElementById('ppeNo').value,
+          toolsUsed: toolsToUse.join(', '), // Use toolsToUse array with proper formatting
+          hazards: document.getElementById('hazards').value,
+          circulars: document.getElementById('circulars').value,
+          riskAssessment: document.getElementById('riskAssessment').value,
+          permit: document.getElementById('permit').value,
+          remarks: document.getElementById('remarks').value,
+          preparedBy: document.getElementById('preparedBy').value,
+          verifiedBy: document.getElementById('verifiedBy').value
+        };
+
+        // Extract user ID from JWT token
+        try {
+          const token = localStorage.getItem('token');
+          if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            formData.user_id = payload.userId;
+            console.log('User ID extracted from token:', payload.userId);
+          }
+        } catch (error) {
+          console.error('Error extracting user ID from token:', error);
+          showMessage('❌ Error: Could not identify user. Please login again.', 'error');
+          return;
+        }
+
+        try {
+          const token = localStorage.getItem('token');
+          console.log('Token found:', token ? 'Yes' : 'No');
+          if (!token) {
+            showMessage('Please login first', 'error');
+            setTimeout(() => {
+              window.location.href = './index.html';
+            }, 2000);
+            return;
+          }
+
+          // Show loading state
+          const submitBtn = form.querySelector('button[type="submit"]');
+          const originalText = submitBtn.textContent;
+          submitBtn.textContent = editId ? '⏳ Updating...' : '⏳ Submitting...';
+          submitBtn.disabled = true;
+
+          let response;
+          if (editId) {
+            // Update existing toolbox - automatically mark as completed
+            const updateData = {
+              ...formData,
+              status: 'completed' // Automatically set status to completed when updating
+            };
+            console.log('Updating toolbox with completed status:', updateData);
+
+            response = await fetch(`http://localhost:5000/api/toolbox/${editId}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify(updateData)
+            });
+          } else {
+            // Create new toolbox
+            console.log('Submitting form data:', formData);
+            response = await fetch('http://localhost:5000/api/toolbox', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify(formData)
+            });
+            console.log('API response status:', response.status);
+          }
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('API response data:', result);
+            const action = editId ? 'updated' : 'created';
+
+            if (!editId) {
+              // For new submissions, show success message and refresh the table
+              showMessage('✅ Toolbox form submitted successfully!', 'success');
+
+              // Clear the form
+              form.reset();
+              selectedTools = [];
+              updateSelectedToolsDisplay();
+
+              // Form submitted successfully - user can now view their toolbox
+            } else {
+              // For updates, show success message and redirect to toolbox management
+              showMessage('✅ Toolbox form updated and marked as completed!', 'success');
+
+              // Redirect back to toolbox management page after a short delay
+              setTimeout(() => {
+                window.location.href = './toolbox-submitted.html?updated=true';
+              }, 2000);
+            }
+
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('API error response:', errorData);
+            console.error('Response status:', response.status);
+            console.error('Response headers:', response.headers);
+            throw new Error(errorData.error || `Failed to ${editId ? 'update' : 'submit'} form. Status: ${response.status}`);
+          }
+        } catch (err) {
+          console.error('Form submission error:', err);
+          showMessage(`❌ Error: ${err.message}`, 'error');
+        } finally {
+          // Reset button state
+          const submitBtn = form.querySelector('button[type="submit"]');
+          submitBtn.textContent = editId ? 'Update Toolbox Form' : 'Submit';
+          submitBtn.disabled = false;
+        }
+      });
+
+      // Set today's date as default (only for new forms)
+      if (!editId) {
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+      }
+
+      // Setup tool selection on page load
+      setupToolSelection();
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </script>
+
+  <script src="./dark-mode.js"></script>
+  <script src="./script.js"></script>
+  <script src="./user-greeting.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dashboard</title>
+  <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+  <link rel="stylesheet" href="./dashboard.css">
+  <link rel="stylesheet" href="./user-greeting.css">
+</head>
+
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+
+      <nav>
+        <a href="./dashboard.html">📊 Dashboard</a>
+        <a href="./generate_report.html">📄 Generate Report</a>
+        <a href="./tool_box.html">🛠️ Toolbox</a>
+        <a href="./inventory.html">📦 Inventory</a>
+        <a href="./settings.html">⚙️ Settings</a>
+        <a class="active">👤 Profile</a>
+        <a href="./index.html">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="header">
+        <h1>Profile</h1>
+        <p id="greeting" style="margin-top:4px;color:#666;"></p>
+        <div id="roleSubtitle" style="color:#6b7280;font-weight:600;margin-top:2px;"></div>
+        <div class="tabs" style="margin-top:8px;">
+
+        </div>
+      </header>
+      <style>
+        .profile-card {
+          max-width: 700px;
+          margin: 0 auto 18px auto;
+          background: #fff;
+          padding: 24px;
+          border-radius: 12px;
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06)
+        }
+
+        .profile-card h3 {
+          margin: 0 0 12px 0
+        }
+
+        .profile-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 10px
+        }
+
+        .profile-list li {
+          display: flex;
+          justify-content: space-between;
+          border-bottom: 1px solid #eef2f7;
+          padding: 6px 0
+        }
+
+        .profile-list li span {
+          color: #6b7280
+        }
+
+        .profile-actions {
+          display: flex;
+          gap: 10px;
+          margin-top: 12px
+        }
+      </style>
+      <div class="profile-card">
+        <h3>Personal Information</h3>
+        <ul class="profile-list">
+          <li><span>Staff ID:</span><strong id="displayStaffIdText"></strong></li>
+          <li><span>Full Name:</span><strong id="displayNameText"></strong></li>
+          <li><span>Email Address:</span><strong id="displayEmailText"></strong></li>
+          <li><span>Phone Number:</span><strong id="displayPhoneText"></strong></li>
+          <li><span>Account Created:</span><strong id="displayCreatedText"></strong></li>
+          <li><span>Last Login:</span><strong id="displayLastLoginText"></strong></li>
+        </ul>
+        <div class="profile-actions">
+          <button class="btn primary" onclick="showEditProfileModal()">Edit Profile</button>
+          <button class="btn" onclick="showEditProfileModal()">Change Password</button>
+        </div>
+      </div>
+
+      <!-- Edit Profile Modal -->
+      <div id="editProfileModal" class="modal"
+        style="display:none;position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+        <div class="modal-content" style="background:#fff;padding:16px;border-radius:8px;max-width:600px;width:90%;">
+          <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;">
+            <h2>Edit Profile</h2>
+            <span class="close" style="cursor:pointer;font-size:20px;" onclick="closeEditProfileModal()">&times;</span>
+          </div>
+          <form id="editProfileForm">
+            <div class="form-group"><label>Name</label><input id="nameInput" type="text" placeholder="Your full name">
+            </div>
+            <div class="form-group"><label>Staff ID</label><input id="staffIdDisplay" type="text" disabled></div>
+            <div class="form-group"><label>Email</label><input id="emailInput" type="email"
+                placeholder="name@example.com"></div>
+            <div class="form-group"><label>Phone</label><input id="phoneInput" type="tel"
+                placeholder="e.g. +233 555 555 555"></div>
+            <hr />
+            <div class="form-group"><label>Current Password</label><input id="currentPassword" type="password"
+                autocomplete="current-password"></div>
+            <div class="form-group"><label>New Password</label><input id="newPassword" type="password"
+                autocomplete="new-password"></div>
+            <div class="form-actions" style="display:flex;gap:8px;justify-content:flex-end;">
+              <button type="button" class="btn secondary" onclick="closeEditProfileModal()">Cancel</button>
+              <button type="submit" class="btn primary">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="section">
+        <h3>⚡ Job Responsibilities</h3>
+        <ul class="jobs-list">
+          <li>🔹 Installation & Maintenance of UPS and AVR</li>
+          <li>🔹 Monitoring UPS Remotely</li>
+          <li>🔹 Monitoring Lift Units Remotely</li>
+          <li>🔹 Solar Installations & Monitoring</li>
+          <li>🔹 SCADA Diagram for:
+            <ul>
+              <li>Power Lines to Reefer Containers</li>
+              <li>Genset Monitoring (In & Out of Port)</li>
+            </ul>
+          </li>
+          <li>🔹 Fire Alarm Systems</li>
+          <li>🔹 First Response to Weighbridge</li>
+          <li>🔹 Boom Barrier Maintenance</li>
+          <li>🔹 Electric Fencing</li>
+          <li>🔹 Automation</li>
+          <li>🔹 Traffic Light Maintenance</li>
+        </ul>
+      </div>
+
+      <p style="text-align:center; font-weight:bold;">📜 Working towards <strong>ISO 50001</strong> compliance</p>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load user profile
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!user) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/profile', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (!response.ok) throw new Error('Failed to load profile');
+
+        const profile = await response.json();
+        displayProfile(profile);
+      } catch (err) {
+        console.error('Profile load error:', err);
+        alert('Failed to load profile data');
+      }
+
+      // Setup form submission (modal form)
+      document.getElementById('editProfileForm').addEventListener('submit', updateProfile);
+    });
+
+    function displayProfile(profile) {
+      const name = profile.name || '';
+      document.getElementById('greeting').textContent = name ? `Hello, ${name}` : `Hello, ${profile.staff_id}`;
+      document.getElementById('roleSubtitle').textContent = (profile.role === 'admin' ? 'Admin' : 'Staff Member');
+      // Display-only fields (text)
+      document.getElementById('displayNameText').textContent = name || '-';
+      document.getElementById('displayStaffIdText').textContent = profile.staff_id || '-';
+      document.getElementById('displayEmailText').textContent = profile.email || '-';
+      document.getElementById('displayPhoneText').textContent = profile.phone || '-';
+      document.getElementById('displayCreatedText').textContent = profile.created_at ? new Date(profile.created_at).toLocaleDateString() : '-';
+      document.getElementById('displayLastLoginText').textContent = profile.last_login ? new Date(profile.last_login).toLocaleString() : 'Not available';
+      // Modal form fields
+      document.getElementById('staffIdDisplay').value = profile.staff_id;
+      document.getElementById('nameInput').value = name;
+      document.getElementById('emailInput').value = profile.email || '';
+      document.getElementById('phoneInput').value = profile.phone || '';
+    }
+
+    function showEditProfileModal() {
+      document.getElementById('editProfileModal').style.display = 'flex';
+    }
+
+    function closeEditProfileModal() {
+      document.getElementById('editProfileModal').style.display = 'none';
+    }
+
+    async function updateProfile(e) {
+      e.preventDefault();
+
+      const formData = {
+        name: document.getElementById('nameInput').value,
+        email: document.getElementById('emailInput').value,
+        phone: document.getElementById('phoneInput').value,
+        currentPassword: document.getElementById('currentPassword').value,
+        newPassword: document.getElementById('newPassword').value
+      };
+
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Update failed');
+        }
+
+        // Refresh profile display
+        try {
+          const refreshed = await fetch('http://localhost:5000/api/auth/profile', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          });
+          const profile = await refreshed.json();
+          displayProfile(profile);
+          localStorage.setItem('user', JSON.stringify(profile));
+        } catch { }
+        alert('Profile updated successfully!');
+        closeEditProfileModal();
+        // Clear password fields
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+      } catch (err) {
+        console.error('Update error:', err);
+        alert(err.message || 'Failed to update profile');
+      }
+    }
+
+    function showEditProfileModal() {
+      const modal = document.getElementById('editProfileModal');
+      if (modal) modal.style.display = 'flex';
+    }
+    function closeEditProfileModal() {
+      const modal = document.getElementById('editProfileModal');
+      if (modal) modal.style.display = 'none';
+    }
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.35.5/apexcharts.min.js"></script>
+  <script src="./dark-mode.js"></script>
+  <script src="./script.js"></script>
+  <script src="./user-greeting.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Inventory Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #2980b9;
+        }
+        .test-button.success {
+            background: #27ae60;
+        }
+        .test-button.warning {
+            background: #f39c12;
+        }
+        .test-button.danger {
+            background: #e74c3c;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-connected {
+            background: #27ae60;
+        }
+        .status-disconnected {
+            background: #e74c3c;
+        }
+        .log-container {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #3498db;
+        }
+        .log-entry.success {
+            border-left-color: #27ae60;
+        }
+        .log-entry.error {
+            border-left-color: #e74c3c;
+        }
+        .log-entry.warning {
+            border-left-color: #f39c12;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .connection-status {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Real-time Inventory Update Test</h1>
+    <p>This page tests the real-time inventory update system across all components.</p>
+
+    <div class="grid">
+        <div class="test-section">
+            <h3>📡 Connection Status</h3>
+            <div class="connection-status">
+                <span class="status-indicator" id="socketStatus"></span>
+                <span id="connectionText">Checking connection...</span>
+            </div>
+            <button class="test-button" onclick="testConnection()">Test Connection</button>
+            <button class="test-button" onclick="reconnect()">Reconnect</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📦 Inventory Events</h3>
+            <button class="test-button success" onclick="simulateInventoryCreated()">Simulate Created</button>
+            <button class="test-button warning" onclick="simulateInventoryUpdated()">Simulate Updated</button>
+            <button class="test-button danger" onclick="simulateInventoryDeleted()">Simulate Deleted</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 Cross-Tab Communication</h3>
+            <button class="test-button" onclick="testLocalStorage()">Test LocalStorage</button>
+            <button class="test-button" onclick="testPostMessage()">Test PostMessage</button>
+            <button class="test-button" onclick="testBroadcastChannel()">Test BroadcastChannel</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Dashboard Updates</h3>
+            <button class="test-button" onclick="testDashboardUpdate()">Test Dashboard</button>
+            <button class="test-button" onclick="testChartUpdate()">Test Charts</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>📝 Event Log</h3>
+        <button class="test-button" onclick="clearLog()">Clear Log</button>
+        <div class="log-container" id="eventLog">
+            <div class="log-entry">Ready to test real-time inventory updates...</div>
+        </div>
+    </div>
+
+            <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        let socket = null;
+        let broadcastChannel = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeSocket();
+            initializeBroadcastChannel();
+            log('Test page loaded', 'success');
+        });
+
+        function initializeSocket() {
+            try {
+                socket = io('http://localhost:5000');
+                
+                socket.on('connect', () => {
+                    updateConnectionStatus(true);
+                    log('Socket connected', 'success');
+                });
+
+                socket.on('disconnect', () => {
+                    updateConnectionStatus(false);
+                    log('Socket disconnected', 'warning');
+                });
+
+                socket.on('inventory:created', (data) => {
+                    log(`Inventory created: ${JSON.stringify(data)}`, 'success');
+                });
+
+                socket.on('inventory:updated', (data) => {
+                    log(`Inventory updated: ${JSON.stringify(data)}`, 'warning');
+                });
+
+                socket.on('inventory:deleted', (data) => {
+                    log(`Inventory deleted: ${JSON.stringify(data)}`, 'error');
+                });
+
+                socket.on('inventory:update', (data) => {
+                    log(`General inventory update: ${JSON.stringify(data)}`, 'success');
+                });
+
+            } catch (error) {
+                log(`Socket initialization error: ${error.message}`, 'error');
+            }
+        }
+
+        function initializeBroadcastChannel() {
+            if (typeof BroadcastChannel !== 'undefined') {
+                try {
+                    broadcastChannel = new BroadcastChannel('inventory-updates');
+                    broadcastChannel.onmessage = (event) => {
+                        log(`BroadcastChannel message: ${JSON.stringify(event.data)}`, 'success');
+                    };
+                    log('BroadcastChannel initialized', 'success');
+                } catch (error) {
+                    log(`BroadcastChannel error: ${error.message}`, 'warning');
+                }
+            } else {
+                log('BroadcastChannel not supported', 'warning');
+            }
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusIndicator = document.getElementById('socketStatus');
+            const statusText = document.getElementById('connectionText');
+            
+            if (connected) {
+                statusIndicator.className = 'status-indicator status-connected';
+                statusText.textContent = 'Connected to server';
+            } else {
+                statusIndicator.className = 'status-indicator status-disconnected';
+                statusText.textContent = 'Disconnected from server';
+            }
+        }
+
+        function testConnection() {
+            if (socket && socket.connected) {
+                log('Connection test: Connected', 'success');
+                socket.emit('test:inventory', { message: 'Test from test page' });
+            } else {
+                log('Connection test: Not connected', 'error');
+            }
+        }
+
+        function reconnect() {
+            if (socket) {
+                socket.connect();
+                log('Attempting to reconnect...', 'warning');
+            }
+        }
+
+        function simulateInventoryCreated() {
+            const testData = {
+                id: 'test-' + Date.now(),
+                productType: 'UPS',
+                status: 'New',
+                size: '3kva',
+                serialNumber: 'TEST-' + Math.random().toString(36).substr(2, 9),
+                date: new Date().toISOString().split('T')[0],
+                location: 'Test Location',
+                issuedBy: 'Test User'
+            };
+
+            // Emit via Socket.IO
+            if (socket && socket.connected) {
+                socket.emit('inventory:created', testData);
+                log(`Emitted inventory:created via Socket.IO`, 'success');
+            }
+
+            // Test cross-tab communication
+            testCrossTabCommunication('created', testData);
+        }
+
+        function simulateInventoryUpdated() {
+            const testData = {
+                id: 'test-update-' + Date.now(),
+                productType: 'AVR',
+                status: 'Replaced',
+                size: '6kva'
+            };
+
+            if (socket && socket.connected) {
+                socket.emit('inventory:updated', testData);
+                log(`Emitted inventory:updated via Socket.IO`, 'success');
+            }
+
+            testCrossTabCommunication('updated', testData);
+        }
+
+        function simulateInventoryDeleted() {
+            const testData = {
+                id: 'test-delete-' + Date.now()
+            };
+
+            if (socket && socket.connected) {
+                socket.emit('inventory:deleted', testData);
+                log(`Emitted inventory:deleted via Socket.IO`, 'success');
+            }
+
+            testCrossTabCommunication('deleted', testData);
+        }
+
+        function testCrossTabCommunication(type, data) {
+            // Test LocalStorage
+            try {
+                const updateData = {
+                    type: type,
+                    data: data,
+                    timestamp: new Date().toISOString(),
+                    source: 'test-page'
+                };
+                localStorage.setItem('inventoryUpdate', JSON.stringify(updateData));
+                setTimeout(() => localStorage.removeItem('inventoryUpdate'), 100);
+                log(`LocalStorage update: ${type}`, 'success');
+            } catch (error) {
+                log(`LocalStorage error: ${error.message}`, 'error');
+            }
+
+            // Test BroadcastChannel
+            if (broadcastChannel) {
+                try {
+                    broadcastChannel.postMessage({
+                        type: type,
+                        data: data,
+                        timestamp: new Date().toISOString(),
+                        source: 'test-page'
+                    });
+                    log(`BroadcastChannel message: ${type}`, 'success');
+                } catch (error) {
+                    log(`BroadcastChannel error: ${error.message}`, 'error');
+                }
+            }
+
+            // Test Custom Event
+            try {
+                const event = new CustomEvent('inventoryUpdate', {
+                    detail: {
+                        type: type,
+                        data: data,
+                        timestamp: new Date().toISOString()
+                    }
+                });
+                window.dispatchEvent(event);
+                log(`Custom event: ${type}`, 'success');
+            } catch (error) {
+                log(`Custom event error: ${error.message}`, 'error');
+            }
+        }
+
+        function testLocalStorage() {
+            log('Testing LocalStorage communication...', 'warning');
+            simulateInventoryCreated();
+        }
+
+        function testPostMessage() {
+            log('Testing PostMessage communication...', 'warning');
+            // Try to send message to parent window
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'inventory:test',
+                    data: { message: 'PostMessage test' },
+                    timestamp: new Date().toISOString()
+                }, '*');
+                log('PostMessage sent to parent window', 'success');
+            } else {
+                log('No parent window to send PostMessage to', 'warning');
+            }
+        }
+
+        function testBroadcastChannel() {
+            log('Testing BroadcastChannel communication...', 'warning');
+            if (broadcastChannel) {
+                broadcastChannel.postMessage({
+                    type: 'test',
+                    data: { message: 'BroadcastChannel test' },
+                    timestamp: new Date().toISOString(),
+                    source: 'test-page'
+                });
+                log('BroadcastChannel test message sent', 'success');
+            } else {
+                log('BroadcastChannel not available', 'error');
+            }
+        }
+
+        function testDashboardUpdate() {
+            log('Testing dashboard update...', 'warning');
+            // Simulate a dashboard refresh
+            if (typeof window.refreshDashboard === 'function') {
+                window.refreshDashboard();
+                log('Dashboard refresh function called', 'success');
+            } else {
+                log('Dashboard refresh function not available', 'warning');
+            }
+        }
+
+        function testChartUpdate() {
+            log('Testing chart update...', 'warning');
+            // Simulate chart update
+            if (typeof window.updateChartsInRealTime === 'function') {
+                window.updateChartsInRealTime();
+                log('Chart update function called', 'success');
+            } else {
+                log('Chart update function not available', 'warning');
+            }
+        }
+
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('eventLog');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLog() {
+            const logContainer = document.getElementById('eventLog');
+            logContainer.innerHTML = '<div class="log-entry">Log cleared...</div>';
+        }
+
+        // Listen for inventory updates from other sources
+        window.addEventListener('inventoryUpdate', (event) => {
+            log(`Received inventoryUpdate event: ${event.detail.type}`, 'success');
+        });
+
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'inventoryUpdate') {
+                try {
+                    const data = JSON.parse(event.newValue);
+                    log(`Received storage event: ${data.type}`, 'success');
+                } catch (error) {
+                    log(`Storage event parse error: ${error.message}`, 'error');
+                }
+            }
+        });
+
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type && event.data.type.startsWith('inventory:')) {
+                log(`Received postMessage: ${event.data.type}`, 'success');
+            }
+        });
+    </script>
+</body>
+</html>

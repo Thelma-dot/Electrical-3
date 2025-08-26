@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Toolbox Form Submitted</title>
+  <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+  <link rel="stylesheet" href="./dashboard.css">
+  <link rel="stylesheet" href="./user-greeting.css">
+  <link rel="stylesheet" href="./adminDashboard.css">
+  <style>
+    /* Toolbox Submitted Page Styling */
+    .submission-success {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      border: 2px solid #27ae60;
+      border-radius: 12px;
+      padding: 30px;
+      margin: 20px auto;
+      max-width: 800px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(39, 174, 96, 0.2);
+    }
+
+    .submission-success h2 {
+      color: #155724;
+      margin-bottom: 20px;
+      font-size: 28px;
+    }
+
+    .submission-details {
+      background: white;
+      border-radius: 8px;
+      padding: 25px;
+      margin: 20px auto;
+      max-width: 800px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .submission-details h3 {
+      color: #2c3e50;
+      border-bottom: 2px solid #ecf0f1;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .detail-item label {
+      font-weight: 600;
+      color: #34495e;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .detail-item span {
+      color: #2c3e50;
+      padding: 8px 12px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #e9ecef;
+      font-size: 14px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin: 30px 0;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: #3498db;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2980b9;
+      transform: translateY(-2px);
+    }
+
+    .btn-success {
+      background: #27ae60;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #229954;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #7f8c8d;
+      transform: translateY(-2px);
+    }
+
+    /* Toolbox Table Styling */
+    .toolbox-table-section {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .table-controls button {
+      white-space: nowrap;
+      transition: background-color 0.3s ease;
+    }
+
+    .table-controls button:hover {
+      opacity: 0.9;
+    }
+
+    /* Status Badge Styling */
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .status-draft {
+      background-color: #f0f3f5;
+      color: #343a40;
+    }
+
+    .status-completed {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .status-edited {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+
+    /* Action Button Styling */
+    .btn-edit,
+    .btn-save,
+    .btn-delete {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn-edit {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .btn-edit:hover {
+      background-color: #2980b9;
+    }
+
+    .btn-save {
+      background-color: #27ae60;
+      color: white;
+    }
+
+    .btn-save:hover {
+      background-color: #229954;
+    }
+
+    .btn-delete {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .btn-delete:hover {
+      background-color: #c0392b;
+    }
+
+    .btn-secondary {
+      background-color: #95a5a6;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background-color: #7f8c8d;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .pagination button {
+      padding: 8px 16px;
+      background: #95a5a6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background: #7f8c8d;
+    }
+
+    .pagination button:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+      color: #7f8c8d;
+    }
+
+    .pagination span {
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+
+      .submission-success,
+      .submission-details,
+      .toolbox-table-section {
+        margin: 10px;
+        padding: 15px;
+      }
+
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .table-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .table-controls input,
+      .table-controls select,
+      .table-controls button {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      #toolboxTable th,
+      #toolboxTable td {
+        padding: 8px;
+        font-size: 14px;
+      }
+
+      .btn-edit,
+      .btn-save,
+      .btn-delete {
+        padding: 4px 8px;
+        font-size: 11px;
+        margin: 2px;
+      }
+    }
+
+    /* Loading and Empty States */
+    .table-loading {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+    }
+
+    .table-empty {
+      text-align: center;
+      padding: 40px;
+      color: #95a5a6;
+    }
+
+    /* Tooltip for truncated text */
+    .truncate-text {
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: help;
+    }
+
+    .truncate-text:hover {
+      white-space: normal;
+      word-wrap: break-word;
+      max-width: 300px;
+      position: relative;
+      z-index: 1000;
+      background: white;
+      padding: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Edit mode styling */
+    .edit-mode input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 2px solid #3498db;
+      border-radius: 4px;
+      font-size: 14px;
+      background-color: #f8f9fa;
+      transition: border-color 0.3s ease;
+    }
+
+    .edit-mode input:focus {
+      outline: none;
+      border-color: #2980b9;
+      background-color: white;
+      box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+    }
+
+    .edit-mode input[type="date"] {
+      min-height: 32px;
+    }
+
+    /* Highlight editing row */
+    .edit-mode {
+      background-color: #f0f8ff !important;
+    }
+
+    .edit-mode td {
+      border-color: #3498db !important;
+    }
+
+    /* Message animation */
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+
+      <nav>
+        <a href="./dashboard.html">📊 Dashboard</a>
+        <a href="./generate_report.html">📄 Generate Report</a>
+        <a href="./tool_box.html">🛠️ Toolbox</a>
+        <a href="./inventory.html">📦 Inventory</a>
+        <a href="./settings.html">⚙️ Settings</a>
+        <a href="./profile.html">👤 Profile</a>
+        <a href="./index.html">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+
+      <!-- Recently Submitted Toolbox Display -->
+      <div id="recentSubmission" style="display: none; margin-bottom: 30px;">
+        <div class="submission-success">
+          <h2>🎉 Toolbox Form Submitted Successfully!</h2>
+          <div id="recentSubmissionDetails"></div>
+        </div>
+      </div>
+
+
+
+      <!-- Toolbox Table Section -->
+      <div class="toolbox-table-section">
+
+        <h1 style="color: #2c3e50; margin-bottom: 20px; text-align: center;">📋 My Toolbox Forms</h1>
+
+        <!-- Search and Filter Controls -->
+        <div class="table-controls">
+
+          <input type="text" id="searchToolbox"
+            placeholder="Search by activity, location, company, tools, or personnel..."
+            style="flex: 1; min-width: 250px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+
+          <select id="statusFilter" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            <option value="">All Status</option>
+            <option value="draft">Draft</option>
+            <option value="edited">Edited</option>
+            <option value="completed">Completed</option>
+          </select>
+
+
+
+
+
+
+
+        </div>
+
+        <!-- Toolbox Table -->
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Work Activity</th>
+                <th>Date</th>
+                <th>Work Location</th>
+                <th>Name/Company</th>
+                <th>Tools Used</th>
+                <th>Prepared By</th>
+                <th>Verified By</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="toolboxTableBody">
+              <tr>
+                <td colspan="8" style="padding: 40px; text-align: center; color: #7f8c8d;">
+                  <div style="font-size: 16px;">📋 Loading toolbox forms...</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <button id="prevPage" onclick="changePage(-1)" disabled>
+            ← Previous
+          </button>
+          <span id="pageInfo">Page 1 of 1</span>
+          <button id="nextPage" onclick="changePage(1)" disabled>
+            Next →
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    // Toolbox Table Functionality
+    let allToolboxes = [];
+    let filteredToolboxes = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    // Note: Inline editing removed - now redirects to edit page
+
+    // Helper function to get toolbox ID (handles different ID field names)
+    function getToolboxId(toolbox) {
+      const id = toolbox.id || toolbox._id || toolbox.toolboxId;
+      // Ensure we return a string for consistent comparison
+      return id ? String(id) : null;
+    }
+
+
+
+
+
+    // Load toolbox data on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadToolboxData();
+      setupSearchAndFilter();
+      initializeSocketConnection();
+
+      // Check for recent submission data in URL
+      checkForRecentSubmission();
+
+      // Check if user is returning from an update
+      checkForUpdateReturn();
+    });
+
+    // Initialize Socket.IO connection for real-time updates
+    function initializeSocketConnection() {
+      try {
+        const socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
+
+        socket.on('connect', () => {
+          console.log('🔌 Connected to real-time toolbox updates');
+        });
+
+        socket.on('disconnect', () => {
+          console.log('🔌 Disconnected from real-time toolbox updates');
+        });
+
+        // Listen for toolbox events
+        socket.on('toolbox:created', (data) => {
+          console.log('🛠️ Toolbox created successfully');
+          refreshToolboxTable();
+        });
+
+        socket.on('toolbox:updated', (data) => {
+          console.log('🛠️ Toolbox updated successfully via socket:', data);
+          // Immediately refresh the table to show updated status
+          refreshToolboxTable();
+
+          // Also refresh again after a short delay to ensure data is current
+          setTimeout(() => {
+            console.log('🔄 Refreshing toolbox table again after socket update...');
+            refreshToolboxTable();
+          }, 1000);
+        });
+
+        socket.on('toolbox:deleted', (data) => {
+          console.log('🛠️ Toolbox deleted successfully');
+          refreshToolboxTable();
+        });
+
+      } catch (e) {
+        console.warn('Real-time updates unavailable', e);
+      }
+    }
+
+    // Load toolbox data from API
+    async function loadToolboxData() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.error('❌ Authentication required');
+          return;
+        }
+
+        console.log('🔍 Loading toolbox data...');
+        const response = await fetch('http://localhost:5000/api/toolbox', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          allToolboxes = await response.json();
+          console.log('📋 Received toolbox data:', allToolboxes);
+          console.log('🔍 First toolbox structure:', allToolboxes[0]);
+          console.log('🔍 Toolbox IDs:', allToolboxes.map(t => getToolboxId(t)));
+          console.log('🔍 Toolbox statuses:', allToolboxes.map(t => ({ id: getToolboxId(t), status: t.status, statusType: typeof t.status })));
+          console.log('🔍 Toolbox statuses (detailed):', allToolboxes.map(t => ({
+            id: getToolboxId(t),
+            status: t.status,
+            statusType: typeof t.status,
+            hasStatus: 'status' in t,
+            allKeys: Object.keys(t)
+          })));
+          filteredToolboxes = [...allToolboxes];
+          updateToolboxTable();
+          updatePagination();
+        } else {
+          const errorText = await response.text();
+          console.error('❌ API response not ok:', response.status, errorText);
+          throw new Error(`Failed to load toolbox data: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('❌ Error loading toolbox data:', error);
+      }
+    }
+
+    // Setup search and filter functionality
+    function setupSearchAndFilter() {
+      const searchInput = document.getElementById('searchToolbox');
+      const statusFilter = document.getElementById('statusFilter');
+
+      searchInput.addEventListener('input', filterToolboxes);
+      statusFilter.addEventListener('change', filterToolboxes);
+    }
+
+    // Filter toolboxes based on search and status
+    function filterToolboxes() {
+      const searchTerm = document.getElementById('searchToolbox').value.toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value;
+
+      filteredToolboxes = allToolboxes.filter(toolbox => {
+        // Handle both snake_case and camelCase field names
+        const workActivity = toolbox.work_activity || toolbox.workActivity || '';
+        const workLocation = toolbox.work_location || toolbox.workLocation || '';
+        const nameCompany = toolbox.name_company || toolbox.nameCompany || '';
+        const toolsUsed = toolbox.tools_used || toolbox.toolsUsed || '';
+        const preparedBy = toolbox.prepared_by || toolbox.preparedBy || '';
+        const verifiedBy = toolbox.verified_by || toolbox.verifiedBy || '';
+
+        const matchesSearch =
+          (workActivity && workActivity.toLowerCase().includes(searchTerm)) ||
+          (workLocation && workLocation.toLowerCase().includes(searchTerm)) ||
+          (nameCompany && nameCompany.toLowerCase().includes(searchTerm)) ||
+          (toolsUsed && toolsUsed.toLowerCase().includes(searchTerm)) ||
+          (preparedBy && preparedBy.toLowerCase().includes(searchTerm)) ||
+          (verifiedBy && verifiedBy.toLowerCase().includes(searchTerm));
+
+        const matchesStatus = !statusFilter || toolbox.status === statusFilter;
+
+        return matchesSearch && matchesStatus;
+      });
+
+      currentPage = 1;
+      updateToolboxTable();
+      updatePagination();
+    }
+
+    // Update toolbox table display
+    function updateToolboxTable() {
+      const tbody = document.getElementById('toolboxTableBody');
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const pageItems = filteredToolboxes.slice(startIndex, endIndex);
+
+      tbody.innerHTML = '';
+
+      if (pageItems.length === 0) {
+        tbody.innerHTML = `
+              <tr>
+                <td colspan="8" style="padding: 40px; text-align: center; color: #7f8c8d;">
+                 <div style="font-size: 16px;">📋 No toolbox forms found</div>
+               </td>
+             </tr>
+           `;
+        return;
+      }
+
+      pageItems.forEach(toolbox => {
+        // Handle both snake_case and camelCase field names
+        const workActivity = toolbox.work_activity || toolbox.workActivity || 'N/A';
+        const workLocation = toolbox.work_location || toolbox.workLocation || 'N/A';
+        const nameCompany = toolbox.name_company || toolbox.nameCompany || 'N/A';
+        const toolsUsed = toolbox.tools_used || toolbox.toolsUsed || 'N/A';
+        const preparedBy = toolbox.prepared_by || toolbox.preparedBy || 'N/A';
+        const verifiedBy = toolbox.verified_by || toolbox.verifiedBy || 'N/A';
+        const toolboxId = getToolboxId(toolbox);
+
+        console.log('📋 Processing toolbox:', toolboxId, 'Data:', {
+          workActivity, workLocation, nameCompany, toolsUsed, preparedBy, verifiedBy
+        });
+
+        const row = document.createElement('tr');
+
+        // Always show in view mode - edit functionality redirects to edit page
+        row.innerHTML = `
+           <td>
+             <div class="truncate-text" title="${workActivity}">
+               ${workActivity}
+             </div>
+           </td>
+           <td>${formatDate(toolbox.date)}</td>
+           <td>
+             <div class="truncate-text" title="${workLocation}">
+               ${workLocation}
+             </div>
+           </td>
+           <td>
+             <div class="truncate-text" title="${nameCompany}">
+               ${nameCompany}
+             </div>
+           </td>
+           <td>
+             <div class="truncate-text" title="${toolsUsed}">
+               ${toolsUsed}
+             </div>
+           </td>
+           <td>
+             <div class="truncate-text" title="${preparedBy}">
+               ${preparedBy}
+             </div>
+           </td>
+           <td>
+             <div class="truncate-text" title="${verifiedBy}">
+               ${verifiedBy}
+             </div>
+           </td>
+           <td>
+             ${getActionButtons(toolbox)}
+           </td>
+         `;
+
+        tbody.appendChild(row);
+      });
+    }
+
+    // Get action buttons based on toolbox status
+    function getActionButtons(toolbox) {
+      const toolboxId = getToolboxId(toolbox);
+      console.log('🔧 Generating action buttons for toolbox:', toolboxId, 'Status:', toolbox.status);
+
+      if (toolbox.status === 'completed') {
+        // Completed - show completed status
+        console.log('✅ Showing completed status for toolbox:', toolboxId, 'Status:', toolbox.status);
+        return `
+            <span style="color: #27ae60; font-weight: bold;">✅ Completed</span>
+          `;
+      } else if (toolbox.status === 'edited') {
+        // Edited - show complete and delete buttons
+        console.log('✏️ Showing complete and delete buttons for edited toolbox:', toolboxId);
+        return `
+             <div style="display: flex; gap: 5px; align-items: center;">
+               <button onclick="markAsCompleted('${toolboxId}')" class="btn-success" style="cursor: pointer; background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; transition: background-color 0.3s ease;">
+                 ✅ Complete
+               </button>
+               <button onclick="deleteToolbox('${toolboxId}')" class="btn-delete" style="cursor: pointer; background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; transition: background-color 0.3s ease;">
+                 🗑️ Delete
+               </button>
+             </div>
+           `;
+      } else {
+        // Draft or any other status - show edit and delete buttons
+        console.log('✏️ Showing edit and delete buttons for toolbox:', toolboxId);
+        return `
+             <div style="display: flex; gap: 5px; align-items: center;">
+               <button onclick="editToolbox('${toolboxId}')" class="btn-edit" style="cursor: pointer; background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; transition: background-color 0.3s ease;">
+                 ✏️ Edit
+               </button>
+               <button onclick="deleteToolbox('${toolboxId}')" class="btn-delete" style="cursor: pointer; background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; transition: background-color 0.3s ease;">
+                 🗑️ Delete
+               </button>
+             </div>
+           `;
+      }
+    }
+
+    // Get status class for styling
+    function getStatusClass(status) {
+      switch (status) {
+        case 'completed':
+          return 'status-completed';
+        case 'edited':
+          return 'status-edited';
+        case 'draft':
+          return 'status-draft';
+        default:
+          return 'status-draft';
+      }
+    }
+
+    // Format date for display
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      return new Date(dateString).toLocaleDateString();
+    }
+
+    // Edit toolbox form
+    async function editToolbox(toolboxId) {
+      console.log('🔧 Edit button clicked for toolbox ID:', toolboxId);
+
+      // Show confirmation popup first
+      if (!confirm('Do you want to edit this toolbox?')) {
+        console.log('❌ User cancelled edit operation');
+        return;
+      }
+
+      console.log('🔍 All toolboxes:', allToolboxes);
+      console.log('🔍 Toolbox IDs:', allToolboxes.map(t => getToolboxId(t)));
+
+      // Try to find toolbox with better debugging
+      let toolbox = null;
+      for (let t of allToolboxes) {
+        const currentId = getToolboxId(t);
+        console.log('🔍 Comparing:', currentId, 'with:', toolboxId, 'Type:', typeof currentId, 'vs', typeof toolboxId);
+        if (currentId == toolboxId) { // Use loose equality to handle string vs number
+          toolbox = t;
+          break;
+        }
+      }
+
+      if (!toolbox) {
+        console.error('❌ Toolbox not found for ID:', toolboxId);
+        console.error('❌ Available IDs:', allToolboxes.map(t => getToolboxId(t)));
+        alert('❌ Toolbox not found. Please refresh the page and try again.');
+        return;
+      }
+
+      console.log('📋 Found toolbox data:', toolbox);
+
+      try {
+        // Redirect directly to toolbox form page with edit parameter
+        const editUrl = `./tool_box.html?edit=${toolboxId}`;
+        console.log('🔄 Redirecting to:', editUrl);
+        window.location.href = editUrl;
+      } catch (error) {
+        console.error('❌ Error redirecting to edit page:', error);
+        alert('❌ Error opening edit page. Please try again.');
+      }
+    }
+
+
+
+
+
+    // Mark toolbox as completed
+    async function markAsCompleted(toolboxId) {
+      if (!confirm('Are you sure you want to mark this toolbox form as completed?')) {
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          alert('❌ Authentication required');
+          return;
+        }
+
+        const response = await fetch(`http://localhost:5000/api/toolbox/${toolboxId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ status: 'completed' })
+        });
+
+        if (response.ok) {
+          // Update local data
+          const toolbox = allToolboxes.find(t => getToolboxId(t) === toolboxId);
+          if (toolbox) {
+            toolbox.status = 'completed';
+          }
+
+          // Refresh table
+          updateToolboxTable();
+          updatePagination();
+
+          alert('✅ Toolbox form marked as completed!');
+        } else {
+          throw new Error('Failed to mark toolbox as completed');
+        }
+      } catch (error) {
+        console.error('Error marking toolbox as completed:', error);
+        alert('❌ Failed to mark toolbox as completed');
+      }
+    }
+
+    // Note: Edit functionality now redirects to toolbox form page
+    // The actual editing is handled in tool_box.html with edit parameter
+
+    // Delete toolbox
+    async function deleteToolbox(toolboxId) {
+      if (!confirm('Are you sure you want to delete this toolbox form?')) {
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          alert('❌ Authentication required');
+          return;
+        }
+
+        const response = await fetch(`http://localhost:5000/api/toolbox/${toolboxId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          // Remove from local data
+          allToolboxes = allToolboxes.filter(t => getToolboxId(t) !== toolboxId);
+          filteredToolboxes = filteredToolboxes.filter(t => getToolboxId(t) !== toolboxId);
+
+          // Note: Inline editing removed
+
+          // Refresh table
+          updateToolboxTable();
+          updatePagination();
+
+          alert('✅ Toolbox form deleted successfully!');
+        } else {
+          throw new Error('Failed to delete toolbox form');
+        }
+      } catch (error) {
+        console.error('Error deleting toolbox:', error);
+        alert('❌ Failed to delete toolbox form');
+      }
+    }
+
+    // Show message function
+    function showMessage(message, type = 'info') {
+      const messageDiv = document.createElement('div');
+      messageDiv.style.cssText = `
+         position: fixed;
+         top: 20px;
+         right: 20px;
+         padding: 15px 20px;
+         border-radius: 6px;
+         color: white;
+         font-weight: 600;
+         z-index: 10000;
+         max-width: 400px;
+         word-wrap: break-word;
+         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+         animation: slideIn 0.3s ease-out;
+       `;
+
+      // Set background color based on message type
+      switch (type) {
+        case 'success':
+          messageDiv.style.background = '#27ae60';
+          break;
+        case 'error':
+          messageDiv.style.background = '#e74c3c';
+          break;
+        case 'warning':
+          messageDiv.style.background = '#f39c12';
+          break;
+        default:
+          messageDiv.style.background = '#3498db';
+      }
+
+      messageDiv.textContent = message;
+      document.body.appendChild(messageDiv);
+
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        if (messageDiv.parentNode) {
+          messageDiv.parentNode.removeChild(messageDiv);
+        }
+      }, 5000);
+    }
+
+    // Check if user is returning from an update
+    async function checkForUpdateReturn() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const updatedParam = urlParams.get('updated');
+
+      if (updatedParam) {
+        console.log('🔄 User returning from toolbox update, refreshing data...');
+
+        // Clear the URL parameter
+        const url = new URL(window.location);
+        url.searchParams.delete('updated');
+        window.history.replaceState({}, '', url);
+
+        // Show success message
+        showMessage('✅ Toolbox form has been updated and marked as completed!', 'success');
+
+        // Immediately refresh the table to show updated status
+        await refreshToolboxTable();
+
+        // Also refresh again after a short delay to ensure data is current
+        setTimeout(async () => {
+          console.log('🔄 Refreshing toolbox table again to ensure data is current...');
+          await refreshToolboxTable();
+        }, 2000);
+      }
+    }
+
+    // Check for recent submission data in URL parameters
+    function checkForRecentSubmission() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const dataParam = urlParams.get('data');
+
+      if (dataParam) {
+        try {
+          const submissionData = JSON.parse(decodeURIComponent(dataParam));
+          displayRecentSubmission(submissionData);
+
+          // Clear the URL parameter
+          const url = new URL(window.location);
+          url.searchParams.delete('data');
+          window.history.replaceState({}, '', url);
+        } catch (error) {
+          console.error('Error parsing submission data:', error);
+        }
+      }
+    }
+
+    // Display recent submission details
+    function displayRecentSubmission(data) {
+      const recentSubmission = document.getElementById('recentSubmission');
+      const detailsContainer = document.getElementById('recentSubmissionDetails');
+
+      if (recentSubmission && detailsContainer) {
+        // Handle both snake_case and camelCase field names
+        const workActivity = data.work_activity || data.workActivity || 'N/A';
+        const workLocation = data.work_location || data.workLocation || 'N/A';
+        const nameCompany = data.name_company || data.nameCompany || 'N/A';
+        const toolsUsed = data.tools_used || data.toolsUsed || 'N/A';
+
+        detailsContainer.innerHTML = `
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Work Activity:</label>
+              <span>${workActivity}</span>
+            </div>
+            <div class="detail-item">
+              <label>Date:</label>
+              <span>${data.date || 'N/A'}</span>
+            </div>
+            <div class="detail-item">
+              <label>Work Location:</label>
+              <span>${workLocation}</span>
+            </div>
+            <div class="detail-item">
+              <label>Name/Company:</label>
+              <span>${nameCompany}</span>
+            </div>
+            <div class="detail-item">
+              <label>Tools Used:</label>
+              <span>${toolsUsed}</span>
+            </div>
+          </div>
+        `;
+
+        recentSubmission.style.display = 'block';
+
+        // Auto-hide after 10 seconds
+        setTimeout(() => {
+          recentSubmission.style.display = 'none';
+        }, 10000);
+      }
+    }
+
+    // Refresh toolbox table with better error handling and logging
+    async function refreshToolboxTable() {
+      console.log('🔄 Refreshing toolbox table...');
+      try {
+        await loadToolboxData();
+        console.log('✅ Toolbox table refreshed successfully');
+      } catch (error) {
+        console.error('❌ Error refreshing toolbox table:', error);
+        // Fallback: try to refresh again after a short delay
+        setTimeout(async () => {
+          try {
+            await loadToolboxData();
+            console.log('✅ Toolbox table refreshed on retry');
+          } catch (retryError) {
+            console.error('❌ Failed to refresh toolbox table on retry:', retryError);
+          }
+        }, 2000);
+      }
+    }
+
+    // Pagination functions
+    function changePage(direction) {
+      const maxPage = Math.ceil(filteredToolboxes.length / itemsPerPage);
+
+      if (direction === -1 && currentPage > 1) {
+        currentPage--;
+      } else if (direction === 1 && currentPage < maxPage) {
+        currentPage++;
+      }
+
+      updateToolboxTable();
+      updatePagination();
+    }
+
+    function updatePagination() {
+      const maxPage = Math.ceil(filteredToolboxes.length / itemsPerPage);
+      const pageInfo = document.getElementById('pageInfo');
+      const prevBtn = document.getElementById('prevPage');
+      const nextBtn = document.getElementById('nextPage');
+
+      pageInfo.textContent = `Page ${currentPage} of ${maxPage}`;
+      prevBtn.disabled = currentPage === 1;
+      nextBtn.disabled = currentPage === maxPage;
+    }
+
+
+  </script>
+
+  <script src="./dark-mode.js"></script>
+  <script src="./script.js"></script>
+  <script src="./user-greeting.js"></script>
+</body>
+
+</html>
