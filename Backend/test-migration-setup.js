@@ -1,34 +1,25 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, 'config.env') });
 
-console.log('🧪 Testing Migration Setup...\n');
+console.log('🧪 Testing SQLite Setup...\n');
 
 // Test 1: Check environment variables
 console.log('📋 Environment Variables:');
 console.log(`   DB_TYPE: ${process.env.DB_TYPE || 'sqlite (default)'}`);
-console.log(`   DB_HOST: ${process.env.DB_HOST || 'localhost'}`);
-console.log(`   DB_NAME: ${process.env.DB_NAME || 'electrical_management'}`);
-console.log(`   DB_USER: ${process.env.DB_USER || 'postgres'}`);
-console.log(`   DB_PORT: ${process.env.DB_PORT || '5432'}\n`);
+console.log(`   DB_PATH: ${process.env.DB_PATH || './electrical_management.db'}\n`);
 
-// Test 2: Check database switcher
-try {
-  console.log('🔄 Testing Database Switcher:');
-  const dbSwitcher = require('./config/database-switcher');
-  console.log(`   ✅ Database switcher loaded successfully`);
-  console.log(`   📊 Current database: ${dbSwitcher.pool ? 'PostgreSQL' : 'SQLite'}\n`);
-} catch (error) {
-  console.log(`   ❌ Database switcher error: ${error.message}\n`);
-}
-
-// Test 3: Check SQLite database
+// Test 2: Check SQLite database
 try {
   console.log('🗄️ Testing SQLite Database:');
-  const sqliteDB = require('./config/db-sqlite');
+  const sqlite3 = require('sqlite3').verbose();
+  const dbPath = path.join(__dirname, process.env.DB_PATH || 'electrical_management.db');
+  const db = new sqlite3.Database(dbPath);
+  
   console.log(`   ✅ SQLite database loaded successfully`);
+  console.log(`   📁 Database path: ${dbPath}`);
   
   // Test a simple query
-  sqliteDB.db.all("SELECT COUNT(*) as count FROM users", (err, rows) => {
+  db.all("SELECT COUNT(*) as count FROM users", (err, rows) => {
     if (err) {
       console.log(`   ❌ SQLite query error: ${err.message}`);
     } else {
@@ -39,34 +30,23 @@ try {
   console.log(`   ❌ SQLite database error: ${error.message}\n`);
 }
 
-// Test 4: Check PostgreSQL configuration
+// Test 3: Check database configuration
 try {
-  console.log('\n🐘 Testing PostgreSQL Configuration:');
-  const postgresConfig = require('./config/database-postgresql');
-  console.log(`   ✅ PostgreSQL configuration loaded successfully`);
-  console.log(`   🔧 Pool configuration: ${postgresConfig.pool ? 'Available' : 'Not available'}`);
+  console.log('\n🔧 Testing Database Configuration:');
+  const dbConfig = require('./config/db-sqlite');
+  console.log(`   ✅ SQLite configuration loaded successfully`);
+  console.log(`   📊 Database object: ${dbConfig.db ? 'Available' : 'Not available'}`);
 } catch (error) {
-  console.log(`   ❌ PostgreSQL configuration error: ${error.message}\n`);
+  console.log(`   ❌ SQLite configuration error: ${error.message}\n`);
 }
 
-// Test 5: Check migration script
-try {
-  console.log('\n📦 Testing Migration Script:');
-  const migrationScript = require('./migrate-to-postgresql');
-  console.log(`   ✅ Migration script loaded successfully`);
-  console.log(`   🔄 Migration function: ${typeof migrationScript === 'function' ? 'Available' : 'Not available'}`);
-} catch (error) {
-  console.log(`   ❌ Migration script error: ${error.message}\n`);
-}
-
-console.log('\n🎯 Migration Setup Summary:');
+console.log('\n🎯 SQLite Setup Summary:');
 console.log('   ✅ All core files are in place');
-console.log('   ✅ Database switcher is working');
+console.log('   ✅ SQLite database is working');
 console.log('   ✅ Environment variables are configured');
-console.log('   ✅ Ready for Railway deployment');
+console.log('   ✅ Ready for development and production');
 console.log('\n📝 Next steps:');
-console.log('   1. Set up PostgreSQL on Railway');
-console.log('   2. Update environment variables in Railway');
-console.log('   3. Run migration: npm run migrate');
-console.log('   4. Deploy to Railway');
-console.log('\n🚀 Ready to migrate!');
+console.log('   1. Start your server: npm start');
+console.log('   2. Test your endpoints');
+console.log('   3. Your data is stored in SQLite');
+console.log('\n🚀 Ready to use SQLite!');

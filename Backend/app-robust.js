@@ -122,8 +122,8 @@ app.get("/health", (req, res) => {
 });
 
 app.get("/api/test", (req, res) => {
-  res.json({ 
-    message: "Backend is working!", 
+  res.json({
+    message: "Backend is working!",
     timestamp: new Date().toISOString(),
     status: "success"
   });
@@ -136,8 +136,8 @@ app.get("/", (req, res) => {
 
 // ====================== Enhanced Error Handling ======================
 // 404 Handler - only for API routes
-app.use("/api/*", (req, res) => {
-  res.status(404).json({ 
+app.use("/api/:path", (req, res) => {
+  res.status(404).json({
     error: "API endpoint not found",
     message: `Route ${req.method} ${req.originalUrl} does not exist`,
     timestamp: new Date().toISOString(),
@@ -148,7 +148,7 @@ app.use("/api/*", (req, res) => {
 // Global error handler
 app.use((err, req, res, next) => {
   console.error("❌ Error:", err.stack);
-  res.status(500).json({ 
+  res.status(500).json({
     error: "Internal server error",
     message: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message,
     timestamp: new Date().toISOString()

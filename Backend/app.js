@@ -38,7 +38,7 @@ app.use((req, res, next) => {
 });
 
 // ====================== Static Files ======================
-// Serve frontend files for Railway deployment
+// Serve frontend files for production deployment
 app.use(express.static(path.join(__dirname, "..", "Frontend")));
 
 // ====================== Routes ======================

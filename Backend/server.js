@@ -1,6 +1,4 @@
 const app = require("./app-robust");
-// Use database switcher to automatically choose between SQLite and PostgreSQL
-const db = require("./config/database-switcher");
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, "config.env") });
 
@@ -8,8 +6,13 @@ const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   try {
-    // Database is already initialized in db-sqlite.js
-    console.log("✅ Database connection established");
+    // Initialize SQLite database
+    const sqlite3 = require("sqlite3").verbose();
+    const dbPath = path.join(__dirname, "electrical_management.db");
+    const db = new sqlite3.Database(dbPath);
+
+    console.log("✅ SQLite database connection established");
+    console.log(`📁 Database path: ${dbPath}`);
 
     // Start HTTP + Socket.IO server
     const http = require('http').createServer(app);
@@ -93,11 +96,11 @@ async function startServer() {
     });
 
     http.listen(PORT, () => {
-      console.log("🚀 Server started successfully!");
+      console.log("🚀 SQLite Server started successfully!");
       console.log(`📍 Port: ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
       console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || "http://127.0.0.1:5500"}`);
-      console.log(`💾 Database: ${process.env.DB_TYPE === 'postgresql' ? 'PostgreSQL' : 'SQLite'} (${process.env.DB_TYPE === 'postgresql' ? process.env.DB_NAME : process.env.DB_PATH || "electrical_management.db"})`);
+      console.log(`💾 Database: SQLite (${dbPath})`);
       console.log(`📊 Health Check: http://localhost:${PORT}/health`);
       console.log('🔌 Socket.IO enabled for real-time updates');
     });
@@ -107,10 +110,10 @@ async function startServer() {
   }
 }
 
-// For Vercel deployment, export the app
+// For production deployment, export the app
 // For local development, start the server
-if (process.env.VERCEL) {
-  // Export for Vercel serverless functions
+if (process.env.NODE_ENV === 'production') {
+  // Export for production deployment
   module.exports = app;
 } else {
   // Start server locally

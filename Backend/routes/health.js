@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
-// Health check endpoint for Vercel
+// Health check endpoint for Render
 router.get('/health', async (req, res) => {
   try {
     res.json({
       status: 'OK',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development',
-      platform: process.env.VERCEL ? 'Vercel' : 'Local',
+      platform: process.env.NODE_ENV === 'production' ? 'Render' : 'Local',
       database: 'Connected', // You can add actual DB check here
       uptime: process.uptime()
     });
@@ -23,7 +23,7 @@ router.get('/health', async (req, res) => {
 
 // Simple ping endpoint
 router.get('/ping', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'pong',
     timestamp: new Date().toISOString()
   });

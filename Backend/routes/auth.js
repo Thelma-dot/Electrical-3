@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const { validatePassword, validateEmail } = require("../utils/validators");
 const { generateResetToken } = require("../utils/passwordReset");
 const { sendResetEmail } = require("../utils/emailService");
-const { run, get, all } = require("../config/database-switcher");
+const { run, get, all } = require("../config/db-sqlite");
 const authController = require("../controllers/authController");
 const { authenticateToken, requireAdmin } = require("../middleware/auth");
 

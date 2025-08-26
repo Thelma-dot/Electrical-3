@@ -1,7 +1,7 @@
-// Minimal Vercel serverless function handler
+// Minimal API function handler for Render deployment
 module.exports = async (req, res) => {
   try {
-    // Handle CORS for Vercel
+    // Handle CORS for Render
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
     // Simple test endpoint for debugging
     if (req.url === '/api/test' || req.url === '/test') {
       return res.status(200).json({ 
-        message: '✅ Vercel deployment is working!',
+        message: '✅ Render deployment is working!',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'production',
         url: req.url,
@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
         status: "UP",
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || "production",
-        message: "Electrical Management System API is running on Vercel!",
+        message: "Electrical Management System API is running on Render!",
         version: '1.0.1 - Auto-deploy test'
       });
     }
@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
       return res.status(200).json({
         message: "🚀 Electrical Management System API",
         version: "1.0.1 - Auto-deploy test",
-        status: "Deployed on Vercel",
+        status: "Deployed on Render",
         endpoints: [
           "/api/test - Test endpoint",
           "/health - Health check",
@@ -58,7 +58,7 @@ module.exports = async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ Vercel function error:', error);
+    console.error('❌ API function error:', error);
     res.status(500).json({ 
       error: 'Internal Server Error', 
       message: error.message,

@@ -1,8 +1,8 @@
 module.exports = {
   // Production database configuration
   database: {
-    // For production, you might want to use a cloud database
-    // Example: PostgreSQL on Heroku, MySQL on Railway, etc.
+    // For production, SQLite is recommended for simplicity
+    // Example: SQLite for file-based storage, or other databases if needed
     type: process.env.DB_TYPE || 'sqlite',
     sqlite: {
       database: process.env.DB_PATH || './electrical_management.db'
@@ -27,7 +27,7 @@ module.exports = {
     cors: {
       origin: process.env.ALLOWED_ORIGINS ? 
         process.env.ALLOWED_ORIGINS.split(',') : 
-        ['https://your-app.herokuapp.com', 'https://your-app.vercel.app'],
+        ['https://electrical-management-system.onrender.com'],
       credentials: true
     },
     session: {
