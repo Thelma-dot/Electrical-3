@@ -593,12 +593,17 @@
         const currentData = {
           reports: summary.total || 0,
           toolbox: toolboxTotal,
-          inventory: inventoryTotal, // Current user's inventory for stats card and chart
+          inventory: inventoryTotal || 0, // Ensure inventory is never undefined
           inProgress: tasksInProgress,
           completed: tasksCompleted,
           monthlyData: chartData || [],
           inventorySummary: finalInventorySummary || {}
         };
+
+        // Debug currentData to ensure inventory is properly set
+        console.log('🔍 currentData object:', currentData);
+        console.log('🔍 inventory value:', currentData.inventory);
+        console.log('🔍 inventoryTotal value:', inventoryTotal);
 
         updateDashboardStats(currentData);
         updateInventoryBreakdown(currentData.inventorySummary);
@@ -610,7 +615,7 @@
           inventoryTotal, // Current user's inventory total quantity
           inventoryItemCount: inventoryList.length, // Current user's inventory item count
           inventorySummary: currentData.inventorySummary,
-          systemOverviewData: [currentData.reports, currentData.inventory, currentData.toolbox, currentData.inProgress, currentData.completed]
+          systemOverviewData: [currentData.reports, currentData.toolbox, currentData.inventory, currentData.inProgress, currentData.completed]
         });
 
         // Debug inventory data structure
@@ -783,6 +788,16 @@
           systemBarChartInstance.destroy();
         }
 
+        // Debug chart data before creation
+        console.log('🔍 Chart data being passed:', {
+          reports: data.reports,
+          toolbox: data.toolbox,
+          inventory: data.inventory,
+          inProgress: data.inProgress,
+          completed: data.completed
+        });
+        console.log('🔍 Chart data array:', [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed]);
+
         systemBarChartInstance = new Chart(systemBarCtx, {
           type: 'bar',
           data: {
@@ -868,16 +883,16 @@
           }
         });
 
-                 console.log('📊 System Overview Chart created with data:', {
-           reports: data.reports,
-           toolbox: data.toolbox,
-           inventory: data.inventory,
-           inProgress: data.inProgress,
-           completed: data.completed
-         });
+        console.log('📊 System Overview Chart created with data:', {
+          reports: data.reports,
+          toolbox: data.toolbox,
+          inventory: data.inventory,
+          inProgress: data.inProgress,
+          completed: data.completed
+        });
 
-         // Debug chart data array
-         console.log('🔍 Chart data array:', [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed]);
+        // Debug chart data array
+        console.log('🔍 Chart data array:', [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed]);
         console.log('🔍 Chart instance created:', !!systemBarChartInstance);
         console.log('🔍 Chart instance details:', {
           instance: systemBarChartInstance,
@@ -1037,26 +1052,26 @@
             }, 2000);
           }
 
-                     // Update inventory breakdown
-           updateInventoryBreakdown(inventorySummary);
+          // Update inventory breakdown
+          updateInventoryBreakdown(inventorySummary);
 
-           // Update system overview chart
-           if (systemBarChartInstance && systemBarChartInstance.data && systemBarChartInstance.data.datasets && systemBarChartInstance.data.datasets[0]) {
-             console.log('🔍 Updating chart with inventory total:', inventoryTotal);
-             console.log('🔍 Chart data before update:', systemBarChartInstance.data.datasets[0].data);
-             systemBarChartInstance.data.datasets[0].data[2] = inventoryTotal; // Index 2 for inventory (third position)
-             console.log('🔍 Chart data after update:', systemBarChartInstance.data.datasets[0].data);
+          // Update system overview chart
+          if (systemBarChartInstance && systemBarChartInstance.data && systemBarChartInstance.data.datasets && systemBarChartInstance.data.datasets[0]) {
+            console.log('🔍 Updating chart with inventory total:', inventoryTotal);
+            console.log('🔍 Chart data before update:', systemBarChartInstance.data.datasets[0].data);
+            systemBarChartInstance.data.datasets[0].data[2] = inventoryTotal; // Index 2 for inventory (third position)
+            console.log('🔍 Chart data after update:', systemBarChartInstance.data.datasets[0].data);
 
-             try {
-               systemBarChartInstance.update('active');
-               console.log('✅ Chart updated successfully');
-             } catch (error) {
-               console.error('❌ Error updating chart:', error);
-               // Try to recreate the chart if update fails
-               console.log('🔄 Attempting to recreate chart...');
-               refreshDashboard();
-             }
-           }
+            try {
+              systemBarChartInstance.update('active');
+              console.log('✅ Chart updated successfully');
+            } catch (error) {
+              console.error('❌ Error updating chart:', error);
+              // Try to recreate the chart if update fails
+              console.log('🔄 Attempting to recreate chart...');
+              refreshDashboard();
+            }
+          }
 
           console.log('✅ Inventory count and details updated in real-time', {
             inventoryTotal, // Total quantity across all items

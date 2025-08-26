@@ -593,12 +593,17 @@
         const currentData = {
           reports: summary.total || 0,
           toolbox: toolboxTotal,
-          inventory: inventoryTotal, // Current user's inventory for stats card and chart
+          inventory: inventoryTotal || 0, // Ensure inventory is never undefined
           inProgress: tasksInProgress,
           completed: tasksCompleted,
           monthlyData: chartData || [],
           inventorySummary: finalInventorySummary || {}
         };
+
+        // Debug currentData to ensure inventory is properly set
+        console.log('🔍 currentData object:', currentData);
+        console.log('🔍 inventory value:', currentData.inventory);
+        console.log('🔍 inventoryTotal value:', inventoryTotal);
 
         updateDashboardStats(currentData);
         updateInventoryBreakdown(currentData.inventorySummary);
