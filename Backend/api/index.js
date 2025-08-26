@@ -1,15 +1,6 @@
-const app = require("../app");
-const { initializeDatabase } = require("../config/database-vercel");
-
-// Vercel serverless function handler
+// Minimal Vercel serverless function handler
 module.exports = async (req, res) => {
   try {
-    // Initialize database if not already done
-    if (!global.dbInitialized) {
-      await initializeDatabase();
-      global.dbInitialized = true;
-    }
-
     // Handle CORS for Vercel
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -21,15 +12,55 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // Forward the request to the Express app
-    return app(req, res);
+    // Simple test endpoint for debugging
+    if (req.url === '/api/test' || req.url === '/test') {
+      return res.status(200).json({ 
+        message: '✅ Vercel deployment is working!',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'production',
+        url: req.url,
+        method: req.method
+      });
+    }
+
+    // Health check endpoint
+    if (req.url === '/health' || req.url === '/api/health') {
+      return res.status(200).json({
+        status: "UP",
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || "production",
+        message: "Electrical Management System API is running on Vercel!"
+      });
+    }
+
+    // Root endpoint
+    if (req.url === '/' || req.url === '/api') {
+      return res.status(200).json({
+        message: "🚀 Electrical Management System API",
+        version: "1.0.0",
+        status: "Deployed on Vercel",
+        endpoints: [
+          "/api/test - Test endpoint",
+          "/health - Health check",
+          "/api/health - Health check (alternative)"
+        ],
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // 404 for unknown endpoints
+    res.status(404).json({ 
+      error: "Endpoint not found",
+      availableEndpoints: ["/", "/api", "/api/test", "/health", "/api/health"],
+      url: req.url
+    });
     
   } catch (error) {
     console.error('❌ Vercel function error:', error);
     res.status(500).json({ 
       error: 'Internal Server Error', 
       message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      timestamp: new Date().toISOString()
     });
   }
 };
