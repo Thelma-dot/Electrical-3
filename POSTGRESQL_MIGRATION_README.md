@@ -1,11 +1,11 @@
 # 🚀 SQLite to PostgreSQL Migration Guide
 
-This guide will help you migrate your Electrical Management System from SQLite to PostgreSQL for Railway deployment.
+This guide will help you migrate your Electrical Management System from SQLite to PostgreSQL for Render deployment.
 
 ## 📋 Prerequisites
 
 - Node.js 16+ installed
-- PostgreSQL database (local or Railway)
+- PostgreSQL database (local or Render)
 - Your existing SQLite database with data
 
 ## 🔧 Installation
@@ -29,7 +29,7 @@ DB_TYPE=sqlite
 # SQLite Configuration (for local development)
 DB_PATH=./electrical_management.db
 
-# PostgreSQL Configuration (for Railway production)
+# PostgreSQL Configuration (for Render production)
 DB_USER=postgres
 DB_HOST=localhost
 DB_NAME=electrical_management
@@ -55,13 +55,13 @@ DB_PORT=5432
    DB_PASSWORD=your_password
    ```
 
-### Option 2: Railway PostgreSQL Setup
+### Option 2: Render PostgreSQL Setup
 
-1. **Create Railway account** at [railway.app](https://railway.app)
+1. **Create Render account** at [render.com](https://render.com)
 2. **Create new project**
 3. **Add PostgreSQL service**
-4. **Get connection details** from Railway dashboard
-5. **Set environment variables** in Railway
+4. **Get connection details** from Render dashboard
+5. **Set environment variables** in Render
 
 ## 🔄 Migration Process
 
@@ -89,18 +89,18 @@ This will:
 npm run db:switch
 ```
 
-## 🚀 Railway Deployment
+## 🚀 Render Deployment
 
-### 1. Railway Configuration
+### 1. Render Configuration
 
-Your `railway.json` is already configured with:
+Your `render.yaml` is already configured with:
 - Health check endpoint
 - Restart policies
 - Build configuration
 
-### 2. Environment Variables in Railway
+### 2. Environment Variables in Render
 
-Set these in your Railway project:
+Set these in your Render project:
 
 ```env
 NODE_ENV=production
@@ -114,17 +114,14 @@ JWT_SECRET=your_jwt_secret
 FRONTEND_URL=your_frontend_url
 ```
 
-### 3. Deploy to Railway
+### 3. Deploy to Render
 
 ```bash
-# Install Railway CLI
-npm install -g @railway/cli
-
-# Login to Railway
-railway login
+# Deploy through Render dashboard
+# No CLI required
 
 # Deploy
-railway up
+# Deploy through Render dashboard
 ```
 
 ## 🔍 Testing
@@ -132,13 +129,13 @@ railway up
 ### 1. Health Check
 
 ```bash
-curl https://your-railway-app.railway.app/health
+curl https://your-render-app.onrender.com/health
 ```
 
 ### 2. Database Connection
 
 ```bash
-curl https://your-railway-app.railway.app/api/test
+curl https://your-render-app.onrender.com/api/test
 ```
 
 ## 📊 Database Schema Changes
@@ -209,7 +206,7 @@ Backend/
 │   ├── database-switcher.js    # Database selector
 │   └── config.env              # Environment variables
 ├── migrate-to-postgresql.js    # Migration script
-├── railway.json               # Railway configuration
+├── render.yaml               # Render configuration
 └── package.json              # Updated scripts
 ```
 
@@ -219,7 +216,7 @@ Backend/
 - **Concurrency**: Handles multiple connections efficiently
 - **ACID Compliance**: Better data integrity
 - **Advanced Features**: JSON support, full-text search, etc.
-- **Railway Integration**: Native support and automatic scaling
+- **Render Integration**: Native support and automatic scaling
 
 ## 🔄 Switching Between Databases
 
@@ -248,7 +245,7 @@ If you encounter issues:
 
 After successful migration:
 
-1. **Update frontend URLs** to point to Railway
+1. **Update frontend URLs** to point to Render
 2. **Configure custom domain** if needed
 3. **Set up monitoring** and alerts
 4. **Configure backups** for PostgreSQL

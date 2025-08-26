@@ -77,18 +77,9 @@ heroku config:set NODE_ENV=production
 git push heroku main
 ```
 
-### 2. Vercel
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel
-```
-
-### 3. Railway
+### 2. Render
 1. Connect your GitHub repository
-2. Railway will auto-deploy on push
+2. Render will auto-deploy on push
 3. Set environment variables in dashboard
 
 ## 🔧 Configuration
@@ -104,9 +95,9 @@ FRONTEND_URL=https://your-domain.com
 ```
 
 ### Database Options
-- **SQLite**: Default, good for development
-- **PostgreSQL**: Recommended for production
-- **MySQL**: Alternative production option
+- **SQLite**: Default and recommended (simple, file-based, no setup required)
+- **PostgreSQL**: Alternative for production (requires additional setup)
+- **MySQL**: Alternative production option (requires additional setup)
 
 ## 📁 Project Structure
 

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: derelectrical-3-y99h
+    name: electrical-3-y99h
     env: node
     buildCommand: |
       echo "=== FORCING COMPLETE CLEAN INSTALL ==="

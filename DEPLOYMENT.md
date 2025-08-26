@@ -38,32 +38,20 @@ git push heroku main
 heroku open
 ```
 
-### 2. Vercel Deployment
+### 2. Render Deployment
 
 #### Quick Deploy
-1. Go to [vercel.com](https://vercel.com)
+1. Go to [render.com](https://render.com)
 2. Import your GitHub repository
-3. Vercel will automatically detect the Node.js app
+3. Render will automatically detect the Node.js app
 4. Deploy!
 
 #### Manual Deploy
 ```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel
-
+# Install Render CLI (if available)
+# Deploy through Render dashboard
 # Follow the prompts
 ```
-
-### 3. Railway Deployment
-
-#### Quick Deploy
-1. Go to [railway.app](https://railway.app)
-2. Connect your GitHub repository
-3. Railway will automatically build and deploy
-4. Set environment variables in the dashboard
 
 ## 🔧 Environment Variables
 
@@ -97,8 +85,7 @@ Electrical-3/
 │   └── images/            # Image assets
 ├── package.json            # Root package.json (for deployment)
 ├── Procfile               # Heroku deployment file
-├── vercel.json            # Vercel deployment config
-├── railway.json           # Railway deployment config
+├── render.yaml            # Render deployment config
 ├── app.json               # Heroku app configuration
 └── env.example            # Environment variables template
 ```
@@ -106,12 +93,13 @@ Electrical-3/
 ## 🗄️ Database Considerations
 
 ### For Production (Recommended)
-- **PostgreSQL**: Use Heroku Postgres, Railway Postgres, or Vercel Postgres
-- **MySQL**: Use PlanetScale, Railway MySQL, or AWS RDS
+- **SQLite**: Simple, reliable, file-based database (recommended for most use cases)
+- **PostgreSQL**: Use Render Postgres, Heroku Postgres, or other cloud providers
+- **MySQL**: Use PlanetScale, AWS RDS, or other cloud providers
 - **MongoDB**: Use MongoDB Atlas
 
-### For Quick Testing
-- **SQLite**: Works for small apps but not recommended for production
+### For Quick Testing & Development
+- **SQLite**: Perfect for development and small to medium production apps
 
 ## 🔒 Security Checklist
 
@@ -164,15 +152,10 @@ heroku logs --tail
 heroku ps
 ```
 
-### Vercel
+### Render
 - Logs available in dashboard
 - Real-time monitoring
 - Performance analytics
-
-### Railway
-- Built-in logging
-- Performance metrics
-- Error tracking
 
 ## 🔄 Continuous Deployment
 
@@ -189,21 +172,19 @@ git commit -m "Update for deployment"
 git push origin main
 
 # Deploy to platform
-git push heroku main  # or vercel, or railway
+git push heroku main  # or deploy through Render dashboard
 ```
 
 ## 📞 Support
 
 - **Heroku**: [Dev Center](https://devcenter.heroku.com/)
-- **Vercel**: [Documentation](https://vercel.com/docs)
-- **Railway**: [Docs](https://docs.railway.app/)
+- **Render**: [Documentation](https://render.com/docs)
 
 ## 🎉 Success!
 
 After deployment, your app will be available at:
 - **Heroku**: `https://your-app-name.herokuapp.com`
-- **Vercel**: `https://your-app-name.vercel.app`
-- **Railway**: Custom domain or Railway subdomain
+- **Render**: `https://your-app-name.onrender.com`
 
 ---
 

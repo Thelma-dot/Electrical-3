@@ -8,7 +8,9 @@
     "dev": "nodemon server.js",
     "build": "echo 'No build step required for this project'",
     "test": "echo 'No tests specified'",
-    "setup": "node -e \"console.log('Setting up database...')\""
+    "setup": "node Backend/setup-sqlite.js",
+    "setup-sqlite": "node Backend/setup-sqlite.js",
+    "test-sqlite": "node Backend/test-migration-setup.js"
   },
   "keywords": [
     "electrical",

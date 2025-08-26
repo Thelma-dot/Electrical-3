@@ -8,8 +8,8 @@ function getApiUrl(endpoint) {
   if (window.appConfig && window.appConfig.getApiUrl) {
     return window.appConfig.getApiUrl(endpoint);
   }
-  // Fallback to Vercel URL if config not loaded
-  return `https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app/api${endpoint}`;
+  // Fallback to Render URL if config not loaded
+  return `https://electrical-management-system.onrender.com/api${endpoint}`;
 }
 
 function isStrongPassword(password) {

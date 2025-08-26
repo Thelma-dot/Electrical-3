@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 8080;
 
 // ====================== Middleware ======================
 app.use(helmet({
-  contentSecurityPolicy: false, // Disable CSP for Railway deployment
+  contentSecurityPolicy: false, // Disable CSP for production deployment
 }));
 app.use(compression());
 app.use(express.json({ limit: "10mb" }));
@@ -18,8 +18,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(
   cors({
     origin: [
-      "https://electrical-3-production.up.railway.app",
-      "https://electrical-3-production.railway.app",
+      "https://electrical-management-system.onrender.com",
       "http://localhost:5500",
       "http://localhost:3000",
       "http://localhost:8080",
@@ -150,13 +149,13 @@ app.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || "production",
     database: "SQLite",
-    platform: "Railway"
+    platform: "Render"
   });
 });
 
 // Test Endpoint
 app.get("/api/test", (req, res) => {
-  res.json({ message: "Backend is working on Railway!" });
+  res.json({ message: "Backend is working on Render!" });
 });
 
 // Auth Routes
@@ -166,37 +165,37 @@ const jwt = require("jsonwebtoken");
 // Login route
 app.post("/api/auth/login", (req, res) => {
   const { staff_id, password } = req.body;
-  
+
   if (!staff_id || !password) {
     return res.status(400).json({ error: "Staff ID and password are required" });
   }
-  
+
   db.get("SELECT * FROM users WHERE staff_id = ?", [staff_id], (err, user) => {
     if (err) {
       console.error("Database error:", err);
       return res.status(500).json({ error: "Database error" });
     }
-    
+
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
-    
+
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err) {
         console.error("Password comparison error:", err);
         return res.status(500).json({ error: "Authentication error" });
       }
-      
+
       if (!isMatch) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
-      
+
       const token = jwt.sign(
         { userId: user.id, staff_id: user.staff_id, role: user.role },
         process.env.JWT_SECRET || "your_super_secret_jwt_key_change_this_in_production",
         { expiresIn: "24h" }
       );
-      
+
       res.json({
         message: "Login successful",
         token,
@@ -214,11 +213,11 @@ app.post("/api/auth/login", (req, res) => {
 // Profile route
 app.get("/api/auth/profile", (req, res) => {
   const token = req.headers.authorization?.split(" ")[1];
-  
+
   if (!token) {
     return res.status(401).json({ error: "No token provided" });
   }
-  
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "your_super_secret_jwt_key_change_this_in_production");
     res.json({ message: "Profile accessed", user: decoded });
@@ -239,11 +238,11 @@ app.get("/api/inventory", (req, res) => {
 
 app.post("/api/inventory", (req, res) => {
   const { user_id, item_name, category, product_type, quantity, unit, size, serial_number, status, date, location, supplier, purchase_date, expiry_date, issued_by, notes } = req.body;
-  
+
   db.run(
     "INSERT INTO inventory (user_id, item_name, category, product_type, quantity, unit, size, serial_number, status, date, location, supplier, purchase_date, expiry_date, issued_by, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [user_id, item_name, category, product_type, quantity, unit, size, serial_number, status, date, location, supplier, purchase_date, expiry_date, issued_by, notes],
-    function(err) {
+    function (err) {
       if (err) {
         return res.status(500).json({ error: "Failed to create inventory item" });
       }
@@ -264,11 +263,11 @@ app.get("/api/reports", (req, res) => {
 
 app.post("/api/reports", (req, res) => {
   const { user_id, title, job_description, location, remarks, report_date, report_time, tools_used, status } = req.body;
-  
+
   db.run(
     "INSERT INTO reports (user_id, title, job_description, location, remarks, report_date, report_time, tools_used, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [user_id, title, job_description, location, remarks, report_date, report_time, tools_used, status],
-    function(err) {
+    function (err) {
       if (err) {
         return res.status(500).json({ error: "Failed to create report" });
       }
@@ -289,11 +288,11 @@ app.get("/api/toolbox", (req, res) => {
 
 app.post("/api/toolbox", (req, res) => {
   const { user_id, tool_name, tool_type, condition, location, notes } = req.body;
-  
+
   db.run(
     "INSERT INTO toolbox (user_id, tool_name, tool_type, condition, location, notes) VALUES (?, ?, ?, ?, ?, ?)",
     [user_id, tool_name, tool_type, condition, location, notes],
-    function(err) {
+    function (err) {
       if (err) {
         return res.status(500).json({ error: "Failed to create toolbox item" });
       }
@@ -314,11 +313,11 @@ app.get("/api/tasks", (req, res) => {
 
 app.post("/api/tasks", (req, res) => {
   const { title, description, assigned_to, status, priority, due_date } = req.body;
-  
+
   db.run(
     "INSERT INTO tasks (title, description, assigned_to, status, priority, due_date) VALUES (?, ?, ?, ?, ?, ?)",
     [title, description, assigned_to, status, priority, due_date],
-    function(err) {
+    function (err) {
       if (err) {
         return res.status(500).json({ error: "Failed to create task" });
       }
@@ -346,7 +345,7 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log("🚀 Railway Server started successfully!");
+  console.log("🚀 Render Server started successfully!");
   console.log(`📍 Port: ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "production"}`);
   console.log(`💾 Database: SQLite (${dbPath})`);

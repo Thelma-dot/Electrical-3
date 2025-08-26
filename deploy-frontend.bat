@@ -30,7 +30,7 @@ echo 5. Set build command: echo "Frontend ready"
 echo 6. Set publish directory: Frontend-deploy
 echo 7. Deploy!
 echo.
-echo 🌐 Your Vercel backend is already working at:
-echo    https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app
+echo 🌐 Your Render backend is already working at:
+echo    https://electrical-management-system.onrender.com
 echo.
 pause

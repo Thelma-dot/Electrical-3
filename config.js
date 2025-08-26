@@ -6,23 +6,23 @@ const config = {
     socketUrl: 'http://localhost:5000'
   },
   production: {
-    apiBaseUrl: 'https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app/api',
-    socketUrl: 'https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app'
+    apiBaseUrl: 'https://electrical-management-system.onrender.com/api',
+    socketUrl: 'https://electrical-management-system.onrender.com'
   },
-  vercel: {
-    apiBaseUrl: 'https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app/api',
-    socketUrl: 'https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app'
+  render: {
+    apiBaseUrl: 'https://electrical-management-system.onrender.com/api',
+    socketUrl: 'https://electrical-management-system.onrender.com'
   }
 };
 
 // Detect environment
 const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const isVercel = window.location.hostname.includes('vercel.app');
+const isRender = window.location.hostname.includes('onrender.com');
 
 // Get current configuration
 function getCurrentConfig() {
-  if (isVercel) {
-    return config.vercel;
+  if (isRender) {
+    return config.render;
   } else if (isDevelopment) {
     return config.development;
   } else {
@@ -34,7 +34,7 @@ function getCurrentConfig() {
 window.appConfig = {
   ...getCurrentConfig(),
   isDevelopment,
-  isVercel,
+  isRender,
   getApiUrl: (endpoint) => {
     const config = getCurrentConfig();
     return `${config.apiBaseUrl}${endpoint}`;

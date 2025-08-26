@@ -5,7 +5,7 @@
 ### **🎯 What You'll Get:**
 - Live website at `https://your-name.netlify.app`
 - Full Electrical Management System
-- Connected to your Vercel backend
+- Connected to your Render backend
 - Professional hosting with SSL
 
 ---
@@ -55,7 +55,7 @@
 
 ### **Test 3: Test Backend Connection**
 - Try logging in (use any credentials)
-- Should connect to Vercel backend
+- Should connect to Render backend
 - You'll see API calls in console
 
 ---
@@ -63,7 +63,7 @@
 ## 🌐 **Your System URLs**
 
 - **Frontend**: `https://your-name.netlify.app` (Netlify)
-- **Backend**: `https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app` (Vercel)
+- **Backend**: `https://electrical-management-system.onrender.com` (Render)
 
 ---
 
@@ -74,7 +74,7 @@
 - Make sure `Frontend-deploy` folder has `index.html`
 
 ### **Problem: Can't connect to backend**
-- Verify Vercel backend is working
+- Verify Render backend is working
 - Check browser console for errors
 
 ### **Problem: Configuration not loading**
@@ -87,7 +87,7 @@
 
 Once deployed, you'll have:
 - ✅ **Professional website** hosted on Netlify
-- ✅ **Scalable backend** on Vercel
+- ✅ **Scalable backend** on Render
 - ✅ **Full Electrical Management System** working
 - ✅ **Real-time updates** via Socket.IO
 - ✅ **Mobile responsive** design

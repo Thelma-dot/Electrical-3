@@ -6,30 +6,30 @@ const config = {
     socketUrl: 'http://localhost:5000'
   },
   production: {
-    apiBaseUrl: 'https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app/api',
-    socketUrl: 'https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app'
-  },
-  vercel: {
-    apiBaseUrl: 'https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app/api',
-    socketUrl: 'https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app'
+    apiBaseUrl: 'https://electrical-management-system.onrender.com/api',
+    socketUrl: 'https://electrical-management-system.onrender.com'
   },
   netlify: {
-    apiBaseUrl: 'https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app/api',
-    socketUrl: 'https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app'
+    apiBaseUrl: 'https://electrical-management-system.onrender.com/api',
+    socketUrl: 'https://electrical-management-system.onrender.com'
+  },
+  render: {
+    apiBaseUrl: 'https://electrical-management-system.onrender.com/api',
+    socketUrl: 'https://electrical-management-system.onrender.com'
   }
 };
 
 // Detect environment
 const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const isVercel = window.location.hostname.includes('vercel.app');
 const isNetlify = window.location.hostname.includes('netlify.app') || window.location.hostname.includes('netlify.com');
+const isRender = window.location.hostname.includes('onrender.com');
 
 // Get current configuration
 function getCurrentConfig() {
-  if (isNetlify) {
+  if (isRender) {
+    return config.render;
+  } else if (isNetlify) {
     return config.netlify;
-  } else if (isVercel) {
-    return config.vercel;
   } else if (isDevelopment) {
     return config.development;
   } else {
@@ -41,8 +41,8 @@ function getCurrentConfig() {
 window.appConfig = {
   ...getCurrentConfig(),
   isDevelopment,
-  isVercel,
   isNetlify,
+  isRender,
   getApiUrl: (endpoint) => {
     const config = getCurrentConfig();
     return `${config.apiBaseUrl}${endpoint}`;
@@ -56,7 +56,7 @@ window.appConfig = {
 console.log('🚀 App Configuration Loaded:', window.appConfig);
 console.log('🌐 Current Environment:', {
   isDevelopment,
-  isVercel,
   isNetlify,
+  isRender,
   hostname: window.location.hostname
 });

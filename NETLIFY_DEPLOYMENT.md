@@ -1,10 +1,10 @@
 # 🚀 Netlify Frontend Deployment Guide
 
 ## Overview
-This guide will help you deploy the frontend of your Electrical Management System to Netlify while keeping the backend on Vercel.
+This guide will help you deploy the frontend of your Electrical Management System to Netlify while keeping the backend on Render.
 
 ## 🎯 Current Status
-- ✅ **Backend**: Successfully deployed on Vercel
+- ✅ **Backend**: Successfully deployed on Render
 - ✅ **Frontend**: Ready for Netlify deployment
 - ✅ **Configuration**: Updated for multi-environment support
 
@@ -50,12 +50,12 @@ This creates a `Frontend-deploy` folder ready for deployment.
 ### Environment Detection
 The frontend automatically detects its environment:
 - **Development**: `localhost` or `127.0.0.1`
-- **Vercel**: `*.vercel.app`
+- **Render**: `*.onrender.com`
 - **Netlify**: `*.netlify.app` or `*.netlify.com`
 - **Production**: Any other domain
 
 ### API Endpoints
-All API calls automatically route to your Vercel backend:
+All API calls automatically route to your Render backend:
 - **Health Check**: `/health`
 - **Authentication**: `/auth/*`
 - **Inventory**: `/inventory/*`
@@ -65,13 +65,13 @@ All API calls automatically route to your Vercel backend:
 ## 🌐 URLs After Deployment
 
 - **Frontend**: `https://your-site-name.netlify.app`
-- **Backend API**: `https://electrical-3-iar3gsbul-thelma-dots-projects.vercel.app`
+- **Backend API**: `https://electrical-management-system.onrender.com`
 
 ## ✅ Testing Your Deployment
 
 1. **Frontend Load**: Visit your Netlify URL
 2. **Configuration**: Check browser console for environment detection
-3. **API Connection**: Try logging in (should connect to Vercel backend)
+3. **API Connection**: Try logging in (should connect to Render backend)
 4. **Health Check**: Test `/health` endpoint
 
 ## 🔍 Troubleshooting
@@ -82,7 +82,7 @@ All API calls automatically route to your Vercel backend:
 - Ensure `index.html` is in the root
 
 ### API Connection Issues
-- Verify backend is running on Vercel
+- Verify backend is running on Render
 - Check CORS configuration
 - Test API endpoints directly
 
@@ -113,7 +113,7 @@ To update your frontend:
 
 Once deployed, your Electrical Management System will be:
 - **Frontend**: Hosted on Netlify (fast, reliable)
-- **Backend**: Hosted on Vercel (scalable, serverless)
+- **Backend**: Hosted on Render (scalable, reliable)
 - **Database**: Ready for production use
 - **Real-time**: Socket.IO connections working
 
@@ -121,7 +121,7 @@ Once deployed, your Electrical Management System will be:
 
 If you encounter issues:
 1. Check Netlify deployment logs
-2. Verify Vercel backend status
+2. Verify Render backend status
 3. Check browser console for errors
 4. Ensure all configuration files are present
 
