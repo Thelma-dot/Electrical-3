@@ -270,6 +270,112 @@ app.get('/api/admin/login-stats', (req, res) => {
     });
 });
 
+// Reports performance endpoint for charts
+app.get('/api/admin/reports-performance', (req, res) => {
+    // Get monthly reports count for the last 12 months
+    const monthlyReportsQuery = `
+        SELECT 
+            strftime('%Y-%m', created_at) as month,
+            COUNT(*) as count
+        FROM reports 
+        WHERE created_at >= date('now', '-12 months')
+        GROUP BY strftime('%Y-%m', created_at)
+        ORDER BY month ASC
+    `;
+    
+    // Get reports by status
+    const reportsByStatusQuery = `
+        SELECT 
+            status,
+            COUNT(*) as count
+        FROM reports 
+        GROUP BY status
+    `;
+    
+    // Get reports by location
+    const reportsByLocationQuery = `
+        SELECT 
+            location,
+            COUNT(*) as count
+        FROM reports 
+        GROUP BY location
+        ORDER BY count DESC
+        LIMIT 10
+    `;
+    
+    Promise.all([
+        new Promise((resolve) => db.all(monthlyReportsQuery, (err, results) => resolve(err ? [] : results))),
+        new Promise((resolve) => db.all(reportsByStatusQuery, (err, results) => resolve(err ? [] : results))),
+        new Promise((resolve) => db.all(reportsByLocationQuery, (err, results) => resolve(err ? [] : results)))
+    ]).then(([monthlyReports, reportsByStatus, reportsByLocation]) => {
+        res.json({
+            monthlyReports,
+            reportsByStatus,
+            reportsByLocation,
+            timestamp: new Date().toISOString()
+        });
+    }).catch(err => {
+        console.error('Reports performance error:', err);
+        res.status(500).json({ error: 'Failed to load reports performance data' });
+    });
+});
+
+// Revenue/Performance metrics endpoint
+app.get('/api/admin/revenue-metrics', (req, res) => {
+    // Get performance metrics for the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    // Get reports completed in last 30 days
+    const recentReportsQuery = `
+        SELECT COUNT(*) as count
+        FROM reports 
+        WHERE status = 'Completed' 
+        AND created_at >= ?
+    `;
+    
+    // Get average completion time (in days)
+    const avgCompletionTimeQuery = `
+        SELECT AVG(
+            CASE 
+                WHEN status = 'Completed' 
+                THEN julianday(updated_at) - julianday(created_at)
+                ELSE NULL 
+            END
+        ) as avgDays
+        FROM reports 
+        WHERE status = 'Completed'
+    `;
+    
+    // Get top performing locations
+    const topLocationsQuery = `
+        SELECT 
+            location,
+            COUNT(*) as reportCount,
+            SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) as completedCount
+        FROM reports 
+        GROUP BY location
+        ORDER BY reportCount DESC
+        LIMIT 5
+    `;
+    
+    Promise.all([
+        new Promise((resolve) => db.get(recentReportsQuery, [thirtyDaysAgo.toISOString()], (err, result) => resolve(err ? 0 : result.count))),
+        new Promise((resolve) => db.get(avgCompletionTimeQuery, (err, result) => resolve(err ? 0 : result.avgDays))),
+        new Promise((resolve) => db.all(topLocationsQuery, (err, results) => resolve(err ? [] : results)))
+    ]).then(([recentReports, avgCompletionTime, topLocations]) => {
+        res.json({
+            recentReports,
+            avgCompletionTime: Math.round(avgCompletionTime * 100) / 100, // Round to 2 decimal places
+            topLocations,
+            timestamp: new Date().toISOString()
+        });
+    }).catch(err => {
+        console.error('Revenue metrics error:', err);
+        res.status(500).json({ error: 'Failed to load revenue metrics data' });
+    });
+});
+
 app.get('/api/admin/dashboard', (req, res) => {
     // Get counts for admin dashboard
     const queries = {
