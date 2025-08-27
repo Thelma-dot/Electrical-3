@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["postgresql", "libpq", "openssl"]
+
+[phases.install]
+cmds = ["npm ci --only=production"]
+
+[phases.build]
+cmds = ["echo 'No build step required'"]
+
+[start]
+cmd = "node railway-start.js"
