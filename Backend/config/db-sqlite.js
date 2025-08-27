@@ -181,6 +181,151 @@ function finishUserSetup() {
   console.log("   Demo: h2402117 / password2");
   console.log("   Demo: h2402123 / password3");
   console.log("   Demo: h2402140 / password4");
+  console.log("\n🚀 Server is ready to handle requests!");
+
+  // Create sample data for dashboard
+  createSampleData();
+}
+
+function createSampleData() {
+  console.log("🔧 Creating sample data for dashboard...");
+
+  // Create sample reports
+  createSampleReports();
+}
+
+function createSampleReports() {
+  const sampleReports = [
+    {
+      user_id: 1, // admin user
+      title: "Electrical Maintenance - Building A",
+      job_description: "Routine electrical maintenance and safety checks",
+      location: "Building A - Floor 1",
+      remarks: "All systems functioning normally",
+      report_date: new Date().toISOString().split('T')[0],
+      report_time: new Date().toTimeString().split(' ')[0],
+      tools_used: "Multimeter, Screwdriver, Safety Gloves",
+      status: "Completed"
+    },
+    {
+      user_id: 1,
+      title: "Circuit Breaker Inspection",
+      job_description: "Monthly inspection of main circuit breakers",
+      location: "Main Electrical Room",
+      remarks: "No issues found, all breakers operational",
+      report_date: new Date().toISOString().split('T')[0],
+      report_time: new Date().toTimeString().split(' ')[0],
+      tools_used: "Thermal Camera, Multimeter",
+      status: "Completed"
+    }
+  ];
+
+  let reportsCreated = 0;
+  sampleReports.forEach((report) => {
+    db.run(
+      `INSERT OR IGNORE INTO reports (user_id, title, job_description, location, remarks, report_date, report_time, tools_used, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [report.user_id, report.title, report.job_description, report.location, report.remarks, report.report_date, report.report_time, report.tools_used, report.status],
+      function (err) {
+        if (err) {
+          console.error("❌ Error creating sample report:", err.message);
+        } else {
+          if (this.changes > 0) {
+            console.log("✅ Created sample report:", report.title);
+          }
+        }
+        reportsCreated++;
+        if (reportsCreated === sampleReports.length) {
+          createSampleInventory();
+        }
+      }
+    );
+  });
+}
+
+function createSampleInventory() {
+  const sampleInventory = [
+    {
+      user_id: 1,
+      item_name: "Digital Multimeter",
+      category: "Testing Equipment",
+      product_type: "Electrical Testing",
+      quantity: 5,
+      unit: "piece",
+      status: "Available",
+      location: "Tool Room A"
+    },
+    {
+      user_id: 1,
+      item_name: "Safety Gloves",
+      category: "Safety Equipment",
+      product_type: "Personal Protection",
+      quantity: 20,
+      unit: "pair",
+      status: "Available",
+      location: "Safety Storage"
+    }
+  ];
+
+  let inventoryCreated = 0;
+  sampleInventory.forEach((item) => {
+    db.run(
+      `INSERT OR IGNORE INTO inventory (user_id, item_name, category, product_type, quantity, unit, status, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [item.user_id, item.item_name, item.category, item.product_type, item.quantity, item.unit, item.status, item.location],
+      function (err) {
+        if (err) {
+          console.error("❌ Error creating sample inventory item:", err.message);
+        } else {
+          if (this.changes > 0) {
+            console.log("✅ Created sample inventory item:", item.item_name);
+          }
+        }
+        inventoryCreated++;
+        if (inventoryCreated === sampleInventory.length) {
+          createSampleTasks();
+        }
+      }
+    );
+  });
+}
+
+function createSampleTasks() {
+  const sampleTasks = [
+    {
+      title: "Monthly Safety Inspection",
+      description: "Conduct monthly electrical safety inspection of all buildings",
+      assigned_to: 1,
+      status: "In Progress",
+      priority: "High"
+    },
+    {
+      title: "Equipment Calibration",
+      description: "Calibrate all testing equipment for accuracy",
+      assigned_to: 1,
+      status: "Pending",
+      priority: "Medium"
+    }
+  ];
+
+  let tasksCreated = 0;
+  sampleTasks.forEach((task) => {
+    db.run(
+      `INSERT OR IGNORE INTO tasks (title, description, assigned_to, status, priority) VALUES (?, ?, ?, ?, ?)`,
+      [task.title, task.description, task.assigned_to, task.status, task.priority],
+      function (err) {
+        if (err) {
+          console.error("❌ Error creating sample task:", err.message);
+        } else {
+          if (this.changes > 0) {
+            console.log("✅ Created sample task:", task.title);
+          }
+        }
+        tasksCreated++;
+        if (tasksCreated === sampleTasks.length) {
+          console.log("🎉 Sample data creation complete!");
+        }
+      }
+    );
+  });
 }
 
 // Create reports table
