@@ -253,7 +253,7 @@ async function login() {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        staffid: staffID,
+        staff_id: staffID,
         password: password
       })
     });
@@ -274,7 +274,7 @@ async function login() {
 
     // Store user data in the format expected by the greeting system
     const userData = {
-      staffId: data.user.staffid || data.user.staffId,
+      staffId: data.user.staff_id || data.user.staffid || data.user.staffId,
       fullName: data.user.fullName || data.user.name || `${data.user.firstName || ''} ${data.user.lastName || ''}`.trim(),
       email: data.user.email,
       phone: data.user.phone,

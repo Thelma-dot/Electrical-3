@@ -5,6 +5,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
+const bcrypt = require('bcrypt');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -57,8 +58,8 @@ app.post('/api/auth/login', (req, res) => {
         return res.status(400).json({ error: 'Staff ID and password are required' });
     }
 
-    const query = 'SELECT * FROM users WHERE staff_id = ? AND password = ?';
-    db.get(query, [staff_id, password], (err, user) => {
+    const query = 'SELECT * FROM users WHERE staff_id = ?';
+    db.get(query, [staff_id], async (err, user) => {
         if (err) {
             console.error('Login error:', err);
             return res.status(500).json({ error: 'Database error' });
@@ -68,12 +69,33 @@ app.post('/api/auth/login', (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
+        // Verify password using bcrypt
+        try {
+            const isValidPassword = await bcrypt.compare(password, user.password);
+            if (!isValidPassword) {
+                return res.status(401).json({ error: 'Invalid credentials' });
+            }
+        } catch (bcryptError) {
+            console.error('Password verification error:', bcryptError);
+            return res.status(500).json({ error: 'Password verification failed' });
+        }
+
+        // Generate a simple token (in production, use proper JWT)
+        const token = Buffer.from(JSON.stringify({
+            id: user.id,
+            staff_id: user.staff_id,
+            role: user.role,
+            exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+        })).toString('base64');
+
         res.json({
             message: 'Login successful',
+            token: token,
             user: {
                 id: user.id,
                 staff_id: user.staff_id,
-                role: user.role
+                role: user.role,
+                email: user.email
             }
         });
     });
