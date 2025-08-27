@@ -31,13 +31,13 @@ let previousAdminData = {
 async function testAPIEndpoint() {
     try {
         console.log('🧪 Testing API endpoint...');
-        
+
         const token = localStorage.getItem('token');
         if (!token) {
             console.error('❌ No token found');
             return;
         }
-        
+
         // Test the test endpoint first
         const testResponse = await fetch(window.appConfig.getApiUrl('/admin/dashboard/test'), {
             headers: {
@@ -45,16 +45,16 @@ async function testAPIEndpoint() {
                 'Content-Type': 'application/json'
             }
         });
-        
+
         console.log('🧪 Test endpoint response status:', testResponse.status);
-        
+
         if (testResponse.ok) {
             const testData = await testResponse.json();
             console.log('🧪 Test endpoint data:', testData);
-            
+
             // Try to create chart with test data
             updateAdminCharts(testData);
-            
+
             // Update status
             const statusElement = document.getElementById('adminBarChartStatus');
             if (statusElement) {
@@ -65,7 +65,7 @@ async function testAPIEndpoint() {
             console.error('❌ Test endpoint failed:', testResponse.status);
             showChartError(`Test API failed: ${testResponse.status}`);
         }
-        
+
         // Also test the real endpoint
         const realResponse = await fetch(window.appConfig.getApiUrl('/admin/dashboard'), {
             headers: {
@@ -73,13 +73,13 @@ async function testAPIEndpoint() {
                 'Content-Type': 'application/json'
             }
         });
-        
+
         console.log('🧪 Real endpoint response status:', realResponse.status);
-        
+
         if (realResponse.ok) {
             const realData = await realResponse.json();
             console.log('🧪 Real endpoint data:', realData);
-            
+
             // Update status
             const statusElement = document.getElementById('adminBarChartStatus');
             if (statusElement) {
@@ -90,7 +90,7 @@ async function testAPIEndpoint() {
             console.error('❌ Real endpoint failed:', realResponse.status);
             showChartError(`Real API failed: ${realResponse.status}`);
         }
-        
+
     } catch (error) {
         console.error('❌ Test API error:', error);
         showChartError(`Test API error: ${error.message}`);
@@ -100,17 +100,17 @@ async function testAPIEndpoint() {
 // Show chart error in fallback display
 function showChartError(message) {
     console.error('❌ Chart Error:', message);
-    
+
     const fallbackDiv = document.getElementById('adminBarChartFallback');
     const statusElement = document.getElementById('adminBarChartStatus');
     const canvas = document.getElementById('adminBarChart');
-    
+
     if (fallbackDiv && statusElement) {
         fallbackDiv.style.display = 'block';
         statusElement.textContent = `Error: ${message}`;
         statusElement.style.color = '#e74c3c';
     }
-    
+
     if (canvas) {
         canvas.style.display = 'none';
     }
@@ -119,19 +119,19 @@ function showChartError(message) {
 // Test function to manually create chart
 function testChartCreation() {
     console.log('🧪 Testing chart creation...');
-    
+
     const barCtx = document.getElementById('adminBarChart');
     const fallbackDiv = document.getElementById('adminBarChartFallback');
     const statusElement = document.getElementById('adminBarChartStatus');
-    
+
     console.log('🧪 Canvas element found:', barCtx);
     console.log('🧪 Fallback div found:', fallbackDiv);
-    
+
     if (barCtx) {
         // Hide fallback and show canvas
         if (fallbackDiv) fallbackDiv.style.display = 'none';
         barCtx.style.display = 'block';
-        
+
         // Create a simple test chart
         const testChart = new Chart(barCtx, {
             type: 'bar',
@@ -159,12 +159,12 @@ function testChartCreation() {
                 }
             }
         });
-        
+
         console.log('🧪 Test chart created successfully:', testChart);
-        
+
         // Update status
         if (statusElement) statusElement.textContent = 'Test chart loaded successfully';
-        
+
         return testChart;
     } else {
         console.error('🧪 Test failed: Canvas element not found');
@@ -186,13 +186,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     console.log('🔍 Debug: DOM loaded, starting dashboard initialization...');
-    
+
     // Initialize chart status display
     const statusElement = document.getElementById('adminBarChartStatus');
     if (statusElement) {
         statusElement.textContent = 'Initializing dashboard...';
     }
-    
+
     // Test chart creation first
     setTimeout(() => {
         console.log('🧪 Testing chart creation after 1 second...');
@@ -288,7 +288,7 @@ function initializeSocketConnection() {
 // Refresh inventory statistics
 async function refreshInventoryStats() {
     try {
-        const response = await fetch('http://localhost:5000/api/admin/inventory', {
+        const response = await fetch(window.appConfig.getApiUrl('/admin/inventory'), {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
 
@@ -307,7 +307,7 @@ async function refreshInventoryStats() {
 // Refresh toolbox statistics
 async function refreshToolboxStats() {
     try {
-        const response = await fetch('http://localhost:5000/api/admin/toolbox', {
+        const response = await fetch(window.appConfig.getApiUrl('/admin/toolbox'), {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
 
@@ -338,7 +338,7 @@ async function loadDashboardData() {
 
         // Fetch users data (admin-only API)
         console.log('Fetching users data...');
-        const response = await fetch('http://localhost:5000/api/admin/users', {
+        const response = await fetch(window.appConfig.getApiUrl('/admin/users'), {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -588,7 +588,7 @@ async function loadLoginStats() {
         }
 
         console.log('Fetching login statistics...');
-        const response = await fetch('http://localhost:5000/api/admin/login-stats', {
+        const response = await fetch(window.appConfig.getApiUrl('/admin/login-stats'), {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -657,7 +657,7 @@ async function loadAdminCharts() {
 
         // Fetch admin dashboard data (reports, inventory, tasks)
         console.log('🔍 Debug: Fetching admin dashboard data...');
-        const response = await fetch('http://localhost:5000/api/admin/dashboard', {
+        const response = await fetch(window.appConfig.getApiUrl('/admin/dashboard'), {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -728,15 +728,15 @@ function updateAdminCharts(data) {
         const barCtx = document.getElementById('adminBarChart');
         const fallbackDiv = document.getElementById('adminBarChartFallback');
         const statusElement = document.getElementById('adminBarChartStatus');
-        
+
         console.log('🔍 Debug: Bar chart canvas element:', barCtx);
         console.log('🔍 Debug: Fallback div:', fallbackDiv);
-        
+
         if (barCtx && data) {
             // Hide fallback and show canvas
             if (fallbackDiv) fallbackDiv.style.display = 'none';
             barCtx.style.display = 'block';
-            
+
             if (adminBarChartInstance) {
                 console.log('🔍 Debug: Destroying existing bar chart instance');
                 adminBarChartInstance.destroy();
@@ -775,17 +775,17 @@ function updateAdminCharts(data) {
                     }
                 }
             });
-            
+
             console.log('🔍 Debug: Bar chart created successfully:', adminBarChartInstance);
-            
+
             // Update status
             if (statusElement) statusElement.textContent = 'Chart loaded successfully';
-            
+
         } else {
             console.error('❌ Debug: Bar chart canvas not found or data missing');
             console.error('❌ Debug: barCtx:', barCtx);
             console.error('❌ Debug: data:', data);
-            
+
             // Show fallback with error
             showChartError('Chart canvas not found or data missing');
         }
