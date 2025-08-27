@@ -22,6 +22,8 @@ function initializeTables() {
       staff_id TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
       email TEXT,
+      role TEXT DEFAULT 'staff',
+      last_login DATETIME,
       reset_token TEXT,
       token_expiry TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -32,11 +34,48 @@ function initializeTables() {
         console.error("Error creating users table:", err.message);
       } else {
         console.log("✅ Users table created/verified");
+        createReportsTable();
       }
     }
   );
 
-  // Create reports table
+
+
+  // Update existing tables if needed (for schema changes)
+  updateTableSchemas();
+
+  // Verify toolbox table structure
+  verifyToolboxTable();
+}
+
+// Create login_logs table for tracking login attempts
+function createLoginLogsTable() {
+  db.run(
+    `
+    CREATE TABLE IF NOT EXISTS login_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      staff_id TEXT NOT NULL,
+      login_type TEXT DEFAULT 'staff',
+      ip_address TEXT,
+      user_agent TEXT,
+      success INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `,
+    (err) => {
+      if (err) {
+        console.error("Error creating login_logs table:", err.message);
+      } else {
+        console.log("✅ Login logs table created/verified");
+      }
+    }
+  );
+}
+
+// Create reports table
+function createReportsTable() {
   db.run(
     `
     CREATE TABLE IF NOT EXISTS reports (
@@ -59,11 +98,14 @@ function initializeTables() {
         console.error("Error creating reports table:", err.message);
       } else {
         console.log("✅ Reports table created/verified");
+        createInventoryTable();
       }
     }
   );
+}
 
-  // Create inventory table
+// Create inventory table
+function createInventoryTable() {
   db.run(
     `
     CREATE TABLE IF NOT EXISTS inventory (
@@ -94,11 +136,14 @@ function initializeTables() {
         console.error("Error creating inventory table:", err.message);
       } else {
         console.log("✅ Inventory table created/verified");
+        createToolboxTable();
       }
     }
   );
+}
 
-  // Create toolbox table if it doesn't exist
+// Create toolbox table
+function createToolboxTable() {
   db.run(
     `
     CREATE TABLE IF NOT EXISTS toolbox (
@@ -128,11 +173,14 @@ function initializeTables() {
         console.error("Error creating toolbox table:", err.message);
       } else {
         console.log("✅ Toolbox table created/verified");
+        createSettingsTable();
       }
     }
   );
+}
 
-  // Create settings table
+// Create settings table
+function createSettingsTable() {
   db.run(
     `
     CREATE TABLE IF NOT EXISTS settings (
@@ -151,45 +199,76 @@ function initializeTables() {
         console.error("Error creating settings table:", err.message);
       } else {
         console.log("✅ Settings table created/verified");
+        createTasksTable();
       }
     }
   );
+}
 
-  // Update existing tables if needed (for schema changes)
-  updateTableSchemas();
-
-  // Verify toolbox table structure
-  verifyToolboxTable();
+// Create tasks table
+function createTasksTable() {
+  db.run(
+    `
+    CREATE TABLE IF NOT EXISTS tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT,
+      assigned_to INTEGER,
+      status TEXT DEFAULT 'Pending',
+      priority TEXT DEFAULT 'Medium',
+      due_date TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (assigned_to) REFERENCES users(id)
+    )
+  `,
+    (err) => {
+      if (err) {
+        console.error("Error creating tasks table:", err.message);
+      } else {
+        console.log("✅ Tasks table created/verified");
+        createLoginLogsTable();
+      }
+    }
+  );
 }
 
 // Function to update existing table schemas
 function updateTableSchemas() {
   // Check if inventory table needs new columns
-  db.get("PRAGMA table_info(inventory)", (err, rows) => {
+  db.all("PRAGMA table_info(inventory)", (err, rows) => {
     if (err) {
       console.error("Error checking inventory table schema:", err.message);
       return;
     }
 
+    const existingColumns = rows.map(row => row.name);
+
     // Add new columns if they don't exist
-    const addColumns = [
-      "ALTER TABLE inventory ADD COLUMN item_name TEXT",
-      "ALTER TABLE inventory ADD COLUMN category TEXT",
-      "ALTER TABLE inventory ADD COLUMN quantity INTEGER",
-      "ALTER TABLE inventory ADD COLUMN unit TEXT",
-      "ALTER TABLE inventory ADD COLUMN supplier TEXT",
-      "ALTER TABLE inventory ADD COLUMN purchase_date TEXT",
-      "ALTER TABLE inventory ADD COLUMN expiry_date TEXT",
-      "ALTER TABLE inventory ADD COLUMN notes TEXT",
-      "ALTER TABLE inventory ADD COLUMN updated_at DATETIME"
+    const columnsToAdd = [
+      { name: 'item_name', type: 'TEXT' },
+      { name: 'category', type: 'TEXT' },
+      { name: 'quantity', type: 'INTEGER' },
+      { name: 'unit', type: 'TEXT' },
+      { name: 'supplier', type: 'TEXT' },
+      { name: 'purchase_date', type: 'TEXT' },
+      { name: 'expiry_date', type: 'TEXT' },
+      { name: 'notes', type: 'TEXT' },
+      { name: 'updated_at', type: 'DATETIME' }
     ];
 
-    addColumns.forEach((sql, index) => {
-      db.run(sql, (err) => {
-        if (err && !err.message.includes('duplicate column name')) {
-          console.error(`Error adding column ${index + 1}:`, err.message);
-        }
-      });
+    columnsToAdd.forEach((column) => {
+      if (!existingColumns.includes(column.name)) {
+        const sql = `ALTER TABLE inventory ADD COLUMN ${column.name} ${column.type}`;
+        db.run(sql, (err) => {
+          if (err) {
+            console.error(`Error adding column ${column.name}:`, err.message);
+          } else {
+            console.log(`✅ Added column ${column.name} to inventory table`);
+          }
+        });
+      } else {
+        console.log(`ℹ️ Column ${column.name} already exists in inventory table`);
+      }
     });
   });
 
@@ -200,9 +279,10 @@ function updateTableSchemas() {
       return;
     }
 
+    const existingColumns = rows.map(row => row.name);
+
     // Check if status column exists
-    const hasStatus = rows.some(row => row.name === 'status');
-    if (!hasStatus) {
+    if (!existingColumns.includes('status')) {
       console.log("🔧 Adding status column to toolbox table...");
       db.run("ALTER TABLE toolbox ADD COLUMN status TEXT DEFAULT 'draft'", (err) => {
         if (err) {
