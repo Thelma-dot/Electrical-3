@@ -66,6 +66,12 @@ app.post('/api/auth/login', (req, res) => {
         }
 
         if (!user) {
+            // Log failed login attempt
+            const logQuery = `INSERT INTO login_logs (user_id, staff_id, status, login_time, ip_address) VALUES (?, ?, ?, ?, ?)`;
+            db.run(logQuery, [null, staff_id, 'failed', new Date().toISOString(), req.ip || 'unknown'], (err) => {
+                if (err) console.error('Failed to log failed login:', err);
+            });
+            
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
@@ -73,12 +79,24 @@ app.post('/api/auth/login', (req, res) => {
         try {
             const isValidPassword = await bcrypt.compare(password, user.password);
             if (!isValidPassword) {
+                // Log failed login attempt (wrong password)
+                const logQuery = `INSERT INTO login_logs (user_id, staff_id, status, login_time, ip_address) VALUES (?, ?, ?, ?, ?)`;
+                db.run(logQuery, [user.id, user.staff_id, 'failed', new Date().toISOString(), req.ip || 'unknown'], (err) => {
+                    if (err) console.error('Failed to log failed login:', err);
+                });
+                
                 return res.status(401).json({ error: 'Invalid credentials' });
             }
         } catch (bcryptError) {
             console.error('Password verification error:', bcryptError);
             return res.status(500).json({ error: 'Password verification failed' });
         }
+
+                // Log successful login
+        const logQuery = `INSERT INTO login_logs (user_id, staff_id, status, login_time, ip_address) VALUES (?, ?, ?, ?, ?)`;
+        db.run(logQuery, [user.id, user.staff_id, 'success', new Date().toISOString(), req.ip || 'unknown'], (err) => {
+            if (err) console.error('Failed to log successful login:', err);
+        });
 
         // Generate a simple token (in production, use proper JWT)
         const token = Buffer.from(JSON.stringify({
@@ -87,7 +105,7 @@ app.post('/api/auth/login', (req, res) => {
             role: user.role,
             exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
         })).toString('base64');
-
+        
         res.json({
             message: 'Login successful',
             token: token,
@@ -211,6 +229,44 @@ app.get('/api/admin/dashboard/test', (req, res) => {
     res.json({
         message: 'Admin dashboard test endpoint working',
         timestamp: new Date().toISOString()
+    });
+});
+
+// Login statistics endpoint
+app.get('/api/admin/login-stats', (req, res) => {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).toISOString();
+    
+    // Get today's successful logins
+    const successfulLoginsQuery = `
+        SELECT COUNT(*) as count 
+        FROM login_logs 
+        WHERE status = 'success' 
+        AND login_time >= ? AND login_time <= ?
+    `;
+    
+    // Get today's failed logins
+    const failedLoginsQuery = `
+        SELECT COUNT(*) as count 
+        FROM login_logs 
+        WHERE status = 'failed' 
+        AND login_time >= ? AND login_time <= ?
+    `;
+    
+    Promise.all([
+        new Promise((resolve) => db.get(successfulLoginsQuery, [startOfDay, endOfDay], (err, result) => resolve(err ? 0 : result.count))),
+        new Promise((resolve) => db.get(failedLoginsQuery, [startOfDay, endOfDay], (err, result) => resolve(err ? 0 : result.count)))
+    ]).then(([successfulLogins, failedLogins]) => {
+        res.json({
+            successfulLogins,
+            failedLogins,
+            totalLogins: successfulLogins + failedLogins,
+            date: today.toISOString().split('T')[0]
+        });
+    }).catch(err => {
+        console.error('Login stats error:', err);
+        res.status(500).json({ error: 'Failed to load login statistics' });
     });
 });
 
