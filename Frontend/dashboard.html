@@ -545,8 +545,9 @@
           fetch('http://localhost:5000/api/inventory/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : null).catch(() => null)
         ]);
 
-        // Compute inventory stats - count the number of inventory items (not quantities)
-        const inventoryTotal = Array.isArray(inventoryList) ? inventoryList.length : 0;
+        // Compute inventory stats - calculate total quantity across all inventory items
+        const inventoryTotal = Array.isArray(inventoryList) ?
+          inventoryList.reduce((total, item) => total + (parseInt(item.quantity) || 1), 0) : 0;
         const toolboxTotal = Array.isArray(toolboxList) ? toolboxList.length : 0;
         const tasksInProgress = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'in_progress' || (t.status || '').toLowerCase() === 'in progress').length;
         const tasksCompleted = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'completed').length;
@@ -616,6 +617,11 @@
           inventoryItemCount: inventoryList.length, // Current user's inventory item count
           inventorySummary: currentData.inventorySummary,
           systemOverviewData: [currentData.reports, currentData.toolbox, currentData.inventory, currentData.inProgress, currentData.completed]
+        });
+        console.log('🔍 Inventory calculation details:', {
+          itemCount: inventoryList.length,
+          totalQuantity: inventoryTotal,
+          sampleItems: inventoryList.slice(0, 3).map(item => ({ id: item.id, quantity: item.quantity }))
         });
 
         // Debug inventory data structure

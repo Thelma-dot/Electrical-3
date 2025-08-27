@@ -544,7 +544,7 @@
           fetch('http://localhost:5000/api/inventory/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : null).catch(() => null)
         ]);
 
-        // Compute inventory stats - calculate total quantity instead of just counting items
+        // Compute inventory stats - calculate total quantity across all inventory items
         const inventoryTotal = Array.isArray(inventoryList) ?
           inventoryList.reduce((total, item) => total + (parseInt(item.quantity) || 1), 0) : 0;
         const toolboxTotal = Array.isArray(toolboxList) ? toolboxList.length : 0;

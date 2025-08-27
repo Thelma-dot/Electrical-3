@@ -1,0 +1,41 @@
+# Development files
+node_modules/
+.env
+.env.local
+.env.development
+
+# Build artifacts
+build/
+dist/
+Frontend-deploy/
+
+# Database files (will be created on Railway)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+
+# Git
+.git/
+.gitignore
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+test-*.js
+*test*.js
