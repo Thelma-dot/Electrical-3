@@ -9,6 +9,10 @@ const config = {
     apiBaseUrl: 'https://electrical-management-system.onrender.com/api',
     socketUrl: 'https://electrical-management-system.onrender.com'
   },
+  railway: {
+    apiBaseUrl: 'https://electrical-3-production.up.railway.app/api',
+    socketUrl: 'https://electrical-3-production.up.railway.app'
+  },
   netlify: {
     apiBaseUrl: 'https://electrical-management-system.onrender.com/api',
     socketUrl: 'https://electrical-management-system.onrender.com'
@@ -21,12 +25,15 @@ const config = {
 
 // Detect environment
 const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const isRailway = window.location.hostname.includes('railway.app') || window.location.hostname.includes('up.railway.app');
 const isNetlify = window.location.hostname.includes('netlify.app') || window.location.hostname.includes('netlify.com');
 const isRender = window.location.hostname.includes('onrender.com');
 
 // Get current configuration
 function getCurrentConfig() {
-  if (isRender) {
+  if (isRailway) {
+    return config.railway;
+  } else if (isRender) {
     return config.render;
   } else if (isNetlify) {
     return config.netlify;
@@ -41,6 +48,7 @@ function getCurrentConfig() {
 window.appConfig = {
   ...getCurrentConfig(),
   isDevelopment,
+  isRailway,
   isNetlify,
   isRender,
   getApiUrl: (endpoint) => {
@@ -56,6 +64,7 @@ window.appConfig = {
 console.log('🚀 App Configuration Loaded:', window.appConfig);
 console.log('🌐 Current Environment:', {
   isDevelopment,
+  isRailway,
   isNetlify,
   isRender,
   hostname: window.location.hostname
