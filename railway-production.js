@@ -224,6 +224,156 @@ app.get('/api/admin/users', (req, res) => {
     });
 });
 
+// User management endpoints
+app.post('/api/admin/users', (req, res) => {
+    const { staff_id, email, password, role } = req.body;
+    
+    if (!staff_id || !email || !password || !role) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+    
+    // Hash the password
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
+        if (err) {
+            console.error('Password hashing error:', err);
+            return res.status(500).json({ error: 'Failed to hash password' });
+        }
+        
+        const query = `INSERT INTO users (staff_id, email, password, role, created_at) VALUES (?, ?, ?, ?, ?)`;
+        db.run(query, [staff_id, email, hashedPassword, role, new Date().toISOString()], function (err) {
+            if (err) {
+                console.error('Create user error:', err);
+                return res.status(500).json({ error: 'Failed to create user' });
+            }
+            res.json({ id: this.lastID, message: 'User created successfully' });
+        });
+    });
+});
+
+app.put('/api/admin/users/:id', (req, res) => {
+    const { id } = req.params;
+    const { staff_id, email, role } = req.body;
+    
+    if (!staff_id || !email || !role) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+    
+    const query = `UPDATE users SET staff_id = ?, email = ?, role = ? WHERE id = ?`;
+    db.run(query, [staff_id, email, role, id], function (err) {
+        if (err) {
+            console.error('Update user error:', err);
+            return res.status(500).json({ error: 'Failed to update user' });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json({ message: 'User updated successfully' });
+    });
+});
+
+app.delete('/api/admin/users/:id', (req, res) => {
+    const { id } = req.params;
+    
+    const query = `DELETE FROM users WHERE id = ?`;
+    db.run(query, [id], function (err) {
+        if (err) {
+            console.error('Delete user error:', err);
+            return res.status(500).json({ error: 'Failed to delete user' });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json({ message: 'User deleted successfully' });
+    });
+});
+
+// Get user by ID for editing
+app.get('/api/admin/users/:id', (req, res) => {
+    const { id } = req.params;
+    
+    const query = `SELECT id, staff_id, email, role, created_at FROM users WHERE id = ?`;
+    db.get(query, [id], (err, user) => {
+        if (err) {
+            console.error('Get user error:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+    });
+});
+
+// Task management endpoints
+app.get('/api/admin/tasks', (req, res) => {
+    const query = `SELECT t.*, u.staff_id as assigned_to_name 
+                   FROM tasks t 
+                   LEFT JOIN users u ON t.assigned_to = u.id 
+                   ORDER BY t.created_at DESC`;
+    db.all(query, (err, tasks) => {
+        if (err) {
+            console.error('Tasks error:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        res.json(tasks);
+    });
+});
+
+app.post('/api/admin/tasks', (req, res) => {
+    const { title, description, assigned_to, priority, status, due_date } = req.body;
+    
+    if (!title || !description || !assigned_to || !priority || !due_date) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+    
+    const query = `INSERT INTO tasks (title, description, assigned_to, priority, status, due_date, created_at) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    
+    db.run(query, [title, description, assigned_to, priority, status || 'Pending', due_date, new Date().toISOString()], function (err) {
+        if (err) {
+            console.error('Create task error:', err);
+            return res.status(500).json({ error: 'Failed to create task' });
+        }
+        res.json({ id: this.lastID, message: 'Task created successfully' });
+    });
+});
+
+app.put('/api/admin/tasks/:id', (req, res) => {
+    const { id } = req.params;
+    const { title, description, assigned_to, priority, status, due_date } = req.body;
+    
+    if (!title || !description || !assigned_to || !priority || !due_date) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+    
+    const query = `UPDATE tasks SET title = ?, description = ?, assigned_to = ?, priority = ?, status = ?, due_date = ? WHERE id = ?`;
+    db.run(query, [title, description, assigned_to, priority, status, due_date, id], function (err) {
+        if (err) {
+            console.error('Update task error:', err);
+            return res.status(500).json({ error: 'Failed to update task' });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+        res.json({ message: 'Task updated successfully' });
+    });
+});
+
+app.delete('/api/admin/tasks/:id', (req, res) => {
+    const { id } = req.params;
+    
+    const query = `DELETE FROM tasks WHERE id = ?`;
+    db.run(query, [id], function (err) {
+        if (err) {
+            console.error('Delete task error:', err);
+            return res.status(500).json({ error: 'Failed to delete task' });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+        res.json({ message: 'Task deleted successfully' });
+    });
+});
+
 // Admin routes
 app.get('/api/admin/dashboard/test', (req, res) => {
     res.json({
