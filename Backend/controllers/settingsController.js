@@ -2,7 +2,7 @@ const Settings = require('../models/Settings');
 
 exports.getSettings = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const settings = await Settings.getByUserId(userId);
     
     // Default settings if not found
@@ -20,7 +20,7 @@ exports.getSettings = async (req, res) => {
 
 exports.updateSettings = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { darkMode, fontSize } = req.body;
 
     await Settings.createOrUpdate({ 

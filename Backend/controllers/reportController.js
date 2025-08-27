@@ -4,7 +4,7 @@ const { get, all } = require('../config/db-sqlite');
 exports.createReport = async (req, res) => {
   try {
     const { title, jobDescription, location, remarks, reportDate, reportTime, toolsUsed, status } = req.body;
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const reportId = await Report.create({
       userId,
@@ -35,7 +35,7 @@ exports.createReport = async (req, res) => {
 
 exports.getUserReports = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const reports = await Report.findByUserId(userId);
     res.json(reports);
   } catch (err) {
@@ -77,7 +77,7 @@ exports.updateReport = async (req, res) => {
       status
     });
     
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     // Verify report belongs to user
     const reports = await Report.findByUserId(userId);
@@ -122,7 +122,7 @@ exports.updateReport = async (req, res) => {
 exports.deleteReport = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     // Verify report belongs to user
     const reports = await Report.findByUserId(userId);
@@ -149,7 +149,7 @@ exports.deleteReport = async (req, res) => {
 // Get report summary for dashboard
 exports.getReportSummary = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const [summary] = await pool.query(`
       SELECT 
@@ -169,7 +169,7 @@ exports.getReportSummary = async (req, res) => {
 // Get reports by month for chart
 exports.getReportsByMonth = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const [results] = await pool.query(`
       SELECT 
