@@ -339,7 +339,7 @@ function createSampleTasks() {
         tasksCreated++;
         if (tasksCreated === sampleTasks.length) {
           console.log("🎉 Sample data creation complete!");
-          
+
           // Now that all tables and data are created, update table schemas if needed
           console.log("🔧 Updating table schemas...");
           updateTableSchemas();
