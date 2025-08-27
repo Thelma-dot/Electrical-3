@@ -60,9 +60,6 @@ function initializeTables() {
 
 
 
-  // Update existing tables if needed (for schema changes)
-  updateTableSchemas();
-
   // Verify toolbox table structure
   verifyToolboxTable();
 }
@@ -342,6 +339,10 @@ function createSampleTasks() {
         tasksCreated++;
         if (tasksCreated === sampleTasks.length) {
           console.log("🎉 Sample data creation complete!");
+          
+          // Now that all tables and data are created, update table schemas if needed
+          console.log("🔧 Updating table schemas...");
+          updateTableSchemas();
         }
       }
     );
