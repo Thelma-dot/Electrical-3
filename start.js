@@ -1,18 +1,16 @@
-// Root start script - explicitly runs the backend production server
+// Root start script - directly runs the backend production server
 console.log('🚀 Starting Electrical Management System...');
-console.log('📁 Changing to Backend directory...');
+console.log('📁 Current working directory:', process.cwd());
 
-// Change to backend directory and run production server
-process.chdir('./Backend');
-console.log('✅ Changed to Backend directory');
-
-// Load and run the production server
+// Load and run the production server directly
 try {
   const path = require('path');
   const serverPath = path.join(__dirname, 'Backend', 'server-production.js');
+  console.log('🔍 Loading server from:', serverPath);
   require(serverPath);
   console.log('✅ Production server loaded successfully');
 } catch (error) {
   console.error('❌ Error loading production server:', error);
+  console.error('❌ Stack trace:', error.stack);
   process.exit(1);
 }
