@@ -9,9 +9,28 @@ const db = new sqlite3.Database(dbPath, (err) => {
     console.error("❌ Error opening database:", err.message);
   } else {
     console.log("✅ Connected to SQLite database");
-    initializeTables();
+    initializeDatabase();
   }
 });
+
+// Initialize database
+function initializeDatabase() {
+  console.log("🚀 Starting database initialization...");
+  console.log("📁 Database file path:", dbPath);
+  console.log("🔧 Current working directory:", process.cwd());
+
+  // Test database connection
+  db.get("SELECT 1 as test", (err, row) => {
+    if (err) {
+      console.error("❌ Database connection test failed:", err.message);
+      return;
+    }
+    console.log("✅ Database connection test successful:", row);
+
+    // Start table creation
+    initializeTables();
+  });
+}
 
 function initializeTables() {
   // Create users table
@@ -79,6 +98,7 @@ function createLoginLogsTable() {
 // Initialize users for the system
 function initializeUsers() {
   console.log("🔧 Initializing system users...");
+  console.log("🔍 Starting user creation process...");
 
   // Create admin user
   createAdminUser();
