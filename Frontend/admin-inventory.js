@@ -206,7 +206,7 @@ async function updateInventoryStats() {
     try {
         console.log('🔄 Updating inventory statistics...');
 
-        const response = await fetch('http://localhost:5000/api/admin/inventory/stats', {
+        const response = await fetch(window.appConfig.getApiUrl('/admin/inventory/stats'), {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -492,7 +492,7 @@ async function confirmDeleteItem() {
     if (!window.deleteItemId) return;
 
     try {
-        const response = await fetch(`http://localhost:5000/api/admin/inventory/${window.deleteItemId}`, {
+        const response = await fetch(`${window.appConfig.getApiUrl()}/admin/inventory/${window.deleteItemId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -653,7 +653,7 @@ async function saveInventoryChanges() {
         console.log('🔑 Editing inventory ID:', editingInventoryId);
         console.log('🔑 Token exists:', !!localStorage.getItem('token'));
 
-        const response = await fetch(`http://localhost:5000/api/admin/inventory/${editingInventoryId}`, {
+        const response = await fetch(`${window.appConfig.getApiUrl()}/admin/inventory/${editingInventoryId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

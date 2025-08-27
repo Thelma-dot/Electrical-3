@@ -398,7 +398,7 @@ router.get("/inventory", authenticateToken, requireAdmin, async (req, res) => {
                 i.issued_by as issuedBy,
                 i.created_at as lastUpdated,
                 u.staff_id as staffId,
-                u.name as staffName
+                u.staff_id as staffName
             FROM inventory i
             LEFT JOIN users u ON i.user_id = u.id
             ORDER BY i.created_at DESC

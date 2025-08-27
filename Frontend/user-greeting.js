@@ -37,7 +37,7 @@ class UserGreeting {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const response = await fetch('http://localhost:5000/api/auth/me', {
+            const response = await fetch(window.appConfig.getApiUrl() + '/auth/me', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -194,7 +194,7 @@ class UserGreeting {
                 phone: formData.get('phone')
             };
 
-            const response = await fetch('http://localhost:5000/api/auth/profile', {
+            const response = await fetch(window.appConfig.getApiUrl() + '/auth/profile', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

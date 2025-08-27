@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-        const socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
+        const socket = io(window.appConfig.getSocketUrl(), { transports: ['websocket', 'polling'] });
         const badge = document.getElementById('liveBadgeAdmin');
         const setLive = (on) => { if (!badge) return; badge.style.background = on ? '#27ae60' : '#e74c3c'; badge.querySelector('.status').textContent = on ? 'LIVE' : 'OFFLINE'; };
         socket.on('connect', () => setLive(true));
@@ -72,7 +72,7 @@ async function loadReports() {
             return;
         }
 
-        const response = await fetch('http://localhost:5000/api/admin/reports', {
+        const response = await fetch(window.appConfig.getApiUrl() + '/admin/reports', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -100,7 +100,7 @@ async function loadReports() {
 async function loadUsers() {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/admin/users', {
+        const response = await fetch(window.appConfig.getApiUrl() + '/admin/users', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -387,7 +387,7 @@ async function editReportStatus(reportId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/admin/reports/${reportId}/status`, {
+        const response = await fetch(window.appConfig.getApiUrl() + `/admin/reports/${reportId}/status`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -422,7 +422,7 @@ async function confirmDeleteReport() {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/admin/reports/${reportToDelete.id}`, {
+        const response = await fetch(window.appConfig.getApiUrl() + `/admin/reports/${reportToDelete.id}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`

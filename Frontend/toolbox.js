@@ -55,7 +55,7 @@ async function handleToolboxSubmission(e) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/toolbox', {
+        const response = await fetch(window.appConfig.getApiUrl() + '/toolbox', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -83,7 +83,7 @@ async function handleToolboxSubmission(e) {
 
         // Try to get PDF if available
         try {
-            const pdfResponse = await fetch(`http://localhost:5000/api/toolbox/${result.id}/pdf`, {
+            const pdfResponse = await fetch(`${window.appConfig.getApiUrl()}/toolbox/${result.id}/pdf`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -295,7 +295,7 @@ function clearForm() {
 async function loadExistingToolboxes() {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/toolbox', {
+        const response = await fetch(window.appConfig.getApiUrl() + '/toolbox', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -316,7 +316,7 @@ async function loadExistingToolboxes() {
 async function viewToolbox(toolboxId) {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/toolbox/${toolboxId}`, {
+        const response = await fetch(`${window.appConfig.getApiUrl()}/toolbox/${toolboxId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -366,7 +366,7 @@ async function editToolbox(toolboxId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/toolbox/${toolboxId}`, {
+        const response = await fetch(`${window.appConfig.getApiUrl()}/toolbox/${toolboxId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -490,7 +490,7 @@ async function updateToolbox() {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/toolbox/${currentToolboxId}`, {
+        const response = await fetch(`${window.appConfig.getApiUrl()}/toolbox/${currentToolboxId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -538,7 +538,7 @@ async function deleteToolbox(toolboxId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/toolbox/${toolboxId}`, {
+        const response = await fetch(`${window.appConfig.getApiUrl()}/toolbox/${toolboxId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -554,7 +554,7 @@ async function deleteToolbox(toolboxId) {
             }
 
             // If not completed, proceed with deletion
-            const deleteResponse = await fetch(`http://localhost:5000/api/toolbox/${toolboxId}`, {
+            const deleteResponse = await fetch(`${window.appConfig.getApiUrl()}/toolbox/${toolboxId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`

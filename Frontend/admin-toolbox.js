@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
 function initializeSocketConnection() {
     try {
         console.log('🔌 Attempting to connect to Socket.IO server...');
-        socket = io('http://localhost:5000');
+        socket = io(window.appConfig.getSocketUrl());
 
         socket.on('connect', () => {
             console.log('🔌 Admin toolbox connected to server for real-time updates');
@@ -98,7 +98,7 @@ async function updateToolboxRow(toolboxId) {
     try {
         // Fetch the updated toolbox data
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/toolbox/admin/${toolboxId}`, {
+        const response = await fetch(`${window.appConfig.getApiUrl()}/toolbox/admin/${toolboxId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -242,7 +242,7 @@ async function loadToolbox() {
             return;
         }
 
-        const response = await fetch('http://localhost:5000/api/toolbox/admin/all', {
+        const response = await fetch(`${window.appConfig.getApiUrl()}/toolbox/admin/all`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

@@ -101,7 +101,7 @@ async function generateReport() {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/reports', {
+        const response = await fetch(window.appConfig.getApiUrl() + '/reports', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -179,7 +179,7 @@ async function updateReport() {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/reports/${currentReportId}`, {
+        const response = await fetch(window.appConfig.getApiUrl() + `/reports/${currentReportId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -199,7 +199,7 @@ async function updateReport() {
         if (index !== -1) {
             allReports[index] = updatedReport;
         }
-        
+
         const filteredIndex = filteredReports.findIndex(r => r.id == currentReportId);
         if (filteredIndex !== -1) {
             filteredReports[filteredIndex] = updatedReport;
@@ -272,7 +272,7 @@ function clearForm() {
     updateSelectedToolsDisplay();
     document.querySelectorAll('input[name="status"]').forEach(radio => radio.checked = false);
     setCurrentDateTime();
-    
+
     // Reset button if we're in edit mode
     if (currentReportId) {
         resetGenerateButton();
@@ -286,7 +286,7 @@ function resetGenerateButton() {
         generateBtn.textContent = 'Generate Report';
         generateBtn.onclick = generateReport;
     }
-    
+
     // Hide cancel button
     const cancelBtn = document.getElementById('cancelEditBtn');
     if (cancelBtn) {
@@ -305,7 +305,7 @@ function cancelEdit() {
 async function loadExistingReports() {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/reports', {
+        const response = await fetch(window.appConfig.getApiUrl() + '/reports', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -337,7 +337,7 @@ async function deleteReport(reportId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/reports/${reportId}`, {
+        const response = await fetch(window.appConfig.getApiUrl() + `/reports/${reportId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -400,20 +400,20 @@ async function editReport(reportId) {
     // Set current report ID for update
     currentReportId = reportId;
 
-        // Change button text and functionality
+    // Change button text and functionality
     const generateBtn = document.querySelector('.generate-btn');
     generateBtn.textContent = 'Update Report';
     generateBtn.onclick = updateReport;
-    
+
     // Show cancel button
     const cancelBtn = document.getElementById('cancelEditBtn');
     if (cancelBtn) {
         cancelBtn.style.display = 'inline-block';
     }
-    
+
     // Scroll to top of form
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
+
     // Show success message
     alert('📝 Form populated with report data. Make your changes and click "Update Report" to save.');
 }

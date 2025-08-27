@@ -63,7 +63,7 @@ async function searchInventory() {
             return;
         }
 
-        const response = await fetch(`http://localhost:5000/api/inventory/search?query=${encodeURIComponent(query)}&page=${page}&limit=50`, {
+        const response = await fetch(`${window.appConfig.getApiUrl()}/inventory/search?query=${encodeURIComponent(query)}&page=${page}&limit=50`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -246,7 +246,7 @@ async function addInventory() {
             return;
         }
 
-        const response = await fetch('http://localhost:5000/api/inventory', {
+        const response = await fetch(`${window.appConfig.getApiUrl()}/inventory`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -434,7 +434,7 @@ async function loadInventory() {
         }
 
         await retryOperation(async () => {
-            const response = await fetch('http://localhost:5000/api/inventory?page=1&limit=50', {
+            const response = await fetch(`${window.appConfig.getApiUrl()}/inventory?page=1&limit=50`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -717,7 +717,7 @@ async function saveInventoryChanges(inventoryId, row, button) {
         });
 
         // Send update request to backend
-        const response = await fetch(`http://localhost:5000/api/inventory/${inventoryId}`, {
+        const response = await fetch(`${window.appConfig.getApiUrl()}/inventory/${inventoryId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -858,7 +858,7 @@ async function deleteInventory(inventoryId) {
             return;
         }
 
-        const response = await fetch(`http://localhost:5000/api/inventory/${inventoryId}`, {
+        const response = await fetch(`${window.appConfig.getApiUrl()}/inventory/${inventoryId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`

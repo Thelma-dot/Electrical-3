@@ -36,9 +36,9 @@ class DashboardTasks {
             const showCompleted = document.getElementById('showCompletedTasks')?.checked || false;
             const statusFilter = document.getElementById('myTaskStatusFilter')?.value || '';
 
-            let endpoint = 'http://localhost:5000/api/tasks/my';
+            let endpoint = window.appConfig.getApiUrl() + '/tasks/my';
             if (showCompleted) {
-                endpoint = 'http://localhost:5000/api/tasks/my/completed';
+                endpoint = window.appConfig.getApiUrl() + '/tasks/my/completed';
             }
 
             const response = await fetch(endpoint, {
@@ -122,7 +122,7 @@ class DashboardTasks {
 
     async startTask(taskId) {
         try {
-            const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+            const response = await fetch(`${window.appConfig.getApiUrl()}/api/tasks/${taskId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ class DashboardTasks {
 
     async completeTask(taskId) {
         try {
-            const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+            const response = await fetch(`${window.appConfig.getApiUrl()}/api/tasks/${taskId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -177,7 +177,7 @@ class DashboardTasks {
     async viewTaskDetails(taskId) {
         try {
             // Fetch the specific task details
-            const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+            const response = await fetch(`${window.appConfig.getApiUrl()}/api/tasks/${taskId}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -394,7 +394,7 @@ class DashboardTasks {
 
     async updateTaskDeadlineReminders() {
         try {
-            const response = await fetch('http://localhost:5000/api/tasks/my', {
+            const response = await fetch(`${window.appConfig.getApiUrl()}/api/tasks/my`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }

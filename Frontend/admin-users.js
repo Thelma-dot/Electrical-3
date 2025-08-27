@@ -66,7 +66,7 @@ async function loadUsers() {
             return;
         }
 
-        const response = await fetch('http://localhost:5000/api/admin/users', {
+        const response = await fetch(window.appConfig.getApiUrl() + '/admin/users', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -167,7 +167,7 @@ async function saveInlineUser(userId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+        const response = await fetch(window.appConfig.getApiUrl() + `/admin/users/${userId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ staff_id, email, role })
@@ -202,7 +202,7 @@ function cancelInlineEdit(userId) {
 async function getUserTaskCount(userId) {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/tasks/user/${userId}`, {
+        const response = await fetch(window.appConfig.getApiUrl() + `/tasks/user/${userId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -284,7 +284,7 @@ async function handleTaskAssignment(event, userId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/tasks', {
+        const response = await fetch(window.appConfig.getApiUrl() + '/tasks', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -364,7 +364,7 @@ function formatDate(iso) {
 async function loadAllTasks() {
     try {
         const token = localStorage.getItem('token');
-        const resp = await fetch('http://localhost:5000/api/tasks/admin/all', {
+        const resp = await fetch(window.appConfig.getApiUrl() + '/tasks/admin/all', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!resp.ok) return;
@@ -517,7 +517,7 @@ function filterTasks() {
 async function markTask(id, status) {
     try {
         const token = localStorage.getItem('token');
-        await fetch(`http://localhost:5000/api/tasks/${id}`, {
+        await fetch(window.appConfig.getApiUrl() + `/tasks/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ status })
@@ -602,7 +602,7 @@ async function handleEditTask(event, taskId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+        const response = await fetch(window.appConfig.getApiUrl() + `/tasks/${taskId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -638,7 +638,7 @@ async function deleteTask(id) {
     if (!confirm('Delete this task?')) return;
     try {
         const token = localStorage.getItem('token');
-        await fetch(`http://localhost:5000/api/tasks/${id}`, {
+        await fetch(window.appConfig.getApiUrl() + `/tasks/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -683,7 +683,7 @@ async function addUser(event) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000${endpoint}`, {
+        const response = await fetch(window.appConfig.getApiUrl() + endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -832,7 +832,7 @@ async function updateUser(event) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+        const response = await fetch(window.appConfig.getApiUrl() + `/admin/users/${userId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -894,7 +894,7 @@ async function resetUserPassword(event) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/admin/users/${userId}/reset-password`, {
+        const response = await fetch(window.appConfig.getApiUrl() + `/admin/users/${userId}/reset-password`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -925,7 +925,7 @@ async function deleteUser(userId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+        const response = await fetch(window.appConfig.getApiUrl() + `/admin/users/${userId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
