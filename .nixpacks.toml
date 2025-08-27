@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["postgresql", "libpq", "openssl"]
+nixPkgs = ["postgresql"]
 
 [phases.install]
 cmds = ["npm ci --only=production"]
