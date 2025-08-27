@@ -194,7 +194,26 @@ app.get('/api/auth/users', (req, res) => {
     });
 });
 
+// Admin users route (for admin dashboard)
+app.get('/api/admin/users', (req, res) => {
+    const query = 'SELECT id, staff_id, email, role, created_at FROM users ORDER BY created_at DESC';
+    db.all(query, (err, users) => {
+        if (err) {
+            console.error('Admin users error:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        res.json(users);
+    });
+});
+
 // Admin routes
+app.get('/api/admin/dashboard/test', (req, res) => {
+    res.json({
+        message: 'Admin dashboard test endpoint working',
+        timestamp: new Date().toISOString()
+    });
+});
+
 app.get('/api/admin/dashboard', (req, res) => {
     // Get counts for admin dashboard
     const queries = {
