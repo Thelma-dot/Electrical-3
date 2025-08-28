@@ -15,6 +15,7 @@
     "dev": "nodemon server.js",
     "setup": "node -e \"require('./config/db-sqlite').initializeTables()\"",
     "setup-postgresql": "node -e \"require('./config/database-postgresql').initializeDatabase()\"",
+    "setup-railway": "node setup-railway-postgresql.js",
     "migrate": "node migrate-to-postgresql.js",
     "db:switch": "node -e \"console.log('Current DB:', require('./config/database-switcher').pool ? 'PostgreSQL' : 'SQLite')\"",
     "test-migration": "node test-migration-setup.js"
