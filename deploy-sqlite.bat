@@ -1,15 +1,15 @@
 @echo off
-echo 🚂 Railway Deployment Script
-echo ================================
+echo 🚂 Railway SQLite Deployment Script
+echo ====================================
 echo.
 
 echo 📋 Checking current status...
 git status
 
 echo.
-echo 🔧 Committing Railway fixes...
+echo 🔧 Committing SQLite restoration...
 git add .
-git commit -m "Fix Railway deployment with PostgreSQL support - Updated server and database setup"
+git commit -m "Restore working SQLite deployment - Remove PostgreSQL complexity"
 
 echo.
 echo 🚀 Pushing to Railway...
@@ -23,9 +23,6 @@ echo    https://electrical-3-production.up.railway.app
 echo.
 echo 🔍 Check deployment status:
 echo    railway logs
-echo.
-echo 🗄️ After deployment, run database setup:
-echo    npm run setup-railway
 echo.
 echo 🎯 Monitor the deployment in Railway dashboard
 echo.
