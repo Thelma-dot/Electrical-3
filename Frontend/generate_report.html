@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Generate Report</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+    <link rel="stylesheet" href="./dashboard.css">
+    <link rel="stylesheet" href="./user-greeting.css">
+    <style>
+        .pagination-container {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .pagination-info {
+            font-weight: 500;
+            color: #666;
+        }
+
+        .pagination-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pagination-buttons button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #333;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pagination-buttons button:hover:not(:disabled) {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .pagination-buttons button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-buttons button.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .pagination-settings {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pagination-settings label {
+            font-weight: 500;
+            color: #666;
+        }
+
+        .pagination-settings select {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+
+        .view-all-reports {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .view-all-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .view-all-btn:hover {
+            background: #34495e;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .search-container {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-btn,
+        .clear-search-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .search-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .search-btn:hover {
+            background: #2980b9;
+        }
+
+        .clear-search-btn {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .clear-search-btn:hover {
+            background: #7f8c8d;
+        }
+
+        .view-all-reports-top {
+            text-align: right;
+            margin: 20px 0 10px 0;
+        }
+
+        .view-all-btn-top {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #27ae60;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .view-all-btn-top:hover {
+            background: #229954;
+        }
+
+        .edit-btn,
+        .delete-btn {
+            padding: 6px 12px;
+            margin: 0 2px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+
+        .edit-btn {
+            background: #f39c12;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #e67e22;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        #reportTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #reportTable th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        #reportTable td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        #reportTable tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .cancel-btn:hover {
+            background: #7f8c8d !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+
+            <nav>
+                <a href="./dashboard.html">📊 Dashboard</a>
+                <a class="active">📄 Generate Report</a>
+                <a href="./tool_box.html">🛠️ Toolbox</a>
+                <a href="./inventory.html">📦 Inventory</a>
+                <a href="./settings.html">⚙️ Settings</a>
+                <a href="./profile.html">👤 Profile</a>
+                <a href="./index.html">🚪 Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <h1>Generate Report</h1>
+            </header>
+
+
+
+
+
+            <div class="report-container">
+
+                <div class="left-section">
+
+                    <div class="form-group">
+                        <label for="reportTitle">Title:</label>
+                        <input type="text" id="reportTitle" placeholder="Enter report title">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jobDescription">Job Description:</label>
+                        <textarea id="jobDescription" placeholder="Enter job description"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location:</label>
+                        <input type="text" id="location" placeholder="Enter location">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="remarks">Remarks:</label>
+                        <textarea id="remarks" placeholder="Enter remarks"></textarea>
+                    </div>
+
+
+                </div>
+                <hr>
+                <div id="generatedReport" class="hidden">
+                    <h3>Report Preview</h3>
+                    <p><strong>Title:</strong> <span id="displayTitle"></span></p>
+                    <p><strong>Job Description:</strong> <span id="displayJobDescription"></span></p>
+                    <p><strong>Location:</strong> <span id="displayLocation"></span></p>
+                    <p><strong>Remarks:</strong> <span id="displayRemarks"></span></p>
+                    <p><strong>Date:</strong> <span id="displayDate"></span></p>
+                    <p><strong>Time:</strong> <span id="displayTime"></span></p>
+                    <p><strong>Tools Used:</strong> <span id="displayToolsUsed"></span></p>
+                    <p><strong>Status:</strong> <span id="displayStatus"></span></p>
+
+                    <button onclick="deleteReport()">Delete Report</button>
+                </div>
+
+                <!-- Right side (New section) -->
+                <div class="right-section">
+                    <h4>Additional Information</h4>
+                    <div class="form-group">
+                        <label for="reportDate"><strong>Date:</strong></label>
+                        <input type="date" id="reportDate">
+
+
+
+
+
+                        <label for="reportTime"><strong>Time:</strong></label>
+                        <input type="time" id="reportTime">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="toolsUsed">Tools Used:</label>
+                        <input type="text" id="toolsUsed" placeholder="Enter tools used" list="tool-list">
+                        <datalist id="tool-list">
+                            <option value="Set of Rachet">
+                            <option value="Mallet">
+                            <option value="Hammer">
+                            <option value="Box Spanner Set">
+                            <option value="Master Screw Driver Bit">
+                            <option value="High Spped Steel Ground Flute Jobber Drill">
+                            <option value="Precision Eye Loupe">
+                            <option value="Spanners(10,11,12,13,14,15,16,17,18,19)">
+                            <option value="Double Cut File Set">
+                            <option value="Handy Knife for Engineers">
+                            <option value="Hacksaw blades">
+                            <option value="Scissors">
+                            <option value="150mm (6'') Engineer Square">
+                            <option value="Tape Measure 5m">
+                            <option value="Tap Wrench Big Size">
+                            <option value="Tap Wrench Small Size">
+                            <option value="Tinsnips - General Purpose Straight">
+                            <option value="Magnetic Telescope Pickup Tool">
+                            <option value="Heavy Duty Hacksaw">
+                            <option value="300mm (12'') Engineer Square">
+                            <option value="Screwdriver Set">
+                            <option value="Alan Keys Set">
+                            <option value="Side Cutter">
+                            <option value="Plier">
+                            <option value="Long Nose">
+                            <option value="Shifting Spanner">
+                            <option value="(Ajustable Wrench) Groove Joint Plier ">
+                            <option value="Needle File Set">
+                            <option value="(Pipe Wrench) Locking Plier">
+                            <option value="Wiring Sharp Blade">
+                            <option value="Adjustable telescopic inspection mirror">
+                            <option value="18 Blade Feeler Gauge">
+                            <option value="Pocket Scriber">
+                            <option value="Engineers Rule 150mm/6''">
+                            <option value="Engineers Rule 150mm/12''">
+                            <option value="Set of Screw Drivers">
+                            <option value="Chisel">
+                            <option value="Meter">
+                            <option value="Battery Tester">
+                            <option value="Ladder">
+                        </datalist>
+                    </div>
+
+                    <!-- Selected tools display area -->
+                    <div id="selectedToolsContainer">
+                        <ul id="selectedToolsList"></ul>
+                    </div>
+
+                    <p><strong>Status:</strong></p>
+
+                    <!-- Status selection: In Progress or Completed -->
+                    <div class="status-options">
+                        <label>
+                            <input type="radio" name="status" value="In Progress" id="statusInProgress">
+                            In Progress
+                        </label>
+                        <label>
+                            <input type="radio" name="status" value="Completed" id="statusCompleted">
+                            Completed
+                        </label>
+                    </div>
+                    <button class="generate-btn" onclick="generateReport()">Generate Report</button>
+                    <button id="cancelEditBtn" class="cancel-btn" onclick="cancelEdit()"
+                        style="display: none; margin-left: 10px; padding: 10px 20px; background: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer; text-align: center;">Cancel
+                        Edit</button>
+                </div>
+
+                <div id="generatedReport" class="hidden">
+                    <h2 id="displayTitle"></h2>
+                    <p id="displayJobDescription"></p>
+                    <p id="displayLocation"></p>
+                    <p id="displayRemarks"></p>
+                    <p id="displayDate"></p>
+                    <p id="displayTime"></p>
+                    <p id="displayToolsUsed"></p>
+                    <p id="displayStatus"></p>
+                </div>
+
+
+            </div>
+
+
+
+
+
+
+            <!-- View All Reports Link -->
+            <div class="view-all-reports">
+                <a href="./reports.html" class="view-all-btn">📋 View All Reports</a>
+            </div>
+
+
+
+
+        </main>
+        <script src="./dark-mode.js"></script>
+        <script src="./script.js"></script>
+        <script src="./generate_report.js"></script>
+        <script src="./user-greeting.js"></script>
+
+        <style>
+            /* Tool selection styling */
+            #selectedToolsContainer {
+                margin: 10px 0;
+            }
+
+            #selectedToolsList {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            #selectedToolsList li {
+                display: inline-flex;
+                align-items: center;
+                padding: 4px 12px;
+                font-size: 12px;
+                color: #000000;
+                max-width: 200px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .remove-tool {
+                background: #f44336;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 18px;
+                height: 18px;
+                margin-left: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                line-height: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                transition: background-color 0.2s ease;
+            }
+
+            .remove-tool:hover {
+                background: #d32f2f;
+            }
+
+            /* Make the tool input more compact */
+            #toolsUsed {
+                margin-bottom: 10px;
+            }
+        </style>
+</body>
+
+</html>

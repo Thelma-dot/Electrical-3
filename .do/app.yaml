@@ -1,0 +1,23 @@
+name: electrical-management-system
+services:
+  - name: web
+    source_dir: /
+    github:
+      repo: Thelma-dot/Electrical-3
+      branch: main
+    run_command: npm start
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: JWT_SECRET
+        scope: RUN_AND_BUILD_TIME
+        value: your_jwt_secret_here
+      - key: DB_TYPE
+        value: sqlite
+      - key: DB_PATH
+        value: ./electrical_management.db

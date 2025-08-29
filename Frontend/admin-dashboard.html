@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Dashboard</title>
+    <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+    <link rel="stylesheet" href="./adminDashboard.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- Load configuration first -->
+    <script src="./config.js"></script>
+    <!-- Then load main script -->
+    <script src="./admin-dashboard.js"></script>
+    <div class="admin-container">
+        <!-- Admin Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="./admin-dashboard.html" class="nav-brand">
+                    <img src="./images/logo_gpha.png" alt="GPHA Logo">
+                    <h1>Admin Dashboard</h1>
+                </a>
+
+                <div class="nav-menu">
+                    <a href="./admin-dashboard.html" class="nav-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                    <a href="./admin-users.html" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        User Management
+                    </a>
+                    <a href="./admin-reports.html" class="nav-link">
+                        <i class="fas fa-chart-bar"></i>
+                        Reports Management
+                    </a>
+                    <a href="./admin-inventory.html" class="nav-link active">
+                        <i class="fas fa-boxes"></i>
+                        Inventory Management
+                    </a>
+                    <a href="./admin-toolbox.html" class="nav-link">
+                        <i class="fas fa-tools"></i>
+                        Toolbox Management
+                    </a>
+
+                    <button class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="admin-main">
+            <div class="admin-container">
+                <h1>Admin Dashboard</h1>
+
+                <!-- Dashboard Overview -->
+                <div class="dashboard-overview">
+                    <div class="overview-card">
+                        <div class="overview-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="overview-content">
+                            <h3>Total Users</h3>
+                            <p id="totalUsers">0</p>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="overview-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="overview-content">
+                            <h3>Admin Users</h3>
+                            <p id="adminUsers">0</p>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="overview-icon">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="overview-content">
+                            <h3>Staff Users</h3>
+                            <p id="staffUsers">0</p>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="overview-icon">
+                            <i class="fas fa-sign-in-alt"></i>
+                        </div>
+                        <div class="overview-content">
+                            <h3>Today's Logins</h3>
+                            <p id="todayLogins">0</p>
+                            <small id="todayFailedLogins" style="color: #e74c3c; font-size: 12px; display: none;">0
+                                failed</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Users Table -->
+                <div class="recent-users">
+                    <h3>Recent Users</h3>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Staff ID</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Created Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentUsersTable">
+                                <!-- Recent users will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <h3>User Roles Distribution</h3>
+                        <canvas id="userRolesChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>User Registration Trend</h3>
+                        <canvas id="userTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Login Statistics -->
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <h3>Today's Login Activity</h3>
+                        <div id="loginStatsContainer">
+                            <div class="login-stats-grid">
+                                <div class="login-stat-item">
+                                    <span class="stat-label">Successful Logins:</span>
+                                    <span class="stat-value" id="successfulLogins">0</span>
+                                </div>
+                                <div class="login-stat-item">
+                                    <span class="stat-label">Failed Logins:</span>
+                                    <span class="stat-value failed" id="failedLogins">0</span>
+                                </div>
+                                <div class="login-stat-item">
+                                    <span class="stat-label">Admin Logins:</span>
+                                    <span class="stat-value" id="adminLogins">0</span>
+                                </div>
+                                <div class="login-stat-item">
+                                    <span class="stat-label">Staff Logins:</span>
+                                    <span class="stat-value" id="staffLogins">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Charts for Admin Dashboard -->
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <h3>System Overview (Barchart)</h3>
+                        <div id="adminBarChartContainer">
+                            <canvas id="adminBarChart"></canvas>
+                            <div id="adminBarChartFallback"
+                                style="display: none; text-align: center; padding: 2rem; color: #666;">
+                                <p>Chart loading...</p>
+                                <p id="adminBarChartStatus">Initializing...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Reports Performance (Revenue Chart)</h3>
+                        <canvas id="adminRevenueChart"></canvas>
+                        <div class="performance-indicator">
+                            <span>Performance:</span>
+                            <span class="performance-arrow" id="adminPerformanceArrow">➡️</span>
+                            <span id="adminPerformanceText">Stable</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-time functionality removed -->
+            </div>
+        </div>
+
+        <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+        <script src="./script.js"></script>
+        <script src="./admin-dashboard.js"></script>
+
+</body>
+
+</html>

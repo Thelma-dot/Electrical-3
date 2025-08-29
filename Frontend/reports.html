@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>View Reports</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+    <link rel="stylesheet" href="./dashboard.css">
+    <link rel="stylesheet" href="./user-greeting.css">
+    <style>
+        .search-container {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-btn {
+            padding: 10px 20px;
+            background: #0055aa;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .search-btn:hover {
+            background: #004080;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: #0055aa;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        .back-btn:hover {
+            background: #004080;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+            <nav>
+                <a href="./dashboard.html">📊 Dashboard</a>
+                <a href="./generate_report.html">📄 Generate Report</a>
+                <a href="./tool_box.html">🛠️ Toolbox</a>
+                <a href="./inventory.html">📦 Inventory</a>
+                <a href="./settings.html">⚙️ Settings</a>
+                <a href="./profile.html">👤 Profile</a>
+                <a href="./index.html" onclick="logout()">🚪 Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <h1>View Reports</h1>
+            </header>
+
+
+
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-input"
+                    placeholder="Search reports by title, location, status...">
+                <button class="search-btn" onclick="searchReports()">Search</button>
+            </div>
+
+            <div class="report-actions">
+                <a href="./generate_report.html" class="back-btn">Generate New Report</a>
+            </div>
+
+            <!-- Reports Section -->
+            <section class="reports-section">
+                <h2>📋 My Reports</h2>
+
+                <table id="reportsTable">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Job Description</th>
+                            <th>Location</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Tools Used</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTableBody">
+                        <!-- Reports will be populated here -->
+                    </tbody>
+                </table>
+
+                <!-- Reports Table Pagination -->
+                <div class="pagination">
+                    <button id="reportsPrevPage" onclick="changeReportsPage(-1)">Previous</button>
+                    <span id="reportsPageInfo">Page 1 of 1</span>
+                    <button id="reportsNextPage" onclick="changeReportsPage(1)">Next</button>
+                </div>
+
+                <div id="noResultsMessage" style="display: none; text-align: center; color: #666; margin: 20px;">
+                    No reports found matching your search criteria.
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="./dark-mode.js"></script>
+    <script src="./script.js"></script>
+    <script>
+        // Reports page specific functionality
+        let allReports = [];
+        let currentReportsPage = 1;
+        const reportsPerPage = 10; // Number of reports to display per page
+
+        // Helper function to format date for input field
+        function formatDateForInput(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '';
+            return date.toISOString().split('T')[0];
+        }
+
+        // Helper function to format time for input field
+        function formatTimeForInput(timeString) {
+            if (!timeString) return '';
+            // If time is in HH:MM:SS format, extract HH:MM
+            if (timeString.includes(':')) {
+                const parts = timeString.split(':');
+                if (parts.length >= 2) {
+                    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+                }
+            }
+            return timeString;
+        }
+
+        // Helper function to format date for display
+        function formatDateForDisplay(dateString) {
+            if (!dateString) return 'N/A';
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return 'N/A';
+                return date.toLocaleDateString();
+            } catch (error) {
+                return 'N/A';
+            }
+        }
+
+        // Helper function to format time for display
+        function formatTimeForDisplay(timeString) {
+            if (!timeString) return 'N/A';
+            try {
+                // If time is in HH:MM:SS format, extract HH:MM
+                if (timeString.includes(':')) {
+                    const parts = timeString.split(':');
+                    if (parts.length >= 2) {
+                        return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+                    }
+                }
+                return timeString;
+            } catch (error) {
+                return 'N/A';
+            }
+        }
+
+        // Load reports when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            loadReports();
+        });
+
+        async function loadReports() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = './index.html';
+                    return;
+                }
+
+                const response = await fetch('http://localhost:5000/api/reports', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    allReports = await response.json();
+                    console.log('📋 Received reports data:', allReports);
+
+                    // Normalize field names for consistency - handle all possible field name variations
+                    allReports = allReports.map(report => ({
+                        ...report,
+                        report_date: report.report_date || report.reportDate || report.date,
+                        report_time: report.report_time || report.reportTime || report.time,
+                        tools_used: report.tools_used || report.toolsUsed || report.tools,
+                        job_description: report.job_description || report.jobDescription
+                    }));
+
+                    // Debug date and time fields
+                    allReports.forEach((report, index) => {
+                        console.log(`📅 Report ${index + 1} date/time fields:`, {
+                            id: report.id,
+                            report_date: report.report_date,
+                            report_time: report.report_time,
+                            title: report.title
+                        });
+                    });
+
+                    displayReports(allReports);
+                } else {
+                    console.error('Failed to load reports');
+                    displayReports([]);
+                }
+            } catch (error) {
+                console.error('Error loading reports:', error);
+                displayReports([]);
+            }
+        }
+
+        function displayReports(reports) {
+            const tbody = document.getElementById('reportsTableBody');
+            tbody.innerHTML = '';
+
+            if (reports.length === 0) {
+                document.getElementById('noResultsMessage').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('noResultsMessage').style.display = 'none';
+
+            // Apply pagination
+            const startIndex = (currentReportsPage - 1) * reportsPerPage;
+            const endIndex = startIndex + reportsPerPage;
+            const reportsToShow = reports.slice(startIndex, endIndex);
+
+            // Update pagination info
+            updateReportsPaginationInfo(reports.length);
+
+            reportsToShow.forEach((report) => {
+                const row = document.createElement('tr');
+                // Format date and time properly - ensure we get the correct field values
+                const reportDate = report.report_date || report.reportDate || report.date;
+                const reportTime = report.report_time || report.reportTime || report.time;
+                const toolsUsed = report.tools_used || report.toolsUsed || report.tools;
+
+                console.log(`📊 Displaying report ${report.id}:`, {
+                    title: report.title,
+                    report_date: report.report_date,
+                    report_time: report.report_time,
+                    reportDate: report.reportDate,
+                    reportTime: report.reportTime,
+                    tools_used: report.tools_used,
+                    toolsUsed: report.toolsUsed,
+                    // Also check for alternative field names
+                    date: report.date,
+                    time: report.time,
+                    tools: report.tools
+                });
+
+                const formattedDate = reportDate ? formatDateForDisplay(reportDate) : 'N/A';
+                const formattedTime = reportTime ? formatTimeForDisplay(reportTime) : 'N/A';
+
+                row.innerHTML = `
+                    <td>${report.title || 'N/A'}</td>
+                    <td>${report.job_description || report.jobDescription || 'N/A'}</td>
+                    <td>${report.location || 'N/A'}</td>
+                    <td>${formattedDate}</td>
+                    <td>${formattedTime}</td>
+                    <td><span class="status ${(report.status || '').toLowerCase().replace(' ', '-')}">${report.status || 'N/A'}</td>
+                                         <td>${Array.isArray(toolsUsed) ?
+                        toolsUsed.join(', ') :
+                        (toolsUsed || 'N/A')}</td>
+                    <td>
+                        ${report.status && report.status.toLowerCase() === 'completed' ?
+                        `<button onclick="viewReport(${report.id})" class="view-btn">View</button>` :
+                        `<button onclick="editReport(${report.id})" class="edit-btn">Edit</button>
+                             <button onclick="deleteReport(${report.id})" class="delete-btn">Delete</button>`
+                    }
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Reports pagination functions
+        function updateReportsPaginationInfo(totalReports) {
+            const totalPages = Math.ceil(totalReports / reportsPerPage);
+            const pageInfo = document.getElementById('reportsPageInfo');
+            if (pageInfo) {
+                pageInfo.textContent = `Page ${currentReportsPage} of ${totalPages}`;
+            }
+
+            // Update button states
+            const prevBtn = document.getElementById('reportsPrevPage');
+            const nextBtn = document.getElementById('reportsNextPage');
+
+            if (prevBtn) prevBtn.disabled = currentReportsPage <= 1;
+            if (nextBtn) nextBtn.disabled = currentReportsPage >= totalPages;
+        }
+
+        function changeReportsPage(direction) {
+            const totalReports = allReports.length;
+            const totalPages = Math.ceil(totalReports / reportsPerPage);
+
+            if (direction === -1 && currentReportsPage > 1) {
+                currentReportsPage--;
+            } else if (direction === 1 && currentReportsPage < totalPages) {
+                currentReportsPage++;
+            }
+
+            displayReports(allReports);
+        }
+
+        function searchReports() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredReports = allReports.filter(report =>
+                (report.title || '').toLowerCase().includes(searchTerm) ||
+                (report.job_description || report.jobDescription || '').toLowerCase().includes(searchTerm) ||
+                (report.location || '').toLowerCase().includes(searchTerm) ||
+                (report.status || '').toLowerCase().includes(searchTerm) ||
+                (report.tools_used || report.toolsUsed || '').toLowerCase().includes(searchTerm)
+            );
+            currentReportsPage = 1; // Reset to first page on new search
+            displayReports(filteredReports);
+        }
+
+        async function viewReport(reportId) {
+            const report = allReports.find(r => r.id === reportId);
+            if (!report) return;
+
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
+            `;
+
+            modal.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 8px; max-width: 500px; max-height: 80vh; overflow-y: auto;">
+                    <h2>Report Details</h2>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Title:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.title}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Description:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.job_description || report.jobDescription}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Location:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.location}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Date:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${formatDateForDisplay(report.report_date || report.reportDate)}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Time:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${formatTimeForDisplay(report.report_time || report.reportTime)}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Status:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.status}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Tools Used:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${Array.isArray(report.tools_used || report.toolsUsed) ? (report.tools_used || report.toolsUsed).join(', ') : (report.tools_used || report.toolsUsed || 'N/A')}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Remarks:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.remarks || 'N/A'}</td></tr>
+                    </table>
+                    <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                                                 <button onclick="printReport(${report.id})" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">🖨️ Print</button>
+                                                 <button onclick="this.parentElement.parentElement.parentElement.remove()" style="padding: 10px 20px; background: #2c3e50; color: white; border: none; border-radius: 4px; cursor: pointer;">❌ Close</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        async function editReport(reportId) {
+            const report = allReports.find(r => r.id === reportId);
+            if (!report) return;
+
+            console.log('📝 Original report data for editing:', report);
+
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
+            `;
+
+            modal.innerHTML = `
+                <div class="edit-modal" style="background: white; padding: 30px; border-radius: 8px; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                    <h2>Edit Report</h2>
+                    <form id="editReportForm">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Title:</label>
+                            <input type="text" id="editTitle" value="${report.title}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Job Description:</label>
+                            <textarea id="editJobDescription" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 80px;">${report.job_description || report.jobDescription || ''}</textarea>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Location:</label>
+                            <input type="text" id="editLocation" value="${report.location || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Date:</label>
+                            <input type="date" id="editDate" value="${formatDateForInput(report.report_date || report.reportDate)}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Time:</label>
+                            <input type="time" id="editTime" value="${formatTimeForInput(report.report_time || report.reportTime)}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Status:</label>
+                            <select id="editStatus" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="Pending" ${(report.status || '').toLowerCase() === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="In Progress" ${(report.status || '').toLowerCase().includes('progress') ? 'selected' : ''}>In Progress</option>
+                                <option value="Completed" ${(report.status || '').toLowerCase() === 'completed' ? 'selected' : ''}>Completed</option>
+                                <option value="Cancelled" ${(report.status || '').toLowerCase() === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Tools Used:</label>
+                            <input type="text" id="editToolsUsed" value="${Array.isArray(report.tools_used || report.toolsUsed) ? (report.tools_used || report.toolsUsed).join(', ') : (report.tools_used || report.toolsUsed || '')}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Remarks:</label>
+                            <textarea id="editRemarks" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 80px;">${report.remarks || ''}</textarea>
+                        </div>
+                        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center; align-items: center;">
+                            <button type="submit" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; min-width: 120px; height: 40px; font-size: 14px; font-weight: 500;">💾 Save Changes</button>
+                            <button type="button" onclick="this.parentElement.parentElement.parentElement.remove()" style="padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; min-width: 120px; height: 40px; font-size: 14px; font-weight: 500;">❌ Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // Handle form submission
+            document.getElementById('editReportForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                await saveReportChanges(reportId, modal);
+            });
+
+            // Handle Escape key to close modal
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    modal.remove();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+
+            // Handle clicking outside modal to close
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            });
+        }
+
+        async function saveReportChanges(reportId, modal) {
+            try {
+                const title = document.getElementById('editTitle').value.trim();
+                const jobDescription = document.getElementById('editJobDescription').value.trim();
+                const location = document.getElementById('editLocation').value.trim();
+                const date = document.getElementById('editDate').value;
+                const time = document.getElementById('editTime').value;
+                const status = document.getElementById('editStatus').value;
+                const toolsUsed = document.getElementById('editToolsUsed').value.trim();
+                const remarks = document.getElementById('editRemarks').value.trim();
+
+                console.log('🔍 Form values collected:', { title, jobDescription, location, date, time, status, toolsUsed, remarks });
+                console.log('🔍 Form element values:', {
+                    title: document.getElementById('editTitle').value,
+                    date: document.getElementById('editDate').value,
+                    time: document.getElementById('editTime').value,
+                    toolsUsed: document.getElementById('editToolsUsed').value
+                });
+
+                if (!title || !jobDescription || !location || !date || !status) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+
+                // Show loading state
+                const submitBtn = modal.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = '⏳ Saving...';
+                submitBtn.disabled = true;
+
+                // When editing and saving, automatically mark the report as completed
+                const finalStatus = 'Completed';
+
+                const reportData = {
+                    title,
+                    jobDescription,
+                    location,
+                    remarks,
+                    report_date: date,
+                    report_time: time,
+                    tools_used: toolsUsed,
+                    status: finalStatus
+                };
+
+                console.log('💾 Sending report data to backend:', reportData);
+
+                const token = localStorage.getItem('token');
+                const response = await fetch(`http://localhost:5000/api/reports/${reportId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(reportData)
+                });
+
+                if (response.ok) {
+                    const updatedReport = await response.json();
+                    console.log('✅ Received updated report from backend:', updatedReport);
+                    console.log('🔍 Checking field mapping in updated report:', {
+                        report_date: updatedReport.report_date,
+                        report_time: updatedReport.report_time,
+                        tools_used: updatedReport.tools_used,
+                        reportDate: updatedReport.reportDate,
+                        reportTime: updatedReport.reportTime,
+                        toolsUsed: updatedReport.toolsUsed
+                    });
+
+                    // Normalize the field names to ensure consistency - handle all possible field name variations
+                    const normalizedReport = {
+                        ...updatedReport,
+                        report_date: updatedReport.report_date || updatedReport.reportDate || updatedReport.date,
+                        report_time: updatedReport.report_time || updatedReport.reportTime || updatedReport.time,
+                        tools_used: updatedReport.tools_used || updatedReport.toolsUsed || updatedReport.tools,
+                        job_description: updatedReport.job_description || updatedReport.jobDescription
+                    };
+
+                    // Update the report in the local array
+                    const index = allReports.findIndex(r => r.id === reportId);
+                    if (index !== -1) {
+                        allReports[index] = normalizedReport;
+                        console.log('💾 Updated local report array with normalized fields:', allReports[index]);
+                    }
+
+                    // Refresh the display
+                    displayReports(allReports);
+
+                    // Close modal
+                    modal.remove();
+
+                    alert('✅ Report updated and marked as completed successfully!');
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Failed to update report');
+                }
+            } catch (error) {
+                console.error('Error updating report:', error);
+                alert(`Failed to update report: ${error.message}`);
+
+                // Reset button state
+                const submitBtn = modal.querySelector('button[type="submit"]');
+                submitBtn.textContent = '💾 Save Changes';
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function markReportComplete(reportId) {
+            if (!confirm('Are you sure you want to mark this report as completed?')) return;
+
+            try {
+                const token = localStorage.getItem('token');
+                const report = allReports.find(r => r.id === reportId);
+                if (!report) return;
+
+                const reportData = {
+                    title: report.title,
+                    jobDescription: report.job_description || report.jobDescription,
+                    location: report.location,
+                    remarks: report.remarks,
+                    report_date: report.report_date || report.reportDate,
+                    report_time: report.report_time || report.reportTime,
+                    tools_used: report.tools_used || report.toolsUsed,
+                    status: 'Completed'
+                };
+
+                const response = await fetch(`http://localhost:5000/api/reports/${reportId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(reportData)
+                });
+
+                if (response.ok) {
+                    const updatedReport = await response.json();
+                    console.log('✅ Received updated report from backend (markComplete):', updatedReport);
+
+                    // Update the report in the local array
+                    const index = allReports.findIndex(r => r.id === reportId);
+                    if (index !== -1) {
+                        allReports[index] = updatedReport;
+                    }
+
+                    // Refresh the display
+                    displayReports(allReports);
+                    alert('✅ Report marked as completed successfully!');
+                } else {
+                    alert('Failed to mark report as completed');
+                }
+            } catch (error) {
+                console.error('Error marking report as completed:', error);
+                alert('Error marking report as completed');
+            }
+        }
+
+        async function deleteReport(reportId) {
+            if (!confirm('Are you sure you want to delete this report?')) return;
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`http://localhost:5000/api/reports/${reportId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    loadReports();
+                } else {
+                    alert('Failed to delete report');
+                }
+            } catch (error) {
+                console.error('Error deleting report:', error);
+                alert('Error deleting report');
+            }
+        }
+
+        function printReport(reportId) {
+            const report = allReports.find(r => r.id === reportId);
+            if (!report) return;
+
+            // Create a new window for printing
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Report - ${report.title}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+                        .report-details { margin-bottom: 30px; }
+                        .report-details table { width: 100%; border-collapse: collapse; }
+                        .report-details td { padding: 8px; border-bottom: 1px solid #ddd; }
+                        .report-details td:first-child { font-weight: bold; width: 30%; }
+                        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #666; }
+                        @media print { body { margin: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Electrical Management System</h1>
+                        <h2>${report.title}</h2>
+                    </div>
+                    
+                    <div class="report-details">
+                        <table>
+                            <tr><td>Job Description:</td><td>${report.job_description || report.jobDescription || 'N/A'}</td></tr>
+                            <tr><td>Location:</td><td>${report.location || 'N/A'}</td></tr>
+                            <tr><td>Date:</td><td>${report.report_date || report.reportDate || 'N/A'}</td></tr>
+                            <tr><td>Time:</td><td>${report.report_time || report.reportTime || 'N/A'}</td></tr>
+                            <tr><td>Status:</td><td>${report.status || 'N/A'}</td></tr>
+                            <tr><td>Tools Used:</td><td>${Array.isArray(report.tools_used || report.toolsUsed) ? (report.tools_used || report.toolsUsed).join(', ') : (report.tools_used || report.toolsUsed || 'N/A')}</td></tr>
+                            <tr><td>Remarks:</td><td>${report.remarks || 'N/A'}</td></tr>
+                        </table>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                    </div>
+                </body>
+                </html>
+            `);
+
+            printWindow.document.close();
+            printWindow.focus();
+
+            // Wait for content to load then print
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
+        }
+
+        function viewReport(reportId) {
+            const report = allReports.find(r => r.id === reportId);
+            if (!report) return;
+
+            // Create a modal for viewing the report
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
+            `;
+
+            modal.innerHTML = `
+                <div class="view-modal" style="background: white; padding: 30px; border-radius: 8px; max-width: 700px; max-height: 80vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0; color: #2c3e50;">📋 Report Details</h2>
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Title:</label>
+                            <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #3498db;">${report.title || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Status:</label>
+                            <div style="padding: 10px; background: #d4edda; color: #155724; border-radius: 4px; border-left: 4px solid #28a745; font-weight: bold;">${report.status || 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Job Description:</label>
+                        <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #3498db; min-height: 60px; white-space: pre-wrap;">${report.job_description || report.jobDescription || 'N/A'}</div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Location:</label>
+                            <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #3498db;">${report.location || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Date:</label>
+                            <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #3498db;">${report.report_date || report.reportDate ? formatDateForDisplay(report.report_date || report.reportDate) : 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Time:</label>
+                            <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #3498db;">${report.report_time || report.reportTime ? formatTimeForDisplay(report.report_time || report.reportTime) : 'N/A'}</div>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Tools Used:</label>
+                            <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #3498db;">${Array.isArray(report.tools_used || report.toolsUsed) ? (report.tools_used || report.toolsUsed).join(', ') : (report.tools_used || report.toolsUsed || 'N/A')}</div>
+                        </div>
+                    </div>
+                    
+                    ${report.remarks ? `
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Remarks:</label>
+                        <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #3498db; min-height: 60px; white-space: pre-wrap;">${report.remarks}</div>
+                    </div>
+                    ` : ''}
+                    
+                    <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; align-items: center;">
+                                                 <button onclick="printReport(${report.id})" style="padding: 12px 24px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">🖨️ Print Report</button>
+                                                 <button onclick="this.parentElement.parentElement.parentElement.remove()" style="padding: 12px 24px; background: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">❌ Close</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // Handle Escape key to close modal
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    modal.remove();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+
+            // Handle clicking outside modal to close
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            });
+        }
+
+        // CSS for status badges and table styling
+        const style = document.createElement('style');
+        style.textContent = `
+            #reportsTable {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            
+            #reportsTable th {
+                background: #f8f9fa;
+                padding: 12px;
+                text-align: left;
+                font-weight: 600;
+                border-bottom: 2px solid #dee2e6;
+            }
+            
+            #reportsTable td {
+                padding: 12px;
+                border-bottom: 1px solid #dee2e6;
+            }
+            
+            #reportsTable tr:hover {
+                background-color: #f8f9fa;
+            }
+            
+            .status.completed { 
+                background: #d4edda; 
+                color: #155724; 
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            
+
+            
+            .view-btn {
+                background: #3498db;
+                color: white;
+                border: none;
+                padding: 4px 12px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: 500;
+                transition: background-color 0.3s ease;
+            }
+            
+            .view-btn:hover {
+                background: #2980b9;
+            }
+            
+            /* Actions column styling */
+            #reportsTable td:last-child {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+            
+            /* View modal styling */
+            .view-modal {
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                border: 1px solid #e9ecef;
+            }
+            
+            .view-modal h2 {
+                color: #2c3e50;
+                border-bottom: 2px solid #3498db;
+                padding-bottom: 10px;
+            }
+            
+            .view-modal label {
+                color: #555;
+                font-size: 14px;
+                margin-bottom: 8px;
+            }
+            
+            .view-modal div[style*="background: #f8f9fa"] {
+                border: 1px solid #e9ecef;
+                font-size: 14px;
+                line-height: 1.4;
+            }
+                font-size: 12px;
+                font-weight: bold;
+                display: inline-block;
+                text-align: center;
+                min-width: 80px;
+            }
+            
+            .status.in-progress { 
+                background: #fff3cd; 
+                color: #856404; 
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            
+            .status.pending { 
+                background: #cce5ff; 
+                color: #004085; 
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            
+            .edit-btn, .delete-btn {
+                padding: 6px 12px;
+                margin: 0 2px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: background-color 0.3s;
+                min-width: 60px;
+                height: 32px;
+            }
+            
+            .edit-btn { 
+                background: #2c3e50; 
+                color: white; 
+            }
+            
+            .edit-btn:hover {
+                background: #34495e;
+            }
+            
+            .delete-btn { 
+                background: #e74c3c; 
+                color: white; 
+            }
+            
+            .delete-btn:hover {
+                background: #c0392b;
+            }
+            
+            /* Edit modal styling */
+            .edit-modal input, .edit-modal textarea, .edit-modal select {
+                font-family: inherit;
+                font-size: 14px;
+            }
+            
+            .edit-modal input:focus, .edit-modal textarea:focus, .edit-modal select:focus {
+                outline: none;
+                border-color: #3498db;
+                box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+            }
+            
+            .edit-modal button[type="submit"]:hover {
+                background: #2c3e50 !important;
+            }
+            
+            .edit-modal button[type="button"]:hover {
+                background: #7f8c8d !important;
+            }
+            
+            .edit-modal h2 {
+                color: #2c3e50;
+                margin-bottom: 20px;
+                text-align: center;
+                border-bottom: 2px solid #ecf0f1;
+                padding-bottom: 10px;
+            }
+            
+            .edit-modal label {
+                color: #34495e;
+                font-weight: 600;
+            }
+            
+            .edit-modal input, .edit-modal textarea, .edit-modal select {
+                transition: all 0.3s ease;
+            }
+            
+            .edit-modal input:hover, .edit-modal textarea:hover, .edit-modal select:hover {
+                border-color: #bdc3c7;
+            }
+            
+            /* Reports Section Styles */
+            .reports-section {
+                margin-top: 2rem;
+                padding: 2rem;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            
+            .reports-section h2 {
+                font-size: 1.8rem;
+                font-weight: 600;
+                color: #1f2937;
+                margin-bottom: 1.5rem;
+                text-align: center;
+                border-bottom: 2px solid #e5e7eb;
+                padding-bottom: 0.5rem;
+            }
+            
+            /* Pagination Styles */
+            .pagination {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 1rem;
+                margin-top: 2rem;
+                padding: 1rem;
+                text-align: center;
+                width: 100%;
+            }
+            
+            .pagination button {
+                padding: 0.5rem 1rem;
+                border: 1px solid #d1d5db;
+                background: white;
+                color: #374151;
+                border-radius: 0.375rem;
+                cursor: pointer;
+                font-size: 0.875rem;
+                font-weight: 500;
+                transition: all 0.2s;
+                min-width: 80px;
+            }
+            
+            .pagination button:hover:not(:disabled) {
+                background: #f3f4f6;
+                border-color: #9ca3af;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            
+            .pagination button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            
+            .pagination span {
+                font-size: 0.875rem;
+                color: #6b7280;
+                font-weight: 500;
+                min-width: 100px;
+                text-align: center;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+
+    <!-- User Greeting Script -->
+    <script src="./user-greeting.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dashboard</title>
+  <link rel="icon" type="image/png" href="./images/logo_gpha.png">
+  <link rel="stylesheet" href="./dashboard.css">
+  <link rel="stylesheet" href="./user-greeting.css">
+  <style>
+    /* Live badge styles removed - no longer needed */
+
+    .live-flash {
+      animation: flash 600ms ease
+    }
+
+    @keyframes flash {
+      0% {
+        box-shadow: 0 0 0 6px rgba(46, 204, 113, .22)
+      }
+
+      100% {
+        box-shadow: none
+      }
+    }
+
+    /* Chart update indicators removed - no longer needed */
+
+    /* Real-time indicator styles removed - no longer needed */
+
+    .stats .card {
+      position: relative;
+    }
+
+    /* Header controls removed - no longer needed */
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+
+      100% {
+        opacity: 1;
+      }
+    }
+
+    /* Chart loading styles removed - no longer needed */
+
+    .toast-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #27ae60;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      max-width: 300px;
+    }
+
+    .toast-notification.show {
+      transform: translateX(0);
+    }
+
+    .toast-notification.success {
+      background: #27ae60;
+    }
+
+    .toast-notification.info {
+      background: #3498db;
+    }
+
+    .toast-notification.warning {
+      background: #f39c12;
+    }
+
+    .toast-notification .toast-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast-notification .toast-icon {
+      font-size: 16px;
+    }
+
+    .performance-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .performance-arrow {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .performance-arrow.up {
+      color: #27ae60;
+    }
+
+    .performance-arrow.down {
+      color: #e74c3c;
+    }
+
+    .performance-arrow.neutral {
+      color: #95a5a6;
+    }
+
+    /* System Overview Chart Styling - Make it more compact */
+    #systemOverview canvas {
+      max-height: 200px !important;
+    }
+
+    #systemOverview {
+      min-height: 280px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 250px;
+      margin: 20px 0;
+    }
+
+    .chart {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+
+    .chart h3 {
+      margin: 0 0 20px 0;
+      color: #2c3e50;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    /* Inventory breakdown styles */
+    .inventory-breakdown {
+      margin-top: 10px;
+      font-size: 0.85em;
+      color: #7f8c8d;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .breakdown-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 2px 0;
+      padding: 2px 0;
+      transition: all 0.2s ease;
+    }
+
+    .breakdown-item:hover {
+      background-color: rgba(52, 152, 219, 0.1);
+      border-radius: 4px;
+      padding-left: 8px;
+    }
+
+    .breakdown-item .label {
+      font-weight: 500;
+    }
+
+    .breakdown-item .value {
+      font-weight: bold;
+      color: #3498db;
+    }
+
+    .card-hint {
+      transition: color 0.2s ease;
+    }
+
+    .card-hint:hover {
+      color: #3498db !important;
+    }
+
+    /* Enhanced inventory card styling */
+    .stats .card:has(.inventory-breakdown) {
+      transition: all 0.3s ease;
+    }
+
+    .stats .card:has(.inventory-breakdown):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .inventory-breakdown {
+        font-size: 0.8em;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+
+      <nav>
+        <a href="./dashboard.html">📊 Dashboard</a>
+        <a href="./generate_report.html">📄 Generate Report</a>
+        <a href="./tool_box.html">🛠️ Toolbox</a>
+
+        <a href="./inventory.html">📦 Inventory</a>
+        <a href="./settings.html">⚙️ Settings</a>
+        <a href="./profile.html">👤 Profile</a>
+        <a href="./index.html">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="header">
+        <h1>Dashboard</h1>
+      </header>
+
+      <section class="stats">
+        <div class="card">
+          <h3>Generate Report</h3>
+          <p id="reportsCount">0</p>
+
+        </div>
+        <div class="card">
+          <h3>Toolbox Forms</h3>
+          <p id="toolboxCount">0</p>
+
+        </div>
+        <div class="card">
+          <h3>Inventory</h3>
+          <p id="inventoryCount">0</p>
+
+          <div class="inventory-breakdown" id="inventoryBreakdown" style="display: none;">
+            <div class="breakdown-item">
+              <span class="label">UPS:</span>
+              <span class="value" id="upsCount">0</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="label">AVR:</span>
+              <span class="value" id="avrCount">0</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="label">New:</span>
+              <span class="value" id="newCount">0</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="label">Replaced:</span>
+              <span class="value" id="replacedCount">0</span>
+            </div>
+          </div>
+          <div class="card-hint" style="font-size: 0.8em; color: #7f8c8d; margin-top: 5px; cursor: pointer;"
+            onclick="toggleInventoryBreakdown()">
+            Click to show details
+          </div>
+        </div>
+        <div class="card">
+          <h3>In Progress</h3>
+          <p id="inProgressCount">0</p>
+        </div>
+        <div class="card">
+          <h3>Completed Tasks</h3>
+          <p id="completedCount">0</p>
+        </div>
+
+
+
+
+      </section>
+
+      <!-- Test Section - REMOVED -->
+      <!-- Real-time update testing functionality has been removed -->
+
+      <section class="charts">
+        <div class="chart" id="systemOverview">
+          <h3>System Overview</h3>
+          <div class="chart-container">
+            <canvas id="systemBarChart"></canvas>
+          </div>
+
+        </div>
+        <div class="chart" id="revenueChart">
+          <h3>Reports Performance</h3>
+          <div class="chart-container">
+            <canvas id="lineChart"></canvas>
+          </div>
+          <div class="performance-indicator">
+            <span>Performance:</span>
+            <span class="performance-arrow" id="performanceArrow">➡️</span>
+            <span id="performanceText">Stable</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h2>⏰ Task Deadline Reminders</h2>
+        <div id="upcomingDeadlines">
+          <p>Loading upcoming deadlines...</p>
+        </div>
+        <div id="noDeadlines" style="display: none; color: gray;">
+          <p>No upcoming task deadlines.</p>
+        </div>
+        <div id="deadlineReminders"></div>
+
+
+
+        <audio id="beepSound" src="./alarm/beep-beep.mp3" preload="auto"></audio>
+      </section>
+
+      <section class="tasks-section">
+        <h2>🗒️ My Task Assignments</h2>
+        <div class="task-controls"
+          style="margin: 8px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <label for="myTaskStatusFilter">Filter:</label>
+          <select id="myTaskStatusFilter">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <label style="margin-left: 16px; display: flex; align-items: center; gap: 4px;">
+            <input type="checkbox" id="showCompletedTasks" style="margin: 0;">
+            Show Completed Tasks
+          </label>
+
+        </div>
+        <div id="myTasksEmpty" style="display:none; color: gray;">No tasks assigned yet.</div>
+        <div class="table-container">
+          <table class="data-table" id="myTasksTable">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Due Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    let lineChartInstance = null;
+    let systemBarChartInstance = null;
+    let socket = null; // Socket.IO connection
+    let previousData = {
+      reports: 0,
+      inventory: 0,
+      inProgress: 0,
+      completed: 0,
+      monthlyData: []
+    };
+    let updateTimeout = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!localStorage.getItem('token')) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // Initialize Socket.IO connection
+      initializeSocketConnection();
+
+      await refreshDashboard();
+      // Real-time updates enabled
+
+      // Periodically refresh as backup
+      setInterval(refreshDashboard, 30000);
+
+      // Initialize deadline reminder
+      initDeadlineReminder();
+
+      // Also refresh deadline reminders periodically
+      setInterval(() => {
+        if (typeof updateTaskDeadlineReminders === 'function') {
+          updateTaskDeadlineReminders();
+        }
+      }, 60000);
+
+      // Real-time event listeners enabled
+
+      // Add event listener for "Show Completed Tasks" toggle
+      const showCompletedToggle = document.getElementById('showCompletedTasks');
+      if (showCompletedToggle) {
+        showCompletedToggle.addEventListener('change', () => {
+          // Refresh dashboard when toggle changes to update charts
+          setTimeout(() => {
+            refreshDashboard();
+          }, 100);
+        });
+      }
+    });
+
+    // Initialize Socket.IO connection for real-time updates
+    function initializeSocketConnection() {
+      try {
+        socket = io('http://localhost:5000');
+
+        socket.on('connect', () => {
+          console.log('🔌 Connected to server for real-time updates');
+          console.log('🔌 Socket ID:', socket.id);
+          console.log('🔌 Socket connected:', socket.connected);
+
+          // Test emit to verify connection is working
+          socket.emit('test:connection', { message: 'Frontend connected', timestamp: new Date().toISOString() });
+        });
+
+        socket.on('disconnect', () => {
+          console.log('🔌 Disconnected from server');
+        });
+
+        socket.on('connect_error', (error) => {
+          console.error('🔌 Socket.IO connection error:', error);
+        });
+
+        socket.on('error', (error) => {
+          console.error('🔌 Socket.IO error:', error);
+        });
+
+        // Listen for test connection response
+        socket.on('test:connection:response', (data) => {
+          console.log('✅ Test connection response received:', data);
+          // Socket.IO popup removed - no more notification when connecting
+        });
+
+        // Listen for inventory updates
+        socket.on('inventory:created', (data) => {
+          console.log('📦 Inventory created event received:', data);
+          console.log('🔍 Calling updateInventoryCountInRealTime...');
+          console.log('🔍 Socket connection status:', socket.connected);
+          console.log('🔍 Current inventory count before update:', document.getElementById('inventoryCount').textContent);
+          console.log('🔍 Socket ID when event received:', socket.id);
+          console.log('🔍 Event data received:', JSON.stringify(data, null, 2));
+          updateInventoryCountInRealTime();
+        });
+
+        socket.on('inventory:updated', (data) => {
+          console.log('📦 Inventory updated event received:', data);
+          console.log('🔍 Calling updateInventoryCountInRealTime...');
+          updateInventoryCountInRealTime();
+        });
+
+        socket.on('inventory:deleted', (data) => {
+          console.log('📦 Inventory deleted event received:', data);
+          console.log('🔍 Calling updateInventoryCountInRealTime...');
+          updateInventoryCountInRealTime();
+        });
+
+        // Listen for toolbox updates
+        socket.on('toolbox:created', (data) => {
+          console.log('🛠️ Toolbox created:', data);
+          updateToolboxCountInRealTime();
+        });
+
+        socket.on('toolbox:updated', (data) => {
+          console.log('🛠️ Toolbox updated:', data);
+          updateToolboxCountInRealTime();
+        });
+
+        socket.on('toolbox:deleted', (data) => {
+          console.log('🛠️ Toolbox deleted:', data);
+          updateToolboxCountInRealTime();
+        });
+
+      } catch (error) {
+        console.error('❌ Error initializing Socket.IO:', error);
+      }
+    }
+
+    // Real-time chart update function removed
+    // function updateChartsInRealTime() {
+    //   // All real-time functionality removed
+    // }
+
+    // Chart loading and update indicator functions removed - no longer needed
+
+    async function refreshDashboard() {
+      try {
+        // Check if "Show Completed Tasks" toggle is enabled
+        const showCompletedToggle = document.getElementById('showCompletedTasks');
+        const showCompleted = showCompletedToggle ? showCompletedToggle.checked : false;
+
+        // Choose the appropriate endpoint based on toggle state
+        const tasksEndpoint = showCompleted ? 'http://localhost:5000/api/tasks/my/completed' : 'http://localhost:5000/api/tasks/my';
+
+        const [summary, inventoryList, myTasks, chartData, toolboxList, inventorySummary] = await Promise.all([
+          fetch('http://localhost:5000/api/reports/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()),
+          fetch('http://localhost:5000/api/inventory', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []),
+          fetch(tasksEndpoint, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []),
+          fetch('http://localhost:5000/api/reports/chart-data', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()),
+          fetch('http://localhost:5000/api/toolbox', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []),
+          fetch('http://localhost:5000/api/inventory/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : null).catch(() => null)
+        ]);
+
+        // Compute inventory stats - calculate total quantity across all inventory items
+        const inventoryTotal = Array.isArray(inventoryList) ?
+          inventoryList.reduce((total, item) => total + (parseInt(item.quantity) || 1), 0) : 0;
+        const toolboxTotal = Array.isArray(toolboxList) ? toolboxList.length : 0;
+        const tasksInProgress = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'in_progress' || (t.status || '').toLowerCase() === 'in progress').length;
+        const tasksCompleted = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'completed').length;
+
+        // Create fallback inventory summary if the endpoint fails
+        let finalInventorySummary = inventorySummary;
+        if (!inventorySummary && Array.isArray(inventoryList)) {
+          finalInventorySummary = {
+            total: inventoryTotal, // This now represents total quantity, not item count
+            byProductType: {
+              UPS: inventoryList.filter(item => item.product_type === 'UPS').length,
+              AVR: inventoryList.filter(item => item.product_type === 'AVR').length
+            },
+            byStatus: {
+              New: inventoryList.filter(item => item.status === 'New').length,
+              Replaced: inventoryList.filter(item => item.status === 'Replaced').length
+            },
+            bySize: {
+              '1.5kva': inventoryList.filter(item => item.size === '1.5kva').length,
+              '3kva': inventoryList.filter(item => item.size === '3kva').length,
+              '6kva': inventoryList.filter(item => item.size === '6kva').length,
+              '10kva': inventoryList.filter(item => item.size === '10kva').length,
+              '20kva': inventoryList.filter(item => item.size === '20kva').length,
+              '30kva': inventoryList.filter(item => item.size === '30kva').length,
+              '40kva': inventoryList.filter(item => item.size === '40kva').length,
+              '60kva': inventoryList.filter(item => item.size === '60kva').length
+            },
+            active: inventoryList.filter(item => item.status === 'New').length,
+            uniqueLocations: new Set(inventoryList.map(item => item.location)).size,
+            recentItems: inventoryList
+              .sort((a, b) => new Date(b.date) - new Date(a.date))
+              .slice(0, 5)
+              .map(item => ({
+                id: item.id,
+                productType: item.product_type,
+                status: item.status,
+                size: item.size,
+                location: item.location,
+                date: item.date
+              }))
+          };
+        }
+
+        const currentData = {
+          reports: summary.total || 0,
+          toolbox: toolboxTotal,
+          inventory: inventoryTotal || 0, // Ensure inventory is never undefined
+          inProgress: tasksInProgress,
+          completed: tasksCompleted,
+          monthlyData: chartData || [],
+          inventorySummary: finalInventorySummary || {}
+        };
+
+        // Debug currentData to ensure inventory is properly set
+        console.log('🔍 currentData object:', currentData);
+        console.log('🔍 inventory value:', currentData.inventory);
+        console.log('🔍 inventoryTotal value:', inventoryTotal);
+
+        updateDashboardStats(currentData);
+        updateInventoryBreakdown(currentData.inventorySummary);
+        initOrUpdateCharts(currentData);
+        updatePerformanceIndicator(currentData);
+
+        // Debug logging
+        console.log('📊 Dashboard Data:', {
+          inventoryTotal, // Current user's inventory total quantity
+          inventoryItemCount: inventoryList.length, // Current user's inventory item count
+          inventorySummary: currentData.inventorySummary,
+          systemOverviewData: [currentData.reports, currentData.toolbox, currentData.inventory, currentData.inProgress, currentData.completed]
+        });
+        console.log('🔍 Inventory calculation details:', {
+          itemCount: inventoryList.length,
+          totalQuantity: inventoryTotal,
+          sampleItems: inventoryList.slice(0, 3).map(item => ({ id: item.id, quantity: item.quantity }))
+        });
+
+        // Debug inventory data structure
+        if (inventoryList && inventoryList.length > 0) {
+          console.log('📦 Sample inventory item structure:', inventoryList[0]);
+          console.log('📦 Available inventory fields:', Object.keys(inventoryList[0]));
+          console.log('📦 Inventory count calculation:', {
+            arrayLength: inventoryList.length,
+            calculatedTotal: inventoryTotal,
+            isArray: Array.isArray(inventoryList)
+          });
+        }
+
+        // Additional debugging for inventory
+        if (inventoryList && inventoryList.length > 0) {
+          console.log('📦 Sample inventory item:', inventoryList[0]);
+          console.log('📦 Inventory product types:', [...new Set(inventoryList.map(item => item.product_type))]);
+          console.log('📦 Inventory statuses:', [...new Set(inventoryList.map(item => item.status))]);
+        } else {
+          console.log('⚠️ No inventory data found');
+        }
+
+        // Store current data for comparison
+        previousData = currentData;
+
+        // Refresh deadline reminders when dashboard is refreshed
+        if (typeof updateTaskDeadlineReminders === 'function') {
+          updateTaskDeadlineReminders();
+        }
+      } catch (err) {
+        console.error('Dashboard refresh error:', err);
+      }
+    }
+
+    // Make refreshDashboard globally accessible
+    window.refreshDashboard = refreshDashboard;
+
+    // Function to manually refresh the chart
+    function refreshChart() {
+      console.log('🔄 Manually refreshing chart...');
+      if (systemBarChartInstance) {
+        console.log('🔍 Current chart data:', systemBarChartInstance.data.datasets[0].data);
+        console.log('🔍 Chart instance exists:', !!systemBarChartInstance);
+        systemBarChartInstance.update('active');
+        console.log('✅ Chart refreshed manually');
+      } else {
+        console.log('⚠️ Chart instance not found');
+        // Try to recreate the chart
+        refreshDashboard();
+      }
+    }
+
+    function updateDashboardStats(data) {
+      console.log('🔧 Updating dashboard stats with data:', data);
+
+      document.getElementById('reportsCount').textContent = data.reports;
+      document.getElementById('inventoryCount').textContent = data.inventory;
+      document.getElementById('inProgressCount').textContent = data.inProgress;
+      document.getElementById('completedCount').textContent = data.completed;
+      document.getElementById('toolboxCount').textContent = data.toolbox;
+    }
+
+    // Update inventory breakdown in stats card
+    function updateInventoryBreakdown(inventorySummary) {
+      console.log('🔍 Updating inventory breakdown with:', inventorySummary);
+
+      if (!inventorySummary || !inventorySummary.total) {
+        console.log('⚠️ No inventory summary, hiding breakdown');
+        document.getElementById('inventoryBreakdown').style.display = 'none';
+        return;
+      }
+
+      // Get saved state from localStorage
+      const savedExpandedState = localStorage.getItem('inventoryBreakdownExpanded') === 'true';
+
+      // Show breakdown but respect saved state
+      const inventoryBreakdown = document.getElementById('inventoryBreakdown');
+      const cardHint = document.querySelector('.card-hint');
+
+      if (savedExpandedState) {
+        inventoryBreakdown.style.display = 'block';
+        cardHint.textContent = 'Click to hide details';
+      } else {
+        inventoryBreakdown.style.display = 'none';
+        cardHint.textContent = 'Click to show details';
+      }
+
+      // Update counts
+      const upsCount = inventorySummary.byProductType?.UPS || 0;
+      const avrCount = inventorySummary.byProductType?.AVR || 0;
+      const newCount = inventorySummary.byStatus?.New || 0;
+      const replacedCount = inventorySummary.byStatus?.Replaced || 0;
+
+      console.log('🔍 Breakdown counts:', { upsCount, avrCount, newCount, replacedCount });
+
+      document.getElementById('upsCount').textContent = upsCount;
+      document.getElementById('avrCount').textContent = avrCount;
+      document.getElementById('newCount').textContent = newCount;
+      document.getElementById('replacedCount').textContent = replacedCount;
+
+      // Also update the main inventory count to ensure consistency
+      const mainInventoryCount = document.getElementById('inventoryCount');
+      if (mainInventoryCount && inventorySummary.total !== undefined) {
+        console.log('🔍 Updating main inventory count to:', inventorySummary.total);
+        mainInventoryCount.textContent = inventorySummary.total;
+      }
+
+      console.log('✅ Inventory breakdown updated:', { upsCount, avrCount, newCount, replacedCount });
+    }
+
+    // Toggle inventory breakdown visibility
+    function toggleInventoryBreakdown() {
+      const inventoryBreakdown = document.getElementById('inventoryBreakdown');
+      const cardHint = document.querySelector('.card-hint');
+
+      if (inventoryBreakdown && cardHint) {
+        const isVisible = inventoryBreakdown.style.display !== 'none';
+        inventoryBreakdown.style.display = isVisible ? 'none' : 'block';
+        cardHint.textContent = isVisible ? 'Click to show details' : 'Click to hide details';
+      }
+    }
+
+    function updatePerformanceIndicator(currentData) {
+      const performanceArrow = document.getElementById('performanceArrow');
+      const performanceText = document.getElementById('performanceText');
+
+      if (!performanceArrow || !performanceText) return;
+
+      // Calculate performance based on completed tasks vs total visible tasks
+      const totalVisibleTasks = currentData.inProgress + currentData.completed;
+      const completionRate = totalVisibleTasks > 0 ? (currentData.completed / totalVisibleTasks) * 100 : 0;
+
+      // Compare with previous data for trend indication
+      const previousTotalTasks = previousData.inProgress + previousData.completed;
+      const previousCompletionRate = previousTotalTasks > 0 ? (previousData.completed / previousTotalTasks) * 100 : 0;
+
+      if (totalVisibleTasks === 0) {
+        performanceArrow.textContent = '➡️';
+        performanceArrow.className = 'performance-arrow neutral';
+        performanceText.textContent = `No tasks to measure`;
+      } else if (completionRate > previousCompletionRate) {
+        performanceArrow.textContent = '↗️';
+        performanceArrow.className = 'performance-arrow up';
+        performanceText.textContent = `Improving (${completionRate.toFixed(1)}%)`;
+      } else if (completionRate < previousCompletionRate) {
+        performanceArrow.textContent = '↘️';
+        performanceArrow.className = 'performance-arrow down';
+        performanceText.textContent = `Declining (${completionRate.toFixed(1)}%)`;
+      } else {
+        performanceArrow.textContent = '➡️';
+        performanceArrow.className = 'performance-arrow neutral';
+        performanceText.textContent = `Stable (${completionRate.toFixed(1)}%)`;
+      }
+    }
+
+    function initOrUpdateCharts(data) {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      // Aggregate report counts per month
+      const monthlyCounts = Array(12).fill(0);
+      (data.monthlyData || []).forEach(item => {
+        const monthIndex = Math.max(0, Math.min(11, parseInt(item.month, 10) - 1));
+        monthlyCounts[monthIndex] += Number(item.count) || 0;
+      });
+
+      // Create System Overview Bar Chart
+      const systemBarCtx = document.getElementById('systemBarChart')?.getContext('2d');
+      if (systemBarCtx) {
+        if (systemBarChartInstance) {
+          systemBarChartInstance.destroy();
+        }
+
+        // Debug chart data before creation
+        console.log('🔍 Chart data being passed:', {
+          reports: data.reports,
+          toolbox: data.toolbox,
+          inventory: data.inventory,
+          inProgress: data.inProgress,
+          completed: data.completed
+        });
+        console.log('🔍 Chart data array:', [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed]);
+
+        systemBarChartInstance = new Chart(systemBarCtx, {
+          type: 'bar',
+          data: {
+            labels: ['Reports', 'Toolbox', 'Inventory', 'In Progress', 'Completed'],
+            datasets: [{
+              label: 'Count',
+              data: [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed],
+              backgroundColor: [
+                'rgba(231, 76, 60, 0.8)',   // Reports - Red
+                'rgba(155, 89, 182, 0.8)',  // Toolbox - Purple
+                'rgba(52, 152, 219, 0.8)',  // Inventory - Blue
+                'rgba(243, 156, 18, 0.8)',  // In Progress - Orange
+                'rgba(46, 204, 113, 0.8)'   // Completed - Green
+              ],
+              borderColor: [
+                'rgba(231, 76, 60, 1)',
+                'rgba(155, 89, 182, 1)',
+                'rgba(52, 152, 219, 1)',
+                'rgba(243, 156, 18, 1)',
+                'rgba(46, 204, 113, 1)'
+              ],
+              borderWidth: 2,
+              borderRadius: 6,
+              borderSkipped: false
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                borderColor: '#3498db',
+                borderWidth: 1,
+                cornerRadius: 8,
+                displayColors: true
+              }
+            },
+            layout: {
+              padding: {
+                top: 20,
+                bottom: 20,
+                left: 20,
+                right: 20
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.1)',
+                  drawBorder: false
+                },
+                ticks: {
+                  maxTicksLimit: 6,
+                  color: '#7f8c8d',
+                  font: {
+                    size: 12
+                  }
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  color: '#7f8c8d',
+                  font: {
+                    size: 12
+                  }
+                }
+              }
+            },
+            animation: {
+              duration: 1000,
+              easing: 'easeInOutQuart'
+            }
+          }
+        });
+
+        console.log('📊 System Overview Chart created with data:', {
+          reports: data.reports,
+          toolbox: data.toolbox,
+          inventory: data.inventory,
+          inProgress: data.inProgress,
+          completed: data.completed
+        });
+
+        // Debug chart data array
+        console.log('🔍 Chart data array:', [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed]);
+        console.log('🔍 Chart instance created:', !!systemBarChartInstance);
+        console.log('🔍 Chart instance details:', {
+          instance: systemBarChartInstance,
+          data: systemBarChartInstance?.data,
+          datasets: systemBarChartInstance?.data?.datasets,
+          canvas: systemBarChartInstance?.canvas,
+          ctx: systemBarChartInstance?.ctx
+        });
+
+        // Make systemBarChartInstance globally accessible
+        window.systemBarChartInstance = systemBarChartInstance;
+
+
+      }
+
+      // Create Reports Performance Line Chart
+      const lineCtx = document.getElementById('lineChart')?.getContext('2d');
+      if (lineCtx) {
+        if (lineChartInstance) {
+          lineChartInstance.destroy();
+        }
+
+        lineChartInstance = new Chart(lineCtx, {
+          type: 'line',
+          data: {
+            labels: months,
+            datasets: [{
+              label: 'Reports Generated',
+              data: monthlyCounts,
+              borderColor: '#3498db',
+              backgroundColor: 'rgba(52, 152, 219, 0.1)',
+              borderWidth: 3,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#3498db',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 5,
+              pointHoverRadius: 8,
+              pointHoverBackgroundColor: '#2980b9',
+              pointHoverBorderColor: '#fff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                borderColor: '#3498db',
+                borderWidth: 1,
+                cornerRadius: 8,
+                mode: 'index',
+                intersect: false
+              }
+            },
+            layout: {
+              padding: {
+                top: 20,
+                bottom: 20,
+                left: 20,
+                right: 20
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.1)',
+                  drawBorder: false
+                },
+                ticks: {
+                  maxTicksLimit: 6,
+                  color: '#7f8c8d',
+                  font: {
+                    size: 12
+                  }
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  color: '#7f8c8d',
+                  font: {
+                    size: 12
+                  }
+                }
+              }
+            },
+            elements: {
+              point: {
+                hoverBackgroundColor: '#3498db'
+              }
+            },
+            interaction: {
+              mode: 'nearest',
+              axis: 'x',
+              intersect: false
+            },
+            animation: {
+              duration: 1000,
+              easing: 'easeInOutQuart'
+            }
+          }
+        });
+
+        // Make lineChartInstance globally accessible
+        window.lineChartInstance = lineChartInstance;
+      }
+    }
+
+    // Real-time inventory count update function
+    async function updateInventoryCountInRealTime() {
+      try {
+        console.log('📦 updateInventoryCountInRealTime function called');
+        console.log('📦 Updating inventory count in real-time...');
+
+        // Fetch latest inventory count and summary
+        const [inventoryResponse, summaryResponse] = await Promise.all([
+          fetch('http://localhost:5000/api/inventory', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          }),
+          fetch('http://localhost:5000/api/inventory/summary', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          })
+        ]);
+
+        if (inventoryResponse.ok && summaryResponse.ok) {
+          const inventoryList = await inventoryResponse.json();
+          const inventorySummary = await summaryResponse.json();
+
+          const inventoryTotal = Array.isArray(inventoryList) ? inventoryList.length : 0;
+
+          // Update dashboard stats
+          const inventoryCountElement = document.getElementById('inventoryCount');
+          console.log('🔍 Found inventoryCount element:', inventoryCountElement);
+          console.log('🔍 Current text content:', inventoryCountElement?.textContent);
+          console.log('🔍 New inventory total:', inventoryTotal);
+
+          if (inventoryCountElement) {
+            inventoryCountElement.textContent = inventoryTotal;
+            console.log('🔍 Updated inventoryCount to:', inventoryCountElement.textContent);
+
+            // Add visual feedback
+            inventoryCountElement.style.color = '#3498db';
+            inventoryCountElement.style.fontWeight = 'bold';
+            setTimeout(() => {
+              inventoryCountElement.style.color = '';
+              inventoryCountElement.style.fontWeight = '';
+            }, 2000);
+          }
+
+          // Update inventory breakdown
+          updateInventoryBreakdown(inventorySummary);
+
+          // Update system overview chart
+          if (systemBarChartInstance && systemBarChartInstance.data && systemBarChartInstance.data.datasets && systemBarChartInstance.data.datasets[0]) {
+            console.log('🔍 Updating chart with inventory total:', inventoryTotal);
+            console.log('🔍 Chart data before update:', systemBarChartInstance.data.datasets[0].data);
+            systemBarChartInstance.data.datasets[0].data[2] = inventoryTotal; // Index 2 for inventory (third position)
+            console.log('🔍 Chart data after update:', systemBarChartInstance.data.datasets[0].data);
+
+            try {
+              systemBarChartInstance.update('active');
+              console.log('✅ Chart updated successfully');
+            } catch (error) {
+              console.error('❌ Error updating chart:', error);
+              // Try to recreate the chart if update fails
+              console.log('🔄 Attempting to recreate chart...');
+              refreshDashboard();
+            }
+          }
+
+          console.log('✅ Inventory count and details updated in real-time', {
+            inventoryTotal, // Total quantity across all items
+            inventoryItemCount: inventoryList.length // Number of inventory items
+          });
+
+          // Debug inventory data in real-time update
+          console.log('📦 Real-time inventory data:', {
+            inventoryList: inventoryList,
+            inventoryTotal: inventoryTotal,
+            chartData: systemBarChartInstance?.data?.datasets?.[0]?.data
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error updating inventory count:', error);
+      }
+    }
+
+    // Real-time toolbox count update function
+    async function updateToolboxCountInRealTime() {
+      try {
+        console.log('🛠️ Updating toolbox count in real-time...');
+
+        // Fetch latest toolbox count
+        const response = await fetch('http://localhost:5000/api/toolbox', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        if (response.ok) {
+          const toolboxList = await response.json();
+          const toolboxTotal = Array.isArray(toolboxList) ? toolboxList.length : 0;
+
+          // Update dashboard stats
+          const toolboxCountElement = document.getElementById('toolboxCount');
+          if (toolboxCountElement) {
+            toolboxCountElement.textContent = toolboxTotal;
+
+            // Add visual feedback
+            toolboxCountElement.style.color = '#9b59b6';
+            toolboxCountElement.style.fontWeight = 'bold';
+            setTimeout(() => {
+              toolboxCountElement.style.color = '';
+              toolboxCountElement.style.fontWeight = '';
+            }, 2000);
+          }
+
+          // Update system overview chart
+          if (systemBarChartInstance) {
+            systemBarChartInstance.data.datasets[0].data[1] = toolboxTotal; // Index 1 for toolbox (second position)
+            systemBarChartInstance.update('active');
+          }
+
+          console.log('✅ Toolbox count updated in real-time');
+        }
+      } catch (error) {
+        console.error('❌ Error updating toolbox count:', error);
+      }
+    }
+
+    // Update related stats that depend on inventory
+    function updateRelatedStats(inventoryCount) {
+      // Update any other stats that might be affected by inventory changes
+      // For example, if you have a "Total Items" stat that includes inventory
+      const totalItemsElement = document.querySelector('[data-stat="total-items"]');
+      if (totalItemsElement) {
+        const currentTotal = parseInt(totalItemsElement.textContent) || 0;
+        // You can add logic here to update other related stats
+        console.log(`📊 Related stats updated for inventory count: ${inventoryCount}`);
+      }
+    }
+
+    // Update task stats in real-time - REMOVED
+    // async function updateTaskStatsInRealTime() {
+    //   // All real-time functionality removed
+    // }
+
+    // Update reports count in real-time - REMOVED
+    // async function updateReportsCountInRealTime() {
+    //   // All real-time functionality removed
+    // }
+
+    // Check connection health and provide user feedback - REMOVED
+    // function checkConnectionHealth() {
+    //   // All real-time functionality removed
+    // }
+
+    // Add connection status indicator to the page - REMOVED
+    // function updateConnectionStatusIndicator() {
+    //   // All real-time functionality removed
+    // }
+
+    // Test function for manual testing of real-time updates - REMOVED
+    // function testRealTimeUpdate() {
+    //   // All real-time functionality removed
+    // }
+
+    // Test inventory update specifically - REMOVED
+    // function testInventoryUpdate() {
+    //   // All real-time functionality removed
+    // }
+
+    function showToastNotification(message, type = 'info') {
+      // Remove existing notifications
+      const existingToasts = document.querySelectorAll('.toast-notification');
+      existingToasts.forEach(toast => toast.remove());
+
+      // Create new notification
+      const toast = document.createElement('div');
+      toast.className = `toast-notification ${type}`;
+
+      // Set icon based on type
+      let icon = 'ℹ️';
+      if (type === 'success') icon = '✅';
+      else if (type === 'error') icon = '❌';
+      else if (type === 'warning') icon = '⚠️';
+
+      toast.innerHTML = `
+      <div class="toast-content">
+        <span class="toast-icon">${icon}</span>
+        <span>${message}</span>
+      </div>
+    `;
+
+      // Add to page
+      document.body.appendChild(toast);
+
+      // Show notification with animation
+      setTimeout(() => toast.classList.add('show'), 100);
+
+      // Auto-hide after appropriate duration
+      const duration = type === 'error' ? 6000 : 4000; // Errors stay longer
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+
+      return toast;
+    }
+
+    // Task Modal Functions
+    function closeTaskModal() {
+      document.getElementById('taskDetailsModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function (event) {
+      const modal = document.getElementById('taskDetailsModal');
+      if (event.target === modal) {
+        closeTaskModal();
+      }
+    }
+
+
+
+
+  </script>
+
+  <!-- Task Details Modal -->
+  <div id="taskDetailsModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTaskTitle">Task Details</h2>
+        <span class="close" onclick="closeTaskModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="task-details-grid">
+          <div class="task-detail-item">
+            <label>Title:</label>
+            <span id="modalTaskTitleText"></span>
+          </div>
+          <div class="task-detail-item">
+            <label>Description:</label>
+            <span id="modalTaskDescription"></span>
+          </div>
+          <div class="task-detail-item">
+            <label>Priority:</label>
+            <span id="modalTaskPriority"></span>
+          </div>
+          <div class="task-detail-item">
+            <label>Status:</label>
+            <span id="modalTaskStatus"></span>
+          </div>
+          <div class="task-detail-item">
+            <label>Due Date:</label>
+            <span id="modalTaskDueDate"></span>
+          </div>
+        </div>
+        <div class="task-actions">
+          <button id="modalTaskActionBtn" class="btn btn-primary" style="display: none;"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./dark-mode.js"></script>
+  <script src="./script.js"></script>
+  <script src="./dashboard-tasks.js"></script>
+  <script src="./user-greeting.js"></script>
+</body>
+
+</html>
