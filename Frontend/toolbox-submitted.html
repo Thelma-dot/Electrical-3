@@ -522,12 +522,18 @@
 
       // Check if user is returning from an update
       checkForUpdateReturn();
+
+      // Set up periodic refresh to ensure data is current
+      setInterval(async () => {
+        console.log('🔄 Periodic refresh of toolbox data...');
+        await refreshToolboxTable();
+      }, 30000); // Refresh every 30 seconds
     });
 
     // Initialize Socket.IO connection for real-time updates
     function initializeSocketConnection() {
       try {
-        const socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
+        const socket = io(window.appConfig.getSocketUrl(), { transports: ['websocket', 'polling'] });
 
         socket.on('connect', () => {
           console.log('🔌 Connected to real-time toolbox updates');
@@ -539,12 +545,26 @@
 
         // Listen for toolbox events
         socket.on('toolbox:created', (data) => {
-          console.log('🛠️ Toolbox created successfully');
+          console.log('🛠️ Toolbox created successfully via socket:', data);
+          // Show notification
+          showMessage('🔄 New toolbox form created! Refreshing data...', 'success');
+
+          // Immediately refresh the table to show new data
           refreshToolboxTable();
+
+          // Also refresh again after a short delay to ensure data is current
+          setTimeout(() => {
+            console.log('🔄 Refreshing toolbox table again after socket create...');
+            refreshToolboxTable();
+          }, 2000);
         });
 
         socket.on('toolbox:updated', (data) => {
           console.log('🛠️ Toolbox updated successfully via socket:', data);
+          console.log('🔄 Toolbox:updated event data:', JSON.stringify(data, null, 2));
+          // Show notification
+          showMessage('🔄 Toolbox form updated! Refreshing data...', 'success');
+
           // Immediately refresh the table to show updated status
           refreshToolboxTable();
 
@@ -552,7 +572,7 @@
           setTimeout(() => {
             console.log('🔄 Refreshing toolbox table again after socket update...');
             refreshToolboxTable();
-          }, 1000);
+          }, 2000);
         });
 
         socket.on('toolbox:deleted', (data) => {
@@ -575,7 +595,7 @@
         }
 
         console.log('🔍 Loading toolbox data...');
-        const response = await fetch('http://localhost:5000/api/toolbox', {
+        const response = await fetch(window.appConfig.getApiUrl('/toolbox'), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -870,7 +890,7 @@
           return;
         }
 
-        const response = await fetch(`http://localhost:5000/api/toolbox/${toolboxId}`, {
+        const response = await fetch(window.appConfig.getApiUrl(`/toolbox/${toolboxId}`), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -916,7 +936,7 @@
           return;
         }
 
-        const response = await fetch(`http://localhost:5000/api/toolbox/${toolboxId}`, {
+        const response = await fetch(window.appConfig.getApiUrl(`/toolbox/${toolboxId}`), {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -988,10 +1008,11 @@
       }, 5000);
     }
 
-    // Check if user is returning from an update
+    // Check if user is returning from an update or new submission
     async function checkForUpdateReturn() {
       const urlParams = new URLSearchParams(window.location.search);
       const updatedParam = urlParams.get('updated');
+      const submittedParam = urlParams.get('submitted');
 
       if (updatedParam) {
         console.log('🔄 User returning from toolbox update, refreshing data...');
@@ -1004,14 +1025,45 @@
         // Show success message
         showMessage('✅ Toolbox form has been updated and marked as completed!', 'success');
 
-        // Immediately refresh the table to show updated status
+        // Force a complete refresh of the data
         await refreshToolboxTable();
 
         // Also refresh again after a short delay to ensure data is current
         setTimeout(async () => {
           console.log('🔄 Refreshing toolbox table again to ensure data is current...');
           await refreshToolboxTable();
+        }, 3000);
+
+        // One more refresh after a longer delay to be absolutely sure
+        setTimeout(async () => {
+          console.log('🔄 Final refresh to ensure all data is current...');
+          await refreshToolboxTable();
+        }, 5000);
+      } else if (submittedParam) {
+        console.log('🔄 User returning from new toolbox submission, refreshing data...');
+
+        // Clear the URL parameter
+        const url = new URL(window.location);
+        url.searchParams.delete('submitted');
+        window.history.replaceState({}, '', url);
+
+        // Show success message
+        showMessage('✅ New toolbox form submitted successfully!', 'success');
+
+        // Force a complete refresh of the data
+        await refreshToolboxTable();
+
+        // Also refresh again after a short delay to ensure data is current
+        setTimeout(async () => {
+          console.log('🔄 Refreshing toolbox table again to ensure new data is loaded...');
+          await refreshToolboxTable();
         }, 2000);
+
+        // One more refresh after a longer delay to be absolutely sure
+        setTimeout(async () => {
+          console.log('🔄 Final refresh to ensure all data is current...');
+          await refreshToolboxTable();
+        }, 4000);
       }
     }
 
@@ -1085,6 +1137,11 @@
     async function refreshToolboxTable() {
       console.log('🔄 Refreshing toolbox table...');
       try {
+        // Clear existing data first
+        allToolboxes = [];
+        filteredToolboxes = [];
+
+        // Reload data from server
         await loadToolboxData();
         console.log('✅ Toolbox table refreshed successfully');
       } catch (error) {
@@ -1092,6 +1149,8 @@
         // Fallback: try to refresh again after a short delay
         setTimeout(async () => {
           try {
+            allToolboxes = [];
+            filteredToolboxes = [];
             await loadToolboxData();
             console.log('✅ Toolbox table refreshed on retry');
           } catch (retryError) {
@@ -1139,95 +1198,89 @@
           return;
         }
 
-        // Show the view modal
-        showToolboxViewModal(toolbox);
+        // Create modal HTML
+        const modalHTML = `
+          <div id="toolboxViewModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000;">
+            <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 20px; border-radius: 8px; width: 80%; max-width: 800px; max-height: 80vh; overflow-y: auto;">
+              <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; margin-bottom: 20px;">
+                <h2 style="margin: 0; color: #2c3e50;">Toolbox Details</h2>
+                <button onclick="closeToolboxViewModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #7f8c8d;">&times;</button>
+              </div>
+              
+              <div class="modal-body">
+                <div class="detail-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                  <div class="detail-item">
+                    <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Work Activity:</label>
+                    <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.work_activity || toolbox.workActivity || 'N/A'}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Date:</label>
+                    <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${formatDate(toolbox.date)}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Work Location:</label>
+                    <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.work_location || toolbox.workLocation || 'N/A'}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Name/Company:</label>
+                    <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.name_company || toolbox.nameCompany || 'N/A'}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Tools Used:</label>
+                    <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.tools_used || toolbox.toolsUsed || 'N/A'}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Prepared By:</label>
+                    <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.prepared_by || toolbox.preparedBy || 'N/A'}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Verified By:</label>
+                    <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.verified_by || toolbox.verifiedBy || 'N/A'}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Hazards:</label>
+                    <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.hazards || 'N/A'}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Circulars:</label>
+                    <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.circulars || 'N/A'}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Risk Assessment:</label>
+                    <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.risk_assessment || toolbox.riskAssessment || 'N/A'}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Permit:</label>
+                    <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.permit || 'N/A'}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Remarks:</label>
+                    <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.remarks || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="modal-footer" style="display: flex; gap: 15px; justify-content: center; margin-top: 20px; border-top: 2px solid #ecf0f1; padding-top: 20px;">
+                <button onclick="printToolbox('${getToolboxId(toolbox)}')" class="btn-primary" style="background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                  🖨️ Print
+                </button>
+                <button onclick="closeToolboxViewModal()" class="btn-secondary" style="background: #2c3e50; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                  ❌ Close
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // Show modal
+        document.getElementById('toolboxViewModal').style.display = 'block';
       } catch (error) {
         console.error('❌ Error viewing toolbox:', error);
         alert('Error viewing toolbox');
       }
-    }
-
-    // Show toolbox view modal
-    function showToolboxViewModal(toolbox) {
-      // Create modal HTML
-      const modalHTML = `
-        <div id="toolboxViewModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000;">
-          <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 20px; border-radius: 8px; width: 80%; max-width: 800px; max-height: 80vh; overflow-y: auto;">
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; margin-bottom: 20px;">
-              <h2 style="margin: 0; color: #2c3e50;">Toolbox Details</h2>
-              <button onclick="closeToolboxViewModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #7f8c8d;">&times;</button>
-            </div>
-            
-            <div class="modal-body">
-              <div class="detail-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px;">
-                <div class="detail-item">
-                  <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Work Activity:</label>
-                  <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.work_activity || toolbox.workActivity || 'N/A'}</span>
-                </div>
-                <div class="detail-item">
-                  <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Date:</label>
-                  <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${formatDate(toolbox.date)}</span>
-                </div>
-                <div class="detail-item">
-                  <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Work Location:</label>
-                  <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.work_location || toolbox.workLocation || 'N/A'}</span>
-                </div>
-                <div class="detail-item">
-                  <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Name/Company:</label>
-                  <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.name_company || toolbox.nameCompany || 'N/A'}</span>
-                </div>
-                <div class="detail-item">
-                  <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Tools Used:</label>
-                  <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.tools_used || toolbox.toolsUsed || 'N/A'}</span>
-                </div>
-                <div class="detail-item">
-                  <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Prepared By:</label>
-                  <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.prepared_by || toolbox.preparedBy || 'N/A'}</span>
-                </div>
-                <div class="detail-item">
-                  <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Verified By:</label>
-                  <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.verified_by || toolbox.verifiedBy || 'N/A'}</span>
-                </div>
-                <div class="detail-item">
-                  <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Hazards:</label>
-                  <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.hazards || 'N/A'}</span>
-                </div>
-                <div class="detail-item">
-                  <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Circulars:</label>
-                  <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.circulars || 'N/A'}</span>
-                </div>
-                <div class="detail-item">
-                  <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Risk Assessment:</label>
-                  <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.risk_assessment || toolbox.riskAssessment || 'N/A'}</span>
-                </div>
-                <div class="detail-item">
-                  <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Permit:</label>
-                  <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.permit || 'N/A'}</span>
-                </div>
-                <div class="detail-item">
-                  <label style="font-weight: 600; color: #34495e; margin-bottom: 5px; font-size: 14px;">Remarks:</label>
-                  <span style="color: #2c3e50; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef; font-size: 14px;">${toolbox.remarks || 'N/A'}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="modal-footer" style="display: flex; gap: 15px; justify-content: center; margin-top: 20px; border-top: 2px solid #ecf0f1; padding-top: 20px;">
-              <button onclick="printToolbox('${getToolboxId(toolbox)}')" class="btn-primary" style="background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
-                🖨️ Print
-              </button>
-                             <button onclick="closeToolboxViewModal()" class="btn-secondary" style="background: #2c3e50; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
-                 ❌ Close
-               </button>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // Add modal to body
-      document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-      // Show modal
-      document.getElementById('toolboxViewModal').style.display = 'block';
     }
 
     // Close toolbox view modal
@@ -1238,114 +1291,15 @@
       }
     }
 
-    // Print toolbox
+    // Print toolbox function
     function printToolbox(toolboxId) {
       console.log('🖨️ Print button clicked for toolbox ID:', toolboxId);
-
-      try {
-        const toolbox = allToolboxes.find(t => getToolboxId(t) === toolboxId);
-        if (!toolbox) {
-          console.error('❌ Toolbox not found for printing:', toolboxId);
-          alert('Toolbox not found');
-          return;
-        }
-
-        // Create print-friendly content
-        const printContent = `
-          <html>
-            <head>
-              <title>Toolbox Form - ${toolbox.work_activity || toolbox.workActivity || 'N/A'}</title>
-              <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-                .section { margin-bottom: 20px; }
-                .section h3 { color: #2c3e50; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-                .detail-row { display: flex; margin-bottom: 10px; }
-                .label { font-weight: bold; width: 150px; }
-                .value { flex: 1; }
-                @media print { body { margin: 0; } }
-              </style>
-            </head>
-            <body>
-              <div class="header">
-                <h1>Toolbox Form</h1>
-                <p><strong>Date:</strong> ${formatDate(toolbox.date)}</p>
-              </div>
-              
-              <div class="section">
-                <h3>Basic Information</h3>
-                <div class="detail-row">
-                  <span class="label">Work Activity:</span>
-                  <span class="value">${toolbox.work_activity || toolbox.workActivity || 'N/A'}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="label">Work Location:</span>
-                  <span class="value">${toolbox.work_location || toolbox.workLocation || 'N/A'}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="label">Name/Company:</span>
-                  <span class="value">${toolbox.name_company || toolbox.nameCompany || 'N/A'}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="label">Tools Used:</span>
-                  <span class="value">${toolbox.tools_used || toolbox.toolsUsed || 'N/A'}</span>
-                </div>
-              </div>
-              
-              <div class="section">
-                <h3>Safety Information</h3>
-                <div class="detail-row">
-                  <span class="label">Hazards:</span>
-                  <span class="value">${toolbox.hazards || 'N/A'}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="label">Circulars:</span>
-                  <span class="value">${toolbox.circulars || 'N/A'}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="label">Risk Assessment:</span>
-                  <span class="value">${toolbox.risk_assessment || toolbox.riskAssessment || 'N/A'}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="label">Permit:</span>
-                  <span class="value">${toolbox.permit || 'N/A'}</span>
-                </div>
-              </div>
-              
-              <div class="section">
-                <h3>Additional Details</h3>
-                <div class="detail-row">
-                  <span class="label">Remarks:</span>
-                  <span class="value">${toolbox.remarks || 'N/A'}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="label">Prepared By:</span>
-                  <span class="value">${toolbox.prepared_by || toolbox.preparedBy || 'N/A'}</span>
-                  <span class="label" style="margin-left: 50px;">Verified By:</span>
-                  <span class="value">${toolbox.verified_by || toolbox.verifiedBy || 'N/A'}</span>
-                </div>
-              </div>
-            </body>
-          </html>
-        `;
-
-        // Open print window
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(printContent);
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-
-      } catch (error) {
-        console.error('❌ Error printing toolbox:', error);
-        alert('Error printing toolbox');
-      }
+      // Print functionality has been removed
     }
-
 
   </script>
 
-  <script src="./dark-mode.js"></script>
+  <script src="./config.js"></script>
   <script src="./script.js"></script>
   <script src="./user-greeting.js"></script>
 </body>

@@ -212,7 +212,7 @@ router.delete("/reports/:id", authenticateToken, requireAdmin, async (req, res) 
 router.get("/dashboard/test", authenticateToken, requireAdmin, async (req, res) => {
     try {
         console.log("Admin dashboard test request received");
-        
+
         // Return test data to verify the endpoint is working
         const testData = {
             reports: 5,
@@ -223,7 +223,7 @@ router.get("/dashboard/test", authenticateToken, requireAdmin, async (req, res) 
             totalUsers: 15,
             todayLogins: 3
         };
-        
+
         console.log("Test data sent:", testData);
         res.json(testData);
     } catch (err) {
@@ -626,6 +626,108 @@ router.get("/health", authenticateToken, requireAdmin, async (req, res) => {
             error: err.message,
             timestamp: new Date().toISOString()
         });
+    }
+});
+
+// Get task statistics for admin dashboard
+router.get("/tasks/stats", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log("Admin task statistics request received");
+
+        // Get task counts by status
+        const taskStats = await all(`
+            SELECT status, COUNT(*) as count 
+            FROM tasks 
+            GROUP BY status
+        `);
+
+        // Calculate totals
+        const total = taskStats.reduce((sum, stat) => sum + stat.count, 0);
+        const pending = taskStats.find(stat => stat.status === 'Pending')?.count || 0;
+        const inProgress = taskStats.find(stat => stat.status === 'In Progress')?.count || 0;
+        const completed = taskStats.find(stat => stat.status === 'Completed')?.count || 0;
+
+        const stats = {
+            total,
+            pending,
+            inProgress,
+            completed
+        };
+
+        console.log("Task statistics:", stats);
+        res.json(stats);
+    } catch (err) {
+        console.error("Admin task statistics error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Get user task counts
+router.get("/users/task-counts", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log("Admin user task counts request received");
+
+        // Get task counts for each user
+        const userTaskCounts = await all(`
+            SELECT assigned_to as user_id, COUNT(*) as task_count
+            FROM tasks 
+            GROUP BY assigned_to
+        `);
+
+        // Convert to object format for easy lookup
+        const taskCounts = {};
+        userTaskCounts.forEach(item => {
+            taskCounts[item.user_id] = item.task_count;
+        });
+
+        console.log("User task counts:", taskCounts);
+        res.json(taskCounts);
+    } catch (err) {
+        console.error("Admin user task counts error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Get all tasks for admin dashboard
+router.get("/tasks", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log("Admin tasks request received");
+
+        // Get tasks with user information
+        const tasks = await all(`
+            SELECT t.*, u.staff_id as assigned_to_name
+            FROM tasks t
+            LEFT JOIN users u ON t.assigned_to = u.id
+            ORDER BY t.created_at DESC
+            LIMIT 50
+        `);
+
+        console.log(`Found ${tasks.length} tasks`);
+        res.json(tasks);
+    } catch (err) {
+        console.error("Admin tasks error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Get all tasks for admin dashboard (alternative endpoint)
+router.get("/tasks/all", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log("Admin all tasks request received");
+
+        // Get tasks with user information
+        const tasks = await all(`
+            SELECT t.*, u.staff_id as assigned_to_name
+            FROM tasks t
+            LEFT JOIN users u ON t.assigned_to = u.id
+            ORDER BY t.created_at DESC
+        `);
+
+        console.log(`Found ${tasks.length} tasks`);
+        res.json(tasks);
+    } catch (err) {
+        console.error("Admin all tasks error:", err);
+        res.status(500).json({ error: "Server error" });
     }
 });
 

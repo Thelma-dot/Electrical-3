@@ -88,6 +88,9 @@ exports.getUserToolboxes = async (req, res) => {
 
 exports.getAllToolboxes = async (req, res) => {
   try {
+    console.log('🔍 getAllToolboxes called - Admin request received');
+    console.log('👤 User making request:', req.user ? { id: req.user.id, role: req.user.role } : 'No user');
+
     const query = `
       SELECT t.*, u.name as user_name, u.email as user_email 
       FROM toolbox t 
@@ -95,15 +98,21 @@ exports.getAllToolboxes = async (req, res) => {
       ORDER BY t.created_at DESC
     `;
 
+    console.log('📊 Executing query:', query);
+
     db.all(query, (err, toolboxes) => {
       if (err) {
-        console.error('Database error:', err);
+        console.error('❌ Database error:', err);
         return res.status(500).json({ error: 'Database error' });
       }
+
+      console.log('✅ Query successful - Found toolboxes:', toolboxes.length);
+      console.log('📋 Toolbox data:', toolboxes);
+
       res.json(toolboxes);
     });
   } catch (err) {
-    console.error(err);
+    console.error('❌ getAllToolboxes error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 };

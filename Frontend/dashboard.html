@@ -112,6 +112,81 @@
       font-size: 16px;
     }
 
+    /* Sidebar Greeting Styles */
+    .sidebar-greeting {
+      text-align: center;
+      padding: 20px 15px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border: 2px solid #e2e8f0;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-greeting::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(52, 152, 219, 0.1), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .sidebar-greeting:hover::before {
+      left: 100%;
+    }
+
+    .sidebar-greeting:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(52, 152, 219, 0.2);
+      border-color: #3498db;
+      background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+    }
+
+    .sidebar-greeting:active {
+      transform: translateY(0);
+      transition: transform 0.1s ease;
+    }
+
+    /* Animation for page load */
+    @keyframes slideInFromTop {
+      0% {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .sidebar-greeting {
+      animation: slideInFromTop 0.6s ease-out;
+    }
+
+    /* Greeting text styling */
+    .sidebar-greeting #greeting {
+      margin: 0;
+      color: #3498db;
+      font-size: 18px;
+      font-weight: 700;
+      text-shadow: 0 1px 2px rgba(52, 152, 219, 0.1);
+    }
+
+    .sidebar-greeting #roleSubtitle {
+      color: #6b7280;
+      font-size: 14px;
+      margin-top: 8px;
+      font-weight: 500;
+    }
+
     .performance-indicator {
       display: flex;
       align-items: center;
@@ -244,6 +319,12 @@
     <aside class="sidebar">
       <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
 
+      <!-- User Greeting in Sidebar -->
+      <div class="sidebar-greeting">
+        <p id="greeting"></p>
+        <div id="roleSubtitle"></div>
+      </div>
+
       <nav>
         <a href="./dashboard.html">📊 Dashboard</a>
         <a href="./generate_report.html">📄 Generate Report</a>
@@ -339,6 +420,26 @@
 
       <section class="settings-section">
         <h2>⏰ Task Deadline Reminders</h2>
+
+        <!-- Manual Deadline Input -->
+        <div class="deadline-input-section"
+          style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+          <h3 style="margin-top: 0; color: #495057; font-size: 16px;">Set Personal Deadline (Ghana Time)</h3>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <label for="deadlineInput" style="font-weight: 500; color: #495057;">Deadline:</label>
+            <input type="datetime-local" id="deadlineInput"
+              style="padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px;">
+            <button id="setDeadlineBtn" onclick="setPersonalDeadline()"
+              style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Set
+              Deadline</button>
+            <button id="clearDeadlineBtn" onclick="clearPersonalDeadline()"
+              style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Clear</button>
+          </div>
+          <div id="deadlineCountdown" style="margin-top: 10px; font-weight: 500; color: #007bff;"></div>
+          <div id="ghanaTime" style="margin-top: 5px; font-size: 12px; color: #6c757d;"></div>
+        </div>
+
+        <!-- Task Deadlines -->
         <div id="upcomingDeadlines">
           <p>Loading upcoming deadlines...</p>
         </div>
@@ -346,8 +447,6 @@
           <p>No upcoming task deadlines.</p>
         </div>
         <div id="deadlineReminders"></div>
-
-
 
         <audio id="beepSound" src="./alarm/beep-beep.mp3" preload="auto"></audio>
       </section>
@@ -536,50 +635,55 @@
         // Choose the appropriate endpoint based on toggle state
         const tasksEndpoint = showCompleted ? 'http://localhost:5000/api/tasks/my/completed' : 'http://localhost:5000/api/tasks/my';
 
-        const [summary, inventoryList, myTasks, chartData, toolboxList, inventorySummary] = await Promise.all([
-          fetch('http://localhost:5000/api/reports/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()),
-          fetch('http://localhost:5000/api/inventory', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []),
-          fetch(tasksEndpoint, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []),
-          fetch('http://localhost:5000/api/reports/chart-data', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()),
-          fetch('http://localhost:5000/api/toolbox', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []),
+        const [summary, inventoryResponse, myTasks, chartData, toolboxList, inventorySummary] = await Promise.all([
+          fetch('http://localhost:5000/api/reports/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()).catch(() => ({ total: 0 })),
+          fetch('http://localhost:5000/api/inventory', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : { data: [] }).catch(() => ({ data: [] })),
+          fetch(tasksEndpoint, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []).catch(() => []),
+          fetch('http://localhost:5000/api/reports/chart-data', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()).catch(() => []),
+          fetch('http://localhost:5000/api/toolbox', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []).catch(() => []),
           fetch('http://localhost:5000/api/inventory/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : null).catch(() => null)
         ]);
 
-        // Compute inventory stats - calculate total quantity across all inventory items
-        const inventoryTotal = Array.isArray(inventoryList) ?
-          inventoryList.reduce((total, item) => total + (parseInt(item.quantity) || 1), 0) : 0;
+        // Extract inventory list from response (handle both paginated and direct array formats)
+        const inventoryList = inventoryResponse.data || inventoryResponse;
+        const safeInventoryList = Array.isArray(inventoryList) ? inventoryList : [];
+        console.log('🔍 inventoryResponse structure:', inventoryResponse);
+        console.log('🔍 inventoryList type:', typeof inventoryList, 'isArray:', Array.isArray(inventoryList), 'length:', safeInventoryList.length);
+
+        // Compute inventory stats - count the number of inventory items
+        const inventoryTotal = safeInventoryList.length;
         const toolboxTotal = Array.isArray(toolboxList) ? toolboxList.length : 0;
         const tasksInProgress = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'in_progress' || (t.status || '').toLowerCase() === 'in progress').length;
         const tasksCompleted = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'completed').length;
 
         // Create fallback inventory summary if the endpoint fails
         let finalInventorySummary = inventorySummary;
-        if (!inventorySummary && Array.isArray(inventoryList)) {
+        if (!inventorySummary && safeInventoryList.length > 0) {
           finalInventorySummary = {
-            total: inventoryTotal, // This now represents total quantity, not item count
+            total: inventoryTotal, // This represents the number of inventory items
             byProductType: {
-              UPS: inventoryList.filter(item => item.product_type === 'UPS').length,
-              AVR: inventoryList.filter(item => item.product_type === 'AVR').length
+              UPS: safeInventoryList.filter(item => item.product_type === 'UPS').length,
+              AVR: safeInventoryList.filter(item => item.product_type === 'AVR').length
             },
             byStatus: {
-              New: inventoryList.filter(item => item.status === 'New').length,
-              Replaced: inventoryList.filter(item => item.status === 'Replaced').length
+              New: safeInventoryList.filter(item => item.status === 'New').length,
+              Replaced: safeInventoryList.filter(item => item.status === 'Replaced').length
             },
             bySize: {
-              '1.5kva': inventoryList.filter(item => item.size === '1.5kva').length,
-              '3kva': inventoryList.filter(item => item.size === '3kva').length,
-              '6kva': inventoryList.filter(item => item.size === '6kva').length,
-              '10kva': inventoryList.filter(item => item.size === '10kva').length,
-              '20kva': inventoryList.filter(item => item.size === '20kva').length,
-              '30kva': inventoryList.filter(item => item.size === '30kva').length,
-              '40kva': inventoryList.filter(item => item.size === '40kva').length,
-              '60kva': inventoryList.filter(item => item.size === '60kva').length
+              '1.5kva': safeInventoryList.filter(item => item.size === '1.5kva').length,
+              '3kva': safeInventoryList.filter(item => item.size === '3kva').length,
+              '6kva': safeInventoryList.filter(item => item.size === '6kva').length,
+              '10kva': safeInventoryList.filter(item => item.size === '10kva').length,
+              '20kva': safeInventoryList.filter(item => item.size === '20kva').length,
+              '30kva': safeInventoryList.filter(item => item.size === '30kva').length,
+              '40kva': safeInventoryList.filter(item => item.size === '40kva').length,
+              '60kva': safeInventoryList.filter(item => item.size === '60kva').length
             },
-            active: inventoryList.filter(item => item.status === 'New').length,
-            uniqueLocations: new Set(inventoryList.map(item => item.location)).size,
-            recentItems: inventoryList
+            active: safeInventoryList.filter(item => item.status === 'New').length,
+            uniqueLocations: new Set(safeInventoryList.map(item => item.location)).size,
+            recentItems: safeInventoryList
               .sort((a, b) => new Date(b.date) - new Date(a.date))
-              .slice(0, 5)
+              .slice(0, 3)
               .map(item => ({
                 id: item.id,
                 productType: item.product_type,
@@ -613,33 +717,44 @@
 
         // Debug logging
         console.log('📊 Dashboard Data:', {
-          inventoryTotal, // Current user's inventory total quantity
-          inventoryItemCount: inventoryList.length, // Current user's inventory item count
+          inventoryTotal, // Current user's inventory item count
+          inventoryItemCount: safeInventoryList.length, // Current user's inventory item count
           inventorySummary: currentData.inventorySummary,
           systemOverviewData: [currentData.reports, currentData.toolbox, currentData.inventory, currentData.inProgress, currentData.completed]
         });
-        console.log('🔍 Inventory calculation details:', {
-          itemCount: inventoryList.length,
-          totalQuantity: inventoryTotal,
-          sampleItems: inventoryList.slice(0, 3).map(item => ({ id: item.id, quantity: item.quantity }))
-        });
+
+        // Only call .slice() if safeInventoryList has items
+        if (safeInventoryList.length > 0) {
+          console.log('🔍 Inventory calculation details:', {
+            itemCount: safeInventoryList.length,
+            totalItems: inventoryTotal,
+            sampleItems: safeInventoryList.slice(0, 3).map(item => ({ id: item.id, product_type: item.product_type, status: item.status }))
+          });
+        } else {
+          console.log('🔍 Inventory calculation details:', {
+            itemCount: 0,
+            totalItems: inventoryTotal,
+            sampleItems: [],
+            note: 'No inventory items found'
+          });
+        }
 
         // Debug inventory data structure
-        if (inventoryList && inventoryList.length > 0) {
-          console.log('📦 Sample inventory item structure:', inventoryList[0]);
-          console.log('📦 Available inventory fields:', Object.keys(inventoryList[0]));
+        if (safeInventoryList.length > 0) {
+          console.log('📦 Sample inventory item structure:', safeInventoryList[0]);
+          console.log('📦 Available inventory fields:', Object.keys(safeInventoryList[0]));
           console.log('📦 Inventory count calculation:', {
-            arrayLength: inventoryList.length,
+            arrayLength: safeInventoryList.length,
             calculatedTotal: inventoryTotal,
-            isArray: Array.isArray(inventoryList)
+            isArray: Array.isArray(safeInventoryList)
           });
         }
 
         // Additional debugging for inventory
-        if (inventoryList && inventoryList.length > 0) {
-          console.log('📦 Sample inventory item:', inventoryList[0]);
-          console.log('📦 Inventory product types:', [...new Set(inventoryList.map(item => item.product_type))]);
-          console.log('📦 Inventory statuses:', [...new Set(inventoryList.map(item => item.status))]);
+        if (safeInventoryList.length > 0) {
+          console.log('📦 Sample inventory item:', safeInventoryList[0]);
+          console.log('📦 Inventory product types:', [...new Set(safeInventoryList.map(item => item.product_type))]);
+          console.log('📦 Inventory statuses:', [...new Set(safeInventoryList.map(item => item.status))]);
         } else {
           console.log('⚠️ No inventory data found');
         }
@@ -1034,9 +1149,11 @@
         ]);
 
         if (inventoryResponse.ok && summaryResponse.ok) {
-          const inventoryList = await inventoryResponse.json();
+          const inventoryResponseData = await inventoryResponse.json();
           const inventorySummary = await summaryResponse.json();
 
+          // Extract inventory list from response (handle both paginated and direct array formats)
+          const inventoryList = inventoryResponseData.data || inventoryResponseData;
           const inventoryTotal = Array.isArray(inventoryList) ? inventoryList.length : 0;
 
           // Update dashboard stats
@@ -1080,7 +1197,7 @@
           }
 
           console.log('✅ Inventory count and details updated in real-time', {
-            inventoryTotal, // Total quantity across all items
+            inventoryTotal, // Number of inventory items
             inventoryItemCount: inventoryList.length // Number of inventory items
           });
 
@@ -1272,9 +1389,132 @@
     </div>
   </div>
 
-  <script src="./dark-mode.js"></script>
+
+  <script src="./config.js"></script>
   <script src="./script.js"></script>
   <script src="./dashboard-tasks.js"></script>
+
+  <script>
+    // Personal Deadline Functions
+    function setPersonalDeadline() {
+      const deadlineInput = document.getElementById('deadlineInput');
+      const deadlineCountdown = document.getElementById('deadlineCountdown');
+
+      if (!deadlineInput.value) {
+        alert('Please select a date and time for your deadline.');
+        return;
+      }
+
+      const deadline = new Date(deadlineInput.value);
+      const now = new Date();
+
+      if (deadline <= now) {
+        alert('Please select a future date and time for your deadline.');
+        return;
+      }
+
+      // Store deadline in localStorage
+      localStorage.setItem('userDeadline', deadlineInput.value);
+      localStorage.setItem('userDeadlineTaskTitle', 'Personal Deadline');
+      localStorage.setItem('userDeadlineTaskId', 'personal');
+
+      // Start countdown
+      displayDeadlineCountdown(deadlineInput.value);
+
+      console.log('✅ Personal deadline set:', deadline.toLocaleString("en-US", { timeZone: "Africa/Accra" }));
+    }
+
+    function clearPersonalDeadline() {
+      const deadlineInput = document.getElementById('deadlineInput');
+      const deadlineCountdown = document.getElementById('deadlineCountdown');
+
+      deadlineInput.value = '';
+      deadlineCountdown.innerHTML = '';
+
+      // Clear from localStorage
+      localStorage.removeItem('userDeadline');
+      localStorage.removeItem('userDeadlineTaskTitle');
+      localStorage.removeItem('userDeadlineTaskId');
+
+      console.log('🗑️ Personal deadline cleared');
+    }
+
+    function displayDeadlineCountdown(deadlineValue) {
+      const deadlineCountdown = document.getElementById('deadlineCountdown');
+      if (!deadlineCountdown) return;
+
+      // Use Ghana time (GMT+0)
+      const deadline = new Date(deadlineValue);
+      const now = new Date();
+
+      // Convert to Ghana time for display
+      const ghanaNow = new Date(now.toLocaleString("en-US", { timeZone: "Africa/Accra" }));
+      const ghanaDeadline = new Date(deadline.toLocaleString("en-US", { timeZone: "Africa/Accra" }));
+
+      const timeDiff = ghanaDeadline - ghanaNow;
+
+      if (timeDiff <= 0) {
+        deadlineCountdown.innerHTML = '<span style="color: #dc3545; font-weight: bold;">⏰ Deadline reached!</span>';
+        return;
+      }
+
+      const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+      let countdownText = '';
+      if (days > 0) {
+        countdownText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+      } else if (hours > 0) {
+        countdownText = `${hours}h ${minutes}m ${seconds}s`;
+      } else if (minutes > 0) {
+        countdownText = `${minutes}m ${seconds}s`;
+      } else {
+        countdownText = `${seconds}s`;
+      }
+
+      deadlineCountdown.innerHTML = `<span style="color: #007bff;">⏰ Time remaining: ${countdownText}</span>`;
+
+      // Update every second
+      setTimeout(() => displayDeadlineCountdown(deadlineValue), 1000);
+    }
+
+    // Display current Ghana time
+    function updateGhanaTime() {
+      const ghanaTimeElement = document.getElementById('ghanaTime');
+      if (ghanaTimeElement) {
+        const now = new Date();
+        const ghanaTime = now.toLocaleString("en-US", {
+          timeZone: "Africa/Accra",
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true
+        });
+        ghanaTimeElement.textContent = `Current Ghana Time: ${ghanaTime}`;
+      }
+    }
+
+    // Load saved deadline on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedDeadline = localStorage.getItem('userDeadline');
+      if (savedDeadline) {
+        const deadlineInput = document.getElementById('deadlineInput');
+        if (deadlineInput) {
+          deadlineInput.value = savedDeadline;
+          displayDeadlineCountdown(savedDeadline);
+        }
+      }
+
+      // Update Ghana time every second
+      updateGhanaTime();
+      setInterval(updateGhanaTime, 1000);
+    });
+  </script>
   <script src="./user-greeting.js"></script>
 </body>
 

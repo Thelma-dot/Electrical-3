@@ -51,6 +51,22 @@ function initializeSocketConnection() {
             handleInventoryUpdate('deleted', data);
         });
 
+        // Also listen for general inventory updates from user actions
+        socket.on('inventory:created', (data) => {
+            console.log('📦 Admin inventory: User created item:', data);
+            handleInventoryUpdate('created', data);
+        });
+
+        socket.on('inventory:updated', (data) => {
+            console.log('📦 Admin inventory: User updated item:', data);
+            handleInventoryUpdate('updated', data);
+        });
+
+        socket.on('inventory:deleted', (data) => {
+            console.log('📦 Admin inventory: User deleted item:', data);
+            handleInventoryUpdate('deleted', data);
+        });
+
     } catch (error) {
         console.error('❌ Error initializing Socket.IO in admin inventory:', error);
     }
@@ -492,7 +508,7 @@ async function confirmDeleteItem() {
     if (!window.deleteItemId) return;
 
     try {
-        const response = await fetch(`${window.appConfig.getApiUrl()}/admin/inventory/${window.deleteItemId}`, {
+        const response = await fetch(window.appConfig.getApiUrl(`/admin/inventory/${window.deleteItemId}`), {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -653,7 +669,7 @@ async function saveInventoryChanges() {
         console.log('🔑 Editing inventory ID:', editingInventoryId);
         console.log('🔑 Token exists:', !!localStorage.getItem('token'));
 
-        const response = await fetch(`${window.appConfig.getApiUrl()}/admin/inventory/${editingInventoryId}`, {
+        const response = await fetch(window.appConfig.getApiUrl(`/admin/inventory/${editingInventoryId}`), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -803,6 +819,13 @@ function showNotification(message, type = 'info') {
 }
 
 
+
+// Logout function
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = 'index.html';
+}
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {

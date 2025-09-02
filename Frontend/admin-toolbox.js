@@ -20,6 +20,7 @@ let currentPage = 1;
 const itemsPerPage = 10;
 let currentToolId = null;
 let socket = null; // Socket.IO connection
+let eventCounter = 0; // Debug counter for events
 
 // Load toolbox data on page load
 document.addEventListener('DOMContentLoaded', function () {
@@ -38,14 +39,41 @@ function initializeSocketConnection() {
             console.log('🔌 Admin toolbox connected to server for real-time updates');
             console.log('🔌 Socket ID:', socket.id);
             console.log('🔌 Connection status:', socket.connected);
+            console.log('🔌 Socket URL:', window.appConfig.getSocketUrl());
+
+            // Show connection status notification
+            showConnectionNotification('connected');
+
+            // Notify server that admin is connected
+            socket.emit('admin:connected', {
+                type: 'toolbox-management',
+                timestamp: new Date().toISOString()
+            });
+
+            // Test the connection by emitting a test event
+            socket.emit('test:connection', {
+                message: 'Admin toolbox connection test',
+                timestamp: new Date().toISOString()
+            });
         });
 
         socket.on('disconnect', () => {
             console.log('🔌 Admin toolbox disconnected from server');
+            showConnectionNotification('disconnected');
+        });
+
+        socket.on('reconnect', () => {
+            console.log('🔌 Admin toolbox reconnected to server');
+            showConnectionNotification('reconnected');
         });
 
         socket.on('connect_error', (error) => {
             console.error('❌ Socket.IO connection error:', error);
+        });
+
+        // Listen for test connection response
+        socket.on('test:connection:response', (data) => {
+            console.log('🧪 Test connection response received:', data);
         });
 
         // Listen for toolbox updates
@@ -55,13 +83,35 @@ function initializeSocketConnection() {
         });
 
         socket.on('admin:toolbox:updated', (data) => {
-            console.log('🛠️ Admin toolbox: Form updated:', data);
+            eventCounter++;
+            console.log(`🛠️ Admin toolbox: Form updated (Event #${eventCounter}):`, data);
             console.log('🔄 Event data received:', JSON.stringify(data, null, 2));
+            console.log('🔄 About to call handleToolboxUpdate with type: updated');
             handleToolboxUpdate('updated', data);
         });
 
         socket.on('admin:toolbox:deleted', (data) => {
             console.log('🛠️ Admin toolbox: Form deleted:', data);
+            handleToolboxUpdate('deleted', data);
+        });
+
+        // Also listen for general toolbox updates from user actions
+        socket.on('toolbox:created', (data) => {
+            console.log('🛠️ Admin toolbox: User created form:', data);
+            handleToolboxUpdate('created', data);
+        });
+
+        socket.on('toolbox:updated', (data) => {
+            eventCounter++;
+            console.log(`🛠️ Admin toolbox: User updated form (Event #${eventCounter}):`, data);
+            console.log('🔄 General toolbox:updated event received:', JSON.stringify(data, null, 2));
+            console.log('🔄 Event type:', typeof data);
+            console.log('🔄 Event toolboxId:', data.toolboxId);
+            handleToolboxUpdate('updated', data);
+        });
+
+        socket.on('toolbox:deleted', (data) => {
+            console.log('🛠️ Admin toolbox: User deleted form:', data);
             handleToolboxUpdate('deleted', data);
         });
 
@@ -74,37 +124,39 @@ function initializeSocketConnection() {
 // Handle toolbox updates
 function handleToolboxUpdate(type, data) {
     console.log(`🛠️ Handling toolbox ${type} update:`, data);
+    eventCounter++;
+    console.log(`🛠️ Event #${eventCounter} received:`, { type, data });
+
+    // Show notification
+    showToolboxUpdateNotification(type, data);
 
     // Flash the stats to show update
     flashStats();
 
-    // For updates, check if we need to update a specific row
-    if (type === 'updated' && data.toolboxId) {
-        console.log('🔄 Processing toolbox update for ID:', data.toolboxId);
-        updateToolboxRow(data.toolboxId);
-    } else {
-        // Reload toolbox data for other types
-        console.log('🔄 Reloading entire toolbox table');
-        setTimeout(() => {
-            loadToolbox();
-        }, 500);
-    }
+    // Reload toolbox data immediately (same pattern as inventory and reports)
+    console.log('🔄 Reloading toolbox data for real-time update');
+    loadToolbox();
 }
 
 // Update a specific toolbox row when its status changes
 async function updateToolboxRow(toolboxId) {
     console.log('🔄 Starting row update for toolbox:', toolboxId);
+    console.log('🔄 ToolboxId type:', typeof toolboxId);
+    console.log('🔄 API URL:', window.appConfig.getApiUrl(`/toolbox/admin/${toolboxId}`));
 
     try {
         // Fetch the updated toolbox data
         const token = localStorage.getItem('token');
-        const response = await fetch(`${window.appConfig.getApiUrl()}/toolbox/admin/${toolboxId}`, {
+        console.log('🔄 Token available:', !!token);
+
+        const response = await fetch(window.appConfig.getApiUrl(`/toolbox/admin/${toolboxId}`), {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
 
         console.log('🔄 Fetch response status:', response.status);
+        console.log('🔄 Response ok:', response.ok);
 
         if (response.ok) {
             const updatedToolbox = await response.json();
@@ -120,6 +172,13 @@ async function updateToolboxRow(toolboxId) {
 
                 // Flash the updated row to show the change
                 flashRow(existingRow);
+
+                // Update the allTools array with the new data
+                const toolIndex = allTools.findIndex(tool => tool.id == toolboxId);
+                if (toolIndex !== -1) {
+                    allTools[toolIndex] = updatedToolbox;
+                    console.log('🔄 Updated allTools array');
+                }
 
                 // Update statistics
                 updateStats();
@@ -158,7 +217,7 @@ function updateRowContent(row, toolbox) {
     const toolsUsed = toolbox.tools_used || toolbox.toolsUsed || 'N/A';
     const preparedBy = toolbox.prepared_by || toolbox.preparedBy || 'N/A';
     const verifiedBy = toolbox.verified_by || toolbox.verifiedBy || 'N/A';
-    const createdAt = toolbox.created_at || toolbox.createdAt || 'N/A';
+
     const status = toolbox.status || 'submitted';
 
     // Get user information
@@ -199,7 +258,7 @@ function updateRowContent(row, toolbox) {
                 ${status === 'completed' ? '✅ Completed' : '📝 Submitted'}
             </span>
         </td>
-        <td>${formatDate(createdAt)}</td>
+
         <td>${actionButtons}</td>
     `;
 }
@@ -210,6 +269,151 @@ function flashRow(row) {
     setTimeout(() => {
         row.style.animation = '';
     }, 600);
+}
+
+// Remove a toolbox row from the table when it's deleted
+function removeToolboxRow(toolboxId) {
+    console.log('🗑️ Removing toolbox row for ID:', toolboxId);
+
+    const row = document.querySelector(`tr[data-toolbox-id="${toolboxId}"]`);
+    if (row) {
+        // Add fade-out animation before removing
+        row.style.transition = 'opacity 0.3s ease';
+        row.style.opacity = '0';
+
+        setTimeout(() => {
+            row.remove();
+            // Update statistics after removal
+            updateStats();
+            console.log('✅ Toolbox row removed successfully');
+        }, 300);
+    } else {
+        console.log('⚠️ Toolbox row not found, reloading entire table');
+        // If row not found, reload the entire table
+        setTimeout(() => {
+            loadToolbox();
+        }, 300);
+    }
+}
+
+// Show toolbox update notification
+function showToolboxUpdateNotification(type, data) {
+    const messages = {
+        'created': 'New toolbox form created',
+        'updated': 'Toolbox form updated and marked as completed',
+        'deleted': 'Toolbox form deleted'
+    };
+
+    const message = messages[type] || 'Toolbox updated';
+    const colors = {
+        'created': '#27ae60',
+        'updated': '#f39c12',
+        'deleted': '#e74c3c'
+    };
+    const icons = {
+        'created': '🆕',
+        'updated': '✅',
+        'deleted': '🗑️'
+    };
+
+    const color = colors[type] || '#27ae60';
+    const icon = icons[type] || '🛠️';
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${color};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        max-width: 300px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        border-left: 4px solid rgba(255, 255, 255, 0.3);
+    `;
+
+    notification.innerHTML = `${icon} ${message}`;
+
+    // Add to page
+    document.body.appendChild(notification);
+
+    // Show notification with animation
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+
+    // Remove after 4 seconds (longer for updates)
+    const displayTime = type === 'updated' ? 4000 : 3000;
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, displayTime);
+}
+
+// Show connection status notification
+function showConnectionNotification(status) {
+    const messages = {
+        'connected': '🔌 Connected to real-time updates',
+        'disconnected': '⚠️ Disconnected from real-time updates',
+        'reconnected': '🔄 Reconnected to real-time updates'
+    };
+
+    const colors = {
+        'connected': '#27ae60',
+        'disconnected': '#e74c3c',
+        'reconnected': '#f39c12'
+    };
+
+    const message = messages[status] || 'Connection status changed';
+    const color = colors[status] || '#3498db';
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: ${color};
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 999;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        max-width: 250px;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        font-weight: 500;
+    `;
+
+    notification.innerHTML = message;
+
+    // Add to page
+    document.body.appendChild(notification);
+
+    // Show notification with animation
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+
+    // Remove after 2 seconds
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 2000);
 }
 
 // Real-time flash effects
@@ -236,32 +440,49 @@ function flashToolboxTable() {
 // Load toolbox data
 async function loadToolbox() {
     try {
+        console.log('🔄 Loading toolbox data for admin...');
         const token = localStorage.getItem('token');
         if (!token) {
-            console.error('No authentication token found');
+            console.error('❌ No authentication token found');
             return;
         }
 
-        const response = await fetch(`${window.appConfig.getApiUrl()}/toolbox/admin/all`, {
+        const apiUrl = window.appConfig.getApiUrl('/toolbox/admin/all');
+        console.log('🔍 Making API call to:', apiUrl);
+        console.log('🔑 Token available:', !!token);
+        console.log('🔑 Token preview:', token ? token.substring(0, 20) + '...' : 'No token');
+
+        const response = await fetch(apiUrl, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
         });
 
+        console.log('📡 API Response status:', response.status);
+        console.log('📡 API Response ok:', response.ok);
+
         if (response.ok) {
             allTools = await response.json();
+            console.log('📋 Loaded toolbox data:', allTools);
+            console.log('📊 Number of tools loaded:', allTools.length);
+
             filteredTools = [...allTools];
             updateStats();
             displayTools();
             populateUserFilter(); // Populate user filter after loading data
+
+            console.log('✅ Toolbox data loaded and displayed successfully');
         } else if (response.status === 401) {
-            console.error('Authentication expired');
+            console.error('❌ Authentication expired');
             window.location.href = './index.html';
         } else {
+            const errorText = await response.text();
+            console.error('❌ API Error:', response.status, errorText);
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
     } catch (error) {
-        console.error('Error loading toolbox data:', error);
+        console.error('❌ Error loading toolbox data:', error);
         showMessage('Error loading toolbox data. Please try again.', 'error');
     }
 }
@@ -269,24 +490,59 @@ async function loadToolbox() {
 // Update statistics
 function updateStats() {
     const totalTools = allTools.length;
+    console.log('📊 Updating stats - Total tools:', totalTools);
 
     // Count by status
     const completedCount = allTools.filter(tool => tool.status === 'completed').length;
-    const submittedCount = allTools.filter(tool => tool.status !== 'completed').length;
+    const draftCount = allTools.filter(tool => tool.status === 'draft' || tool.status === 'submitted').length;
 
-    document.getElementById('totalTools').textContent = totalTools;
-    document.getElementById('submittedTools').textContent = submittedCount;
-    document.getElementById('completedTools').textContent = completedCount;
+    console.log('📊 Stats breakdown:', {
+        total: totalTools,
+        draft: draftCount,
+        completed: completedCount
+    });
+
+    const totalElement = document.getElementById('totalTools');
+    const draftElement = document.getElementById('draftTools');
+    const completedElement = document.getElementById('completedTools');
+
+    if (totalElement) {
+        totalElement.textContent = totalTools;
+        console.log('✅ Updated total tools display:', totalTools);
+    } else {
+        console.error('❌ totalTools element not found');
+    }
+
+    if (draftElement) {
+        draftElement.textContent = draftCount;
+        console.log('✅ Updated draft tools display:', draftCount);
+    } else {
+        console.error('❌ draftTools element not found');
+    }
+
+    if (completedElement) {
+        completedElement.textContent = completedCount;
+        console.log('✅ Updated completed tools display:', completedCount);
+    } else {
+        console.error('❌ completedTools element not found');
+    }
 }
 
 // Display tools in the table
 function displayTools() {
+    console.log('🔄 Displaying tools in table...');
+    console.log('📊 Filtered tools count:', filteredTools.length);
+
     const tbody = document.getElementById('toolboxTableBody');
-    if (!tbody) return;
+    if (!tbody) {
+        console.error('❌ toolboxTableBody element not found');
+        return;
+    }
 
     tbody.innerHTML = '';
 
     if (filteredTools.length === 0) {
+        console.log('📋 No tools to display, showing empty message');
         tbody.innerHTML = `
             <tr>
                 <td colspan="11" style="text-align: center; padding: 40px; color: #666;">
@@ -296,6 +552,8 @@ function displayTools() {
         `;
         return;
     }
+
+    console.log('📋 Displaying', filteredTools.length, 'tools in table');
 
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -313,7 +571,7 @@ function displayTools() {
         const toolsUsed = tool.tools_used || tool.toolsUsed || 'N/A';
         const preparedBy = tool.prepared_by || tool.preparedBy || 'N/A';
         const verifiedBy = tool.verified_by || tool.verifiedBy || 'N/A';
-        const createdAt = tool.created_at || tool.createdAt || 'N/A';
+
         const status = tool.status || 'submitted';
 
         // Get user information
@@ -353,7 +611,6 @@ function displayTools() {
                     ${status === 'completed' ? '✅ Completed' : '📝 Submitted'}
                 </span>
             </td>
-            <td>${formatDate(createdAt)}</td>
             <td>${actionButtons}</td>
         `;
 
@@ -485,7 +742,7 @@ Tools Used: ${tool.tools_used || tool.toolsUsed || 'N/A'}
 Prepared By: ${tool.prepared_by || tool.preparedBy || 'N/A'}
 Verified By: ${tool.verified_by || tool.verifiedBy || 'N/A'}
 Status: ${tool.status === 'completed' ? '✅ Completed' : '📝 Submitted'}
-Created At: ${formatDate(tool.created_at || tool.createdAt)}${statusMessage}
+${statusMessage}
     `;
 
     alert(details);
@@ -602,3 +859,4 @@ function confirmDeleteTool() {
     // Implementation for confirming tool deletion
     console.log('Confirm delete tool functionality');
 }
+

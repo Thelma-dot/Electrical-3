@@ -35,7 +35,7 @@ class Toolbox {
       `UPDATE toolbox SET 
         work_activity = ?, date = ?, work_location = ?, name_company = ?, sign = ?, 
         ppe_no = ?, tools_used = ?, hazards = ?, circulars = ?, risk_assessment = ?, 
-        permit = ?, remarks = ?, prepared_by = ?, verified_by = ?, status = ?
+        permit = ?, remarks = ?, prepared_by = ?, verified_by = ?, status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?`,
       [workActivity, date, workLocation, nameCompany, sign, ppeNo, toolsUsed, hazards, circulars, riskAssessment, permit, remarks, preparedBy, verifiedBy, status, id]
     );

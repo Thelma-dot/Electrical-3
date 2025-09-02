@@ -94,7 +94,7 @@ function initLoginForm() {
     e.preventDefault();
     login();
   });
-  
+
   // Also add click handler to button as backup
   const loginButton = form.querySelector('.login-btn');
   if (loginButton) {
@@ -236,6 +236,23 @@ window.onTaskDueChange = async function (e) {
     });
     // After updating due date, refresh tasks and reminder
     loadMyTasks();
+
+    // Explicitly sync deadline reminder with updated task
+    if (due_date) {
+      setTimeout(async () => {
+        try {
+          const response = await fetch(getApiUrl('/tasks/my'), {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          });
+          if (response.ok) {
+            const tasks = await response.json();
+            syncDeadlineWithTasks(tasks);
+          }
+        } catch (error) {
+          console.error('Error syncing deadline reminder:', error);
+        }
+      }, 500); // Small delay to ensure task is updated
+    }
   } catch { }
 }
 
@@ -289,6 +306,16 @@ async function login() {
     console.log('📤 Sending request to:', window.appConfig.getApiUrl('/auth/login'));
     console.log('📦 Request body:', requestBody);
 
+    // Debug: Check if there are any stored admin credentials
+    const storedAdminToken = localStorage.getItem('adminToken');
+    const storedAdminUser = localStorage.getItem('adminUser');
+    console.log('🔍 Stored admin credentials check:', {
+      hasAdminToken: !!storedAdminToken,
+      hasAdminUser: !!storedAdminUser,
+      adminToken: storedAdminToken ? storedAdminToken.substring(0, 20) + '...' : 'None',
+      adminUser: storedAdminUser ? JSON.parse(storedAdminUser).staff_id : 'None'
+    });
+
     const response = await fetch(window.appConfig.getApiUrl('/auth/login'), {
       method: 'POST',
       headers: {
@@ -312,6 +339,13 @@ async function login() {
     localStorage.setItem('user', JSON.stringify(data.user));
     localStorage.setItem('token', data.token);
 
+    console.log('💾 Stored user data:', {
+      user: data.user,
+      token: data.token ? data.token.substring(0, 20) + '...' : 'None',
+      userRole: data.user.role,
+      staffId: data.user.staff_id
+    });
+
     // Store user data in the format expected by the greeting system
     const userData = {
       staffId: data.user.staff_id || data.user.staffid || data.user.staffId,
@@ -326,9 +360,19 @@ async function login() {
 
     // Redirect based on role
     const userRole = (data.user && data.user.role) || (JSON.parse(atob(data.token.split('.')[1] || 'e30='))?.role);
+
+    console.log('🔍 Login redirect logic:', {
+      userData: data.user,
+      userRole: userRole,
+      tokenPayload: JSON.parse(atob(data.token.split('.')[1] || 'e30=')),
+      willRedirectTo: userRole === 'admin' ? 'admin-dashboard.html' : 'dashboard.html'
+    });
+
     if (userRole === 'admin') {
+      console.log('👑 Redirecting admin to admin dashboard');
       window.location.href = 'admin-dashboard.html';
     } else {
+      console.log('👤 Redirecting user to regular dashboard');
       window.location.href = 'dashboard.html';
     }
 
@@ -618,126 +662,9 @@ function initInventoryPage() {
   }
 }
 
-// Function to show the Add Inventory modal
-function showAddModal() {
-  const modal = document.getElementById('addModal');
-  if (modal) {
-    modal.style.display = 'flex';
-  }
-}
+// Inventory functions are now handled by inventory.js
 
-// Function to hide the Add Inventory modal
-function hideAddModal() {
-  const modal = document.getElementById('addModal');
-  if (modal) {
-    modal.style.display = 'none';
-  }
-}
-
-// Function to add inventory to the table
-function addInventory() {
-  const type = document.getElementById('type').value;
-  const status = document.getElementById('status').value;
-  const size = document.getElementById('size').value;
-  const serial = document.getElementById('serial').value;
-  const date = document.getElementById('date').value;
-  const location = document.getElementById('location').value;
-  const issued = document.getElementById('issued').value;
-
-  const newRow = document.createElement('tr');
-  newRow.innerHTML = `
-    <td>${type}</td>
-    <td>${status}</td>
-    <td>${size}</td>
-    <td>${serial}</td>
-    <td>${date}</td>
-    <td>${location}</td>
-    <td>${issued}</td>
-    <td><button class="edit-button" onclick="editInventory(this)">Edit</button></td>
-  `;
-
-  const inventoryBody = document.getElementById('inventoryBody');
-  if (inventoryBody) {
-    inventoryBody.appendChild(newRow);
-  }
-
-  const inventoryTable = document.getElementById('inventoryTable');
-  if (inventoryTable) {
-    inventoryTable.classList.remove('hidden');
-  }
-
-  hideAddModal();
-}
-
-// Function to edit inventory
-function editInventory(button) {
-  const row = button.closest('tr');
-  if (!row) return;
-
-  const cells = row.getElementsByTagName('td');
-
-  if (button.textContent === "Save") {
-    // Save the edited values
-    cells[0].textContent = document.getElementById('editType').value;
-    cells[1].textContent = document.getElementById('editStatus').value;
-    cells[2].textContent = document.getElementById('editSize').value;
-    cells[3].textContent = document.getElementById('editSerial').value;
-    cells[4].textContent = document.getElementById('editDate').value;
-    cells[5].textContent = document.getElementById('editLocation').value;
-    cells[6].textContent = document.getElementById('editIssued').value;
-
-    // Replace the Edit/Save button with 'Completed'
-    const actionCell = cells[7];
-    actionCell.innerHTML = '<span class="completed-action">✓ Completed</span>';
-  } else {
-    // Change to save button
-    button.textContent = 'Save';
-    button.setAttribute('onclick', 'editInventory(this)');
-
-    // Edit the row values by adding editable input fields
-    cells[0].innerHTML = `<input type="text" id="editType" value="${cells[0].textContent}">`;
-    cells[1].innerHTML = `<input type="text" id="editStatus" value="${cells[1].textContent}">`;
-    cells[2].innerHTML = `<input type="text" id="editSize" value="${cells[2].textContent}">`;
-    cells[3].innerHTML = `<input type="text" id="editSerial" value="${cells[3].textContent}">`;
-    cells[4].innerHTML = `<input type="text" id="editDate" value="${cells[4].textContent}">`;
-    cells[5].innerHTML = `<input type="text" id="editLocation" value="${cells[5].textContent}">`;
-    cells[6].innerHTML = `<input type="text" id="editIssued" value="${cells[6].textContent}">`;
-  }
-}
-
-function searchInventory() {
-  const query = document.getElementById('searchInput').value.toLowerCase();
-  const rows = document.querySelectorAll('#inventoryBody tr');
-  let found = false;
-
-  rows.forEach(row => {
-    const cells = row.getElementsByTagName('td');
-    const matches = Array.from(cells).some(cell =>
-      cell.textContent.toLowerCase().includes(query)
-    );
-
-    if (matches) {
-      row.style.display = '';
-      found = true;
-    } else {
-      row.style.display = 'none';
-    }
-  });
-
-  const noResultsMessage = document.getElementById('noResultsMessage');
-  if (!found) {
-    if (!noResultsMessage) {
-      const message = document.createElement('div');
-      message.id = 'noResultsMessage';
-      message.textContent = 'No results found';
-      message.style.color = 'red';
-      message.style.textAlign = 'center';
-      document.querySelector('.main-content')?.appendChild(message);
-    }
-  } else if (noResultsMessage) {
-    noResultsMessage.remove();
-  }
-}
+// Search functionality is now handled by inventory.js
 
 // Export to Excel (Dummy function)
 function exportToExcel() {
@@ -848,7 +775,7 @@ function createDeadlineItem(task) {
         <span class="priority-badge ${priorityClass}">${capitalizeFirst(task.priority || 'medium')}</span>
       </div>
       <div class="deadline-time">
-        <span class="due-date">Due: ${formatDate(task.due_date)}</span>
+        <span class="due-date">Due: ${new Date(task.due_date).toLocaleString("en-US", { timeZone: "Africa/Accra" })}</span>
         <span class="countdown" id="countdown-${task.id}">
           ${isOverdue ? '🚨 OVERDUE!' : 'Loading...'}
         </span>

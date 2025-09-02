@@ -1,0 +1,104 @@
+/* User Greeting Styles */
+.user-greeting {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.user-greeting h2 {
+    margin: 0 0 10px 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.user-greeting p {
+    margin: 0;
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.user-details {
+    flex: 1;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.user-role {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.user-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.user-status.online {
+    background: #10b981;
+    color: white;
+}
+
+.user-status.offline {
+    background: #6b7280;
+    color: white;
+}
+
+.user-status.busy {
+    background: #f59e0b;
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .user-greeting {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .user-greeting h2 {
+        font-size: 20px;
+    }
+    
+    .user-info {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+}

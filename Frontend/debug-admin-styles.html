@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Styles Debug</title>
+    <style>
+        /* Inline test styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #333;
+            background-color: white;
+        }
+
+        .css-test {
+            padding: 20px;
+            margin: 10px 0;
+            border: 2px dashed #666;
+        }
+
+        .css-test.loaded {
+            border-color: green;
+            background-color: #e8f5e8;
+        }
+
+        .css-test.failed {
+            border-color: red;
+            background-color: #ffe8e8;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Admin Styles Debug Page</h1>
+
+    <div class="test-section">
+        <h2>CSS Loading Test</h2>
+        <div id="css-test-result" class="css-test">
+            Testing CSS loading...
+        </div>
+        <button onclick="testCSS()">Test CSS Loading</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Admin Container Test</h2>
+        <div class="admin-container">
+            <nav class="navbar">
+                <div class="nav-container">
+                    <div class="nav-brand">
+                        <h1>Test Navigation</h1>
+                    </div>
+                    <div class="nav-menu">
+                        <a href="#" class="nav-link">Dashboard</a>
+                        <a href="#" class="nav-link active">Users</a>
+                        <button class="logout-btn">Logout</button>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="main-content">
+                <div class="page-header">
+                    <h1>Test Page</h1>
+                    <div class="header-actions">
+                        <button class="btn primary">Add New</button>
+                    </div>
+                </div>
+
+                <div class="search-filter">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search...">
+                    </div>
+                    <div class="filter-box">
+                        <select>
+                            <option>All</option>
+                            <option>Active</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="stats-section">
+                    <h3>Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h4>Total</h4>
+                            <p>42</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Active</h4>
+                            <p>38</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Test User</td>
+                                <td><span class="status-badge admin">Admin</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn view">View</button>
+                                        <button class="action-btn edit">Edit</button>
+                                        <button class="action-btn delete">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination">
+                    <button>Previous</button>
+                    <span>Page 1</span>
+                    <button>Next</button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>CSS Variables Test</h2>
+        <div id="css-vars-test" class="css-test">
+            Testing CSS variables...
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Console Output</h2>
+        <div id="console-output"
+            style="background: #000; color: #0f0; padding: 10px; font-family: monospace; height: 200px; overflow-y: auto;">
+            Console output will appear here...
+        </div>
+    </div>
+
+    <!-- Load Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Load the admin dashboard CSS -->
+    <link rel="stylesheet" href="./adminDashboard.css">
+
+    <script>
+        function log(message) {
+            const consoleOutput = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            consoleOutput.innerHTML += `[${timestamp}] ${message}\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            console.log(message);
+        }
+
+        function testCSS() {
+            log('Testing CSS loading...');
+
+            // Test if CSS file is loaded
+            const cssTestResult = document.getElementById('css-test-result');
+            const adminContainer = document.querySelector('.admin-container');
+
+            if (adminContainer) {
+                const computedStyle = window.getComputedStyle(adminContainer);
+                log(`Admin container found: ${adminContainer.outerHTML.substring(0, 100)}...`);
+                log(`Admin container background: ${computedStyle.backgroundColor}`);
+                log(`Admin container border: ${computedStyle.border}`);
+
+                if (computedStyle.border.includes('red') || computedStyle.backgroundColor.includes('yellow')) {
+                    cssTestResult.className = 'css-test loaded';
+                    cssTestResult.innerHTML = '✅ CSS loaded successfully! (Test styles visible)';
+                    log('CSS test styles are visible');
+                } else {
+                    cssTestResult.className = 'css-test failed';
+                    cssTestResult.innerHTML = '❌ CSS not loaded or test styles not applied';
+                    log('CSS test styles not visible');
+                }
+            } else {
+                cssTestResult.className = 'css-test failed';
+                cssTestResult.innerHTML = '❌ Admin container not found';
+                log('Admin container not found');
+            }
+
+            // Test CSS variables
+            testCSSVariables();
+        }
+
+        function testCSSVariables() {
+            log('Testing CSS variables...');
+            const cssVarsTest = document.getElementById('css-vars-test');
+
+            const testVars = [
+                '--color-primary',
+                '--color-background',
+                '--color-border',
+                '--color-text-primary',
+                '--max-width',
+                '--transition-duration'
+            ];
+
+            let loadedVars = 0;
+            let missingVars = [];
+
+            testVars.forEach(varName => {
+                const value = getComputedStyle(document.documentElement).getPropertyValue(varName);
+                if (value && value.trim() !== '') {
+                    loadedVars++;
+                    log(`✅ ${varName}: ${value}`);
+                } else {
+                    missingVars.push(varName);
+                    log(`❌ ${varName}: Not defined`);
+                }
+            });
+
+            if (loadedVars === testVars.length) {
+                cssVarsTest.className = 'css-test loaded';
+                cssVarsTest.innerHTML = `✅ All CSS variables loaded (${loadedVars}/${testVars.length})`;
+            } else {
+                cssVarsTest.className = 'css-test failed';
+                cssVarsTest.innerHTML = `❌ Missing CSS variables: ${missingVars.join(', ')} (${loadedVars}/${testVars.length})`;
+            }
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            log('Page loaded, running tests...');
+            setTimeout(() => {
+                testCSS();
+            }, 1000);
+        });
+
+        // Log any errors
+        window.addEventListener('error', (event) => {
+            log(`❌ JavaScript Error: ${event.message}`);
+        });
+    </script>
+</body>
+
+</html>

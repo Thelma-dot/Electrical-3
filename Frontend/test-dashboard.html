@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .warning {
+            color: orange;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Dashboard Test Page</h1>
+
+    <div class="test-section">
+        <h2>Basic DOM Test</h2>
+        <div id="greeting-title">Original Greeting</div>
+        <div id="total-users">Original Users</div>
+        <button onclick="testBasicUpdates()">Test Basic Updates</button>
+        <div id="basic-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Configuration Test</h2>
+        <div id="config-test-result"></div>
+        <button onclick="testConfig()">Test Configuration</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Authentication Test</h2>
+        <div id="auth-test-result"></div>
+        <button onclick="testAuth()">Test Authentication</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Chart Test</h2>
+        <canvas id="test-chart" width="400" height="200"></canvas>
+        <button onclick="testChart()">Test Chart Creation</button>
+        <div id="chart-test-result"></div>
+    </div>
+
+    <!-- Load required scripts -->
+    <script src="./config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./admin-dashboard.js"></script>
+
+    <script>
+        function testBasicUpdates() {
+            const result = document.getElementById('basic-test-result');
+            try {
+                const greetingTitle = document.getElementById('greeting-title');
+                const totalUsers = document.getElementById('total-users');
+
+                if (greetingTitle && totalUsers) {
+                    greetingTitle.textContent = 'Test Greeting - Working!';
+                    totalUsers.textContent = 'Test: 42 Users';
+                    result.innerHTML = '<span class="success">✅ Basic updates working!</span>';
+                } else {
+                    result.innerHTML = '<span class="error">❌ Elements not found</span>';
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        function testConfig() {
+            const result = document.getElementById('config-test-result');
+            try {
+                if (window.appConfig) {
+                    const apiUrl = window.appConfig.getApiUrl();
+                    const socketUrl = window.appConfig.getSocketUrl();
+                    result.innerHTML = `
+                        <span class="success">✅ Config loaded!</span><br>
+                        API URL: ${apiUrl}<br>
+                        Socket URL: ${socketUrl}
+                    `;
+                } else {
+                    result.innerHTML = '<span class="error">❌ Config not loaded</span>';
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Config error: ${error.message}</span>`;
+            }
+        }
+
+        function testAuth() {
+            const result = document.getElementById('auth-test-result');
+            try {
+                if (typeof AuthManager !== 'undefined') {
+                    const isAuth = AuthManager.isAuthenticated();
+                    const isAdmin = AuthManager.isAdmin();
+                    result.innerHTML = `
+                        <span class="success">✅ AuthManager available!</span><br>
+                        Is Authenticated: ${isAuth}<br>
+                        Is Admin: ${isAdmin}
+                    `;
+                } else {
+                    result.innerHTML = '<span class="error">❌ AuthManager not available</span>';
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Auth error: ${error.message}</span>`;
+            }
+        }
+
+        function testChart() {
+            const result = document.getElementById('chart-test-result');
+            try {
+                if (typeof Chart !== 'undefined') {
+                    const canvas = document.getElementById('test-chart');
+                    const ctx = canvas.getContext('2d');
+
+                    const chart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Test 1', 'Test 2', 'Test 3'],
+                            datasets: [{
+                                label: 'Test Data',
+                                data: [10, 20, 30],
+                                backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+
+                    result.innerHTML = '<span class="success">✅ Chart created successfully!</span>';
+                } else {
+                    result.innerHTML = '<span class="error">❌ Chart.js not available</span>';
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Chart error: ${error.message}</span>`;
+            }
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testConfig();
+                testAuth();
+            }, 500);
+        });
+    </script>
+</body>
+
+</html>

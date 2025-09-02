@@ -116,19 +116,17 @@ exports.requestPasswordReset = async (req, res) => {
   }
 };
 
-// Get current user profile
+// Get Profile
 exports.getProfile = async (req, res) => {
   try {
-    const userId = req.user.userId;
-    
-    const user = await get("SELECT * FROM users WHERE id = ?", [userId]);
+    const user = await get("SELECT * FROM users WHERE staff_id = ?", [
+      req.user.staffID,
+    ]);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Remove sensitive data
-    const { password: _, reset_token: __, token_expiry: ___, ...userData } = user;
-    
+    const { password, reset_token, token_expiry, ...userData } = user;
     res.json(userData);
   } catch (err) {
     console.error("Get profile error:", err);
@@ -139,33 +137,82 @@ exports.getProfile = async (req, res) => {
 // Update user profile
 exports.updateProfile = async (req, res) => {
   try {
-    const userId = req.user.userId;
-    const { fullName, email, phone } = req.body;
+    const { name, email, phone, currentPassword, newPassword } = req.body;
+    console.log('Update profile request:', { staffID: req.user.staffID, name, email, phone, hasPasswordChange: !!(currentPassword && newPassword) });
+    
+    const user = await get("SELECT * FROM users WHERE staff_id = ?", [
+      req.user.staffID,
+    ]);
 
-    // Validate input
-    if (!fullName || !email) {
-      return res.status(400).json({ error: "Full name and email are required" });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
 
-    if (email && !validateEmail(email)) {
-      return res.status(400).json({ error: "Invalid email format" });
+    // Update password if requested
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: "Current password is required when setting new password" });
+      }
+      
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ error: "Current password is incorrect" });
+      }
+
+      if (!validatePassword(newPassword)) {
+        return res.status(400).json({
+          error: "Password must be at least 8 characters, include a number and an uppercase letter"
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await run("UPDATE users SET password = ? WHERE staff_id = ?", [
+        hashedPassword,
+        req.user.staffID,
+      ]);
     }
 
-    // Check if email is already taken by another user
-    const existingUser = await get("SELECT id FROM users WHERE email = ? AND id != ?", [email, userId]);
-    if (existingUser) {
-      return res.status(400).json({ error: "Email is already taken" });
+    // Update profile fields
+    const updates = [];
+    const params = [];
+    
+    if (name !== undefined) { 
+      updates.push('name = ?'); 
+      params.push(name || null); 
+    }
+    
+    if (email !== undefined) { 
+      if (email && !validateEmail(email)) {
+        return res.status(400).json({ error: "Invalid email format" });
+      }
+      updates.push('email = ?'); 
+      params.push(email || null); 
+    }
+    
+    if (phone !== undefined) { 
+      updates.push('phone = ?'); 
+      params.push(phone || null); 
+    }
+    
+    if (updates.length > 0) {
+      params.push(req.user.staffID);
+      const updateQuery = `UPDATE users SET ${updates.join(', ')} WHERE staff_id = ?`;
+      console.log('Executing update query:', updateQuery, 'with params:', params);
+      await run(updateQuery, params);
+      console.log('Update query executed successfully');
     }
 
-    // Update user profile
-    await run(
-      "UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?",
-      [fullName, email, phone || null, userId]
-    );
-
-    // Get updated user data
-    const updatedUser = await get("SELECT * FROM users WHERE id = ?", [userId]);
+    // Get updated user data to return
+    const updatedUser = await get("SELECT * FROM users WHERE staff_id = ?", [req.user.staffID]);
+    
+    if (!updatedUser) {
+      console.error("Failed to retrieve updated user data for staff_id:", req.user.staffID);
+      return res.status(500).json({ error: "Failed to retrieve updated profile data" });
+    }
+    
     const { password: _, reset_token: __, token_expiry: ___, ...userData } = updatedUser;
+    
+    console.log('Profile updated successfully for user:', userData.staff_id);
 
     res.json({ message: "Profile updated successfully", user: userData });
   } catch (err) {
@@ -212,63 +259,4 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
-// Get Profile
-exports.getProfile = async (req, res) => {
-  try {
-    const user = await get("SELECT * FROM users WHERE staff_id = ?", [
-      req.user.staffID,
-    ]);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
 
-    const { password, reset_token, token_expiry, ...userData } = user;
-    res.json(userData);
-  } catch (err) {
-    console.error("Get profile error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-};
-
-// Update Profile
-exports.updateProfile = async (req, res) => {
-  try {
-    const { name, email, phone, currentPassword, newPassword } = req.body;
-    const user = await get("SELECT * FROM users WHERE staff_id = ?", [
-      req.user.staffID,
-    ]);
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    // Update password if requested
-    if (newPassword) {
-      const isMatch = await bcrypt.compare(currentPassword, user.password);
-      if (!isMatch) {
-        return res.status(401).json({ error: "Current password is incorrect" });
-      }
-
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      await run("UPDATE users SET password = ? WHERE staff_id = ?", [
-        hashedPassword,
-        req.user.staffID,
-      ]);
-    }
-
-    const updates = [];
-    const params = [];
-    if (name !== undefined) { updates.push('name = ?'); params.push(name || null); }
-    if (email && validateEmail(email)) { updates.push('email = ?'); params.push(email); }
-    if (phone !== undefined) { updates.push('phone = ?'); params.push(phone || null); }
-    if (updates.length) {
-      params.push(req.user.staffID);
-      await run(`UPDATE users SET ${updates.join(', ')} WHERE staff_id = ?`, params);
-    }
-
-    res.json({ message: "Profile updated successfully" });
-  } catch (err) {
-    console.error("Update profile error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-};

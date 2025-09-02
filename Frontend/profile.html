@@ -15,6 +15,12 @@
     <aside class="sidebar">
       <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
 
+      <!-- User Greeting in Sidebar -->
+      <div class="sidebar-greeting">
+        <p id="greeting"></p>
+        <div id="roleSubtitle"></div>
+      </div>
+
       <nav>
         <a href="./dashboard.html">📊 Dashboard</a>
         <a href="./generate_report.html">📄 Generate Report</a>
@@ -29,8 +35,6 @@
     <main class="main-content">
       <header class="header">
         <h1>Profile</h1>
-        <p id="greeting" style="margin-top:4px;color:#666;"></p>
-        <div id="roleSubtitle" style="color:#6b7280;font-weight:600;margin-top:2px;"></div>
         <div class="tabs" style="margin-top:8px;">
 
         </div>
@@ -73,6 +77,81 @@
           display: flex;
           gap: 10px;
           margin-top: 12px
+        }
+
+        /* Sidebar Greeting Hover Effects */
+        .sidebar-greeting {
+          text-align: center;
+          padding: 20px 15px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+          border: 2px solid #e2e8f0;
+          margin-bottom: 20px;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .sidebar-greeting::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(52, 152, 219, 0.1), transparent);
+          transition: left 0.5s ease;
+        }
+
+        .sidebar-greeting:hover::before {
+          left: 100%;
+        }
+
+        .sidebar-greeting:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(52, 152, 219, 0.2);
+          border-color: #3498db;
+          background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+        }
+
+        .sidebar-greeting:active {
+          transform: translateY(0);
+          transition: transform 0.1s ease;
+        }
+
+        /* Animation for page load */
+        @keyframes slideInFromTop {
+          0% {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .sidebar-greeting {
+          animation: slideInFromTop 0.6s ease-out;
+        }
+
+        /* Greeting text styling */
+        .sidebar-greeting #greeting {
+          margin: 0;
+          color: #3498db;
+          font-size: 18px;
+          font-weight: 700;
+          text-shadow: 0 1px 2px rgba(52, 152, 219, 0.1);
+        }
+
+        .sidebar-greeting #roleSubtitle {
+          color: #6b7280;
+          font-size: 14px;
+          margin-top: 8px;
+          font-weight: 500;
         }
       </style>
       <div class="profile-card">
@@ -155,6 +234,11 @@
         return;
       }
 
+      // Initialize user greeting system with current user data
+      if (window.userGreeting) {
+        window.userGreeting.updateUserInfo(user);
+      }
+
       try {
         const response = await fetch('http://localhost:5000/api/auth/profile', {
           headers: {
@@ -166,6 +250,11 @@
 
         const profile = await response.json();
         displayProfile(profile);
+
+        // Update user greeting with fresh profile data
+        if (window.userGreeting) {
+          window.userGreeting.updateUserInfo(profile);
+        }
       } catch (err) {
         console.error('Profile load error:', err);
         alert('Failed to load profile data');
@@ -176,29 +265,36 @@
     });
 
     function displayProfile(profile) {
+      console.log('Displaying profile:', profile);
       const name = profile.name || '';
-      document.getElementById('greeting').textContent = name ? `Hello, ${name}` : `Hello, ${profile.staff_id}`;
-      document.getElementById('roleSubtitle').textContent = (profile.role === 'admin' ? 'Admin' : 'Staff Member');
+
       // Display-only fields (text)
-      document.getElementById('displayNameText').textContent = name || '-';
-      document.getElementById('displayStaffIdText').textContent = profile.staff_id || '-';
-      document.getElementById('displayEmailText').textContent = profile.email || '-';
-      document.getElementById('displayPhoneText').textContent = profile.phone || '-';
-      document.getElementById('displayCreatedText').textContent = profile.created_at ? new Date(profile.created_at).toLocaleDateString() : '-';
-      document.getElementById('displayLastLoginText').textContent = profile.last_login ? new Date(profile.last_login).toLocaleString() : 'Not available';
+      const nameElement = document.getElementById('displayNameText');
+      const staffIdElement = document.getElementById('displayStaffIdText');
+      const emailElement = document.getElementById('displayEmailText');
+      const phoneElement = document.getElementById('displayPhoneText');
+      const createdElement = document.getElementById('displayCreatedText');
+      const lastLoginElement = document.getElementById('displayLastLoginText');
+
+      if (nameElement) nameElement.textContent = name || '-';
+      if (staffIdElement) staffIdElement.textContent = profile.staff_id || '-';
+      if (emailElement) emailElement.textContent = profile.email || '-';
+      if (phoneElement) phoneElement.textContent = profile.phone || '-';
+      if (createdElement) createdElement.textContent = profile.created_at ? new Date(profile.created_at).toLocaleDateString() : '-';
+      if (lastLoginElement) lastLoginElement.textContent = profile.last_login ? new Date(profile.last_login).toLocaleString() : 'Not available';
+
       // Modal form fields
-      document.getElementById('staffIdDisplay').value = profile.staff_id;
-      document.getElementById('nameInput').value = name;
-      document.getElementById('emailInput').value = profile.email || '';
-      document.getElementById('phoneInput').value = profile.phone || '';
-    }
+      const staffIdInput = document.getElementById('staffIdDisplay');
+      const nameInput = document.getElementById('nameInput');
+      const emailInput = document.getElementById('emailInput');
+      const phoneInput = document.getElementById('phoneInput');
 
-    function showEditProfileModal() {
-      document.getElementById('editProfileModal').style.display = 'flex';
-    }
+      if (staffIdInput) staffIdInput.value = profile.staff_id;
+      if (nameInput) nameInput.value = name;
+      if (emailInput) emailInput.value = profile.email || '';
+      if (phoneInput) phoneInput.value = profile.phone || '';
 
-    function closeEditProfileModal() {
-      document.getElementById('editProfileModal').style.display = 'none';
+      console.log('Profile display updated successfully');
     }
 
     async function updateProfile(e) {
@@ -227,20 +323,108 @@
           throw new Error(error.error || 'Update failed');
         }
 
-        // Refresh profile display
-        try {
-          const refreshed = await fetch('http://localhost:5000/api/auth/profile', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-          });
-          const profile = await refreshed.json();
-          displayProfile(profile);
-          localStorage.setItem('user', JSON.stringify(profile));
-        } catch { }
-        alert('Profile updated successfully!');
+        // Get the updated user data from the response
+        const result = await response.json();
+
+        // Debug logging (simplified)
+        console.log('Profile update response:', result);
+
+        // Check if the response has the expected structure
+        if (!result || !result.user) {
+          console.warn('Response missing user data, using fallback:', result);
+          // Instead of throwing an error, create a fallback user object
+          const fallbackUser = {
+            staff_id: formData.staffId || 'Unknown',
+            name: formData.name || 'Unknown',
+            email: formData.email || 'Unknown',
+            phone: formData.phone || 'Unknown'
+          };
+          result.user = fallbackUser;
+        }
+
+        const updatedProfile = result.user;
+
+        console.log('About to update profile display with:', updatedProfile);
+
+        // Update profile display
+        displayProfile(updatedProfile);
+
+        // Update localStorage
+        localStorage.setItem('user', JSON.stringify(updatedProfile));
+        console.log('localStorage updated with new profile data');
+
+        // Update global user greeting if available
+        if (window.userGreeting) {
+          console.log('Updating user greeting with new profile');
+          window.userGreeting.updateUserInfo(updatedProfile);
+        }
+
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('profileUpdated', {
+          detail: updatedProfile
+        }));
+        console.log('Profile update event dispatched');
+
+        // Close modal first
         closeEditProfileModal();
+
         // Clear password fields
         document.getElementById('currentPassword').value = '';
         document.getElementById('newPassword').value = '';
+
+        // Show success message after everything is updated
+        alert('Profile updated successfully!');
+        
+        // Force multiple display updates to ensure visibility
+        console.log('Starting aggressive profile display refresh...');
+        
+        // Immediate update
+        displayProfile(updatedProfile);
+        
+        // Force DOM reflow and multiple updates
+        setTimeout(() => {
+          console.log('First delayed refresh');
+          displayProfile(updatedProfile);
+          // Force a DOM reflow
+          document.body.offsetHeight;
+        }, 50);
+        
+        setTimeout(() => {
+          console.log('Second delayed refresh');
+          displayProfile(updatedProfile);
+        }, 150);
+        
+        setTimeout(() => {
+          console.log('Third delayed refresh');
+          displayProfile(updatedProfile);
+        }, 300);
+        
+        // Final update with DOM manipulation to ensure visibility
+        setTimeout(() => {
+          console.log('Final aggressive refresh');
+          displayProfile(updatedProfile);
+          
+          // Force the display elements to be visible and updated
+          const elements = [
+            'displayNameText',
+            'displayStaffIdText', 
+            'displayEmailText',
+            'displayPhoneText',
+            'displayCreatedText',
+            'displayLastLoginText'
+          ];
+          
+          elements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+              // Force a re-render by temporarily changing and restoring
+              const originalText = element.textContent;
+              element.textContent = originalText + ' ';
+              element.textContent = originalText;
+              console.log(`Forced refresh of ${id}:`, element.textContent);
+            }
+          });
+        }, 500);
       } catch (err) {
         console.error('Update error:', err);
         alert(err.message || 'Failed to update profile');
@@ -251,6 +435,7 @@
       const modal = document.getElementById('editProfileModal');
       if (modal) modal.style.display = 'flex';
     }
+
     function closeEditProfileModal() {
       const modal = document.getElementById('editProfileModal');
       if (modal) modal.style.display = 'none';
@@ -258,7 +443,8 @@
   </script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.35.5/apexcharts.min.js"></script>
-  <script src="./dark-mode.js"></script>
+
+  <script src="./config.js"></script>
   <script src="./script.js"></script>
   <script src="./user-greeting.js"></script>
 </body>

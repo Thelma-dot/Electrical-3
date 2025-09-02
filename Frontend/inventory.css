@@ -40,6 +40,30 @@
     cursor: pointer;
 }
 
+/* Loading and error message styling */
+#inventoryTable .loading,
+#inventoryTable .error-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-style: italic;
+    background-color: #f9f9f9;
+}
+
+#inventoryTable .error-message {
+    color: #d32f2f;
+    background-color: #ffebee;
+}
+
+/* Empty state styling */
+#inventoryTable .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-style: italic;
+    background-color: #f9f9f9;
+}
+
 #updateForm {
     background: #fff;
     padding: 20px;

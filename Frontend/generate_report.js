@@ -101,7 +101,7 @@ async function generateReport() {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + '/reports', {
+        const response = await fetch(window.appConfig.getApiUrl('/reports'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -123,6 +123,28 @@ async function generateReport() {
 
         // Add to table
         addReportToTable(newReport);
+
+        // Save to localStorage for cross-page synchronization
+        const existingReports = JSON.parse(localStorage.getItem('reports') || '[]');
+        existingReports.unshift(newReport); // Add new report to the beginning
+        localStorage.setItem('reports', JSON.stringify(existingReports));
+        console.log('💾 New report saved to localStorage for synchronization');
+
+        // Trigger custom event for other pages
+        console.log('📡 About to dispatch reportGenerated event with report:', newReport);
+        window.dispatchEvent(new CustomEvent('reportGenerated', {
+            detail: { report: newReport }
+        }));
+        console.log('📡 Report generated event dispatched');
+
+        // Also trigger a storage event manually to ensure cross-tab synchronization
+        console.log('📡 About to dispatch storage event with reports:', existingReports.length);
+        window.dispatchEvent(new StorageEvent('storage', {
+            key: 'reports',
+            newValue: JSON.stringify(existingReports),
+            oldValue: JSON.stringify(existingReports.slice(1))
+        }));
+        console.log('📡 Storage event dispatched for cross-tab synchronization');
 
         // Show success message
         alert('✅ Report generated successfully!');
@@ -179,7 +201,7 @@ async function updateReport() {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + `/reports/${currentReportId}`, {
+        const response = await fetch(window.appConfig.getApiUrl(`/reports/${currentReportId}`), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -203,6 +225,30 @@ async function updateReport() {
         const filteredIndex = filteredReports.findIndex(r => r.id == currentReportId);
         if (filteredIndex !== -1) {
             filteredReports[filteredIndex] = updatedReport;
+        }
+
+        // Save to localStorage for cross-page synchronization
+        const existingReports = JSON.parse(localStorage.getItem('reports') || '[]');
+        const reportIndex = existingReports.findIndex(r => r.id == currentReportId);
+        if (reportIndex !== -1) {
+            const oldReport = existingReports[reportIndex];
+            existingReports[reportIndex] = updatedReport;
+            localStorage.setItem('reports', JSON.stringify(existingReports));
+            console.log('💾 Updated report saved to localStorage for synchronization');
+
+            // Trigger custom event for other pages
+            window.dispatchEvent(new CustomEvent('reportUpdated', {
+                detail: { report: updatedReport }
+            }));
+            console.log('📡 Report updated event dispatched');
+
+            // Also trigger a storage event manually to ensure cross-tab synchronization
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: 'reports',
+                newValue: JSON.stringify(existingReports),
+                oldValue: JSON.stringify(existingReports.map((r, i) => i === reportIndex ? oldReport : r))
+            }));
+            console.log('📡 Storage event dispatched for cross-tab synchronization');
         }
 
         // Show success message
@@ -305,7 +351,7 @@ function cancelEdit() {
 async function loadExistingReports() {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + '/reports', {
+        const response = await fetch(window.appConfig.getApiUrl('/reports'), {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -337,7 +383,7 @@ async function deleteReport(reportId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + `/reports/${reportId}`, {
+        const response = await fetch(window.appConfig.getApiUrl(`/reports/${reportId}`), {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`

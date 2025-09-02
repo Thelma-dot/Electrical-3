@@ -12,12 +12,12 @@ class Report {
     const reportTime = report.report_time || report.reportTime;
     const toolsUsed = report.tools_used || report.toolsUsed;
     const status = report.status;
-    
+
     const result = await run(
       'INSERT INTO reports (user_id, title, job_description, location, remarks, report_date, report_time, tools_used, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [userId, title, jobDescription, location, remarks, reportDate, reportTime, toolsUsed, status]
     );
-    return result.lastID; // SQLite returns {lastID, changes}
+    return result.id; // SQLite returns {id, changes}
   }
 
   static async findByUserId(userId) {
@@ -35,7 +35,7 @@ class Report {
     const reportTime = reportData.report_time !== undefined ? reportData.report_time : reportData.reportTime;
     const toolsUsed = reportData.tools_used !== undefined ? reportData.tools_used : reportData.toolsUsed;
     const status = reportData.status;
-    
+
     console.log('🔧 Report model processing update data:', {
       id,
       title,
@@ -47,7 +47,7 @@ class Report {
       toolsUsed,
       status
     });
-    
+
     console.log('🔧 Raw reportData received:', reportData);
     console.log('🔧 Field mapping details:', {
       'reportData.report_date': reportData.report_date,
@@ -57,15 +57,15 @@ class Report {
       'reportData.tools_used': reportData.tools_used,
       'reportData.toolsUsed': reportData.toolsUsed
     });
-    
+
     const sql = 'UPDATE reports SET title = ?, job_description = ?, location = ?, remarks = ?, report_date = ?, report_time = ?, tools_used = ?, status = ? WHERE id = ?';
     const params = [title, jobDescription, location, remarks, reportDate, reportTime, toolsUsed, status, id];
-    
+
     console.log('🔧 Executing SQL:', sql);
     console.log('🔧 SQL parameters:', params);
-    
+
     await run(sql, params);
-    
+
     // Verify the update by checking what's in the database
     const { get } = require('../config/db-sqlite');
     const verification = await get('SELECT report_date, report_time, tools_used FROM reports WHERE id = ?', [id]);

@@ -346,6 +346,81 @@
 
 
     }
+
+    /* Sidebar Greeting Styles */
+    .sidebar-greeting {
+      text-align: center;
+      padding: 20px 15px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border: 2px solid #e2e8f0;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-greeting::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(52, 152, 219, 0.1), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .sidebar-greeting:hover::before {
+      left: 100%;
+    }
+
+    .sidebar-greeting:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(52, 152, 219, 0.2);
+      border-color: #3498db;
+      background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+    }
+
+    .sidebar-greeting:active {
+      transform: translateY(0);
+      transition: transform 0.1s ease;
+    }
+
+    /* Animation for page load */
+    @keyframes slideInFromTop {
+      0% {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .sidebar-greeting {
+      animation: slideInFromTop 0.6s ease-out;
+    }
+
+    /* Greeting text styling */
+    .sidebar-greeting #greeting {
+      margin: 0;
+      color: #3498db;
+      font-size: 18px;
+      font-weight: 700;
+      text-shadow: 0 1px 2px rgba(52, 152, 219, 0.1);
+    }
+
+    .sidebar-greeting #roleSubtitle {
+      color: #6b7280;
+      font-size: 14px;
+      margin-top: 8px;
+      font-weight: 500;
+    }
   </style>
 </head>
 
@@ -355,6 +430,12 @@
   <div class="container">
     <aside class="sidebar" id="sidebar">
       <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+
+      <!-- User Greeting in Sidebar -->
+      <div class="sidebar-greeting">
+        <p id="greeting"></p>
+        <div id="roleSubtitle"></div>
+      </div>
 
       <nav>
         <a href="./dashboard.html">📊 Dashboard</a>
@@ -512,7 +593,13 @@
     // Initialize Socket.IO connection for real-time updates
     function initializeSocketConnection() {
       try {
-        const socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
+        // Check if Socket.IO is available
+        if (typeof io === 'undefined') {
+          console.log('Real-time updates unavailable - Socket.IO not loaded');
+          return;
+        }
+
+        const socket = io(window.appConfig.getSocketUrl(), { transports: ['websocket', 'polling'] });
 
         // Listen for real-time toolbox events
         socket.on('connect', () => {
@@ -613,7 +700,7 @@
         }
 
         // Test with authentication
-        const response = await fetch('http://localhost:5000/api/toolbox', {
+        const response = await fetch(window.appConfig.getApiUrl('/toolbox'), {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -651,7 +738,7 @@
         }
 
         console.log('🔍 Loading toolbox for edit, ID:', toolboxId);
-        const response = await fetch(`http://localhost:5000/api/toolbox/${toolboxId}`, {
+        const response = await fetch(window.appConfig.getApiUrl(`/toolbox/${toolboxId}`), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -808,7 +895,7 @@
             };
             console.log('Updating toolbox with completed status:', updateData);
 
-            response = await fetch(`http://localhost:5000/api/toolbox/${editId}`, {
+            response = await fetch(window.appConfig.getApiUrl(`/toolbox/${editId}`), {
               method: 'PUT',
               headers: {
                 'Content-Type': 'application/json',
@@ -819,7 +906,7 @@
           } else {
             // Create new toolbox
             console.log('Submitting form data:', formData);
-            response = await fetch('http://localhost:5000/api/toolbox', {
+            response = await fetch(window.appConfig.getApiUrl('/toolbox'), {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -836,15 +923,18 @@
             const action = editId ? 'updated' : 'created';
 
             if (!editId) {
-              // For new submissions, show success message and refresh the table
-              showMessage('✅ Toolbox form submitted successfully!', 'success');
+              // For new submissions, show success message and redirect to view page
+              showMessage('✅ Toolbox form submitted successfully! Redirecting to view page...', 'success');
 
               // Clear the form
               form.reset();
               selectedTools = [];
               updateSelectedToolsDisplay();
 
-              // Form submitted successfully - user can now view their toolbox
+              // Redirect to toolbox view page after a short delay
+              setTimeout(() => {
+                window.location.href = './toolbox-submitted.html?submitted=true';
+              }, 2000);
             } else {
               // For updates, show success message and redirect to toolbox management
               showMessage('✅ Toolbox form updated and marked as completed!', 'success');
@@ -915,7 +1005,9 @@
 
   </script>
 
-  <script src="./dark-mode.js"></script>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="./config.js"></script>
   <script src="./script.js"></script>
   <script src="./user-greeting.js"></script>
 </body>

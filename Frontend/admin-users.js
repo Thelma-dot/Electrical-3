@@ -22,17 +22,56 @@ const tasksPerPage = 10;
 
 // Initialize user management
 document.addEventListener('DOMContentLoaded', () => {
-    if (!isAdmin()) {
+    console.log('🔍 Admin users page loaded');
+
+    // Check authentication first
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    console.log('🔍 Authentication check:', { hasToken: !!token, user: user });
+
+    if (!token) {
+        console.log('❌ No token found - redirecting to login');
+        showAlert('Please login to access user management', 'error');
+        window.location.href = 'index.html';
+        return;
+    }
+
+    if (!user || user.role !== 'admin') {
+        console.log('❌ User is not admin - redirecting to dashboard');
+        showAlert('Admin privileges required to access user management', 'error');
         window.location.href = 'dashboard.html';
         return;
     }
 
+    console.log('✅ User is authenticated as admin:', user.staff_id);
+
+    // Load users and tasks immediately - don't wait for health check
+    console.log('🔄 Loading users and tasks...');
+    console.log('🔍 Current authentication status:', {
+        hasToken: !!localStorage.getItem('token'),
+        user: JSON.parse(localStorage.getItem('user') || '{}'),
+        isAdmin: user.role === 'admin'
+    });
+
     loadUsers();
     loadAllTasks();
+
+    // Test API connection in background (optional)
+    testApiConnection().then(() => {
+        console.log('✅ API connection test passed');
+    }).catch((error) => {
+        console.log('⚠️ Health check failed (this is not critical):', error.message);
+        // Don't show error to user - health check is optional
+    });
+
     setActiveNavLink();
 
     // Check if we should show the return to admin button
     checkReturnToAdminButton();
+
+    // Initialize Socket.IO connection for real-time updates
+    initializeSocketConnection();
 
     // Periodically refresh admin task overview so user updates reflect here
     setInterval(() => {
@@ -57,35 +96,311 @@ function isAdmin() {
     return user && user.role === 'admin';
 }
 
+// Helper function to get API URL with fallback
+function getApiUrl() {
+    const defaultUrl = 'http://localhost:5000/api';
+
+    console.log('🔍 getApiUrl called');
+    console.log('🔍 window.appConfig exists:', !!window.appConfig);
+    console.log('🔍 window.appConfig:', window.appConfig);
+
+    // Always return a valid URL
+    if (!window.appConfig) {
+        console.log('🔍 No appConfig found, using default URL:', defaultUrl);
+        return defaultUrl;
+    }
+
+    if (typeof window.appConfig.getApiUrl !== 'function') {
+        console.log('🔍 appConfig.getApiUrl is not a function, using default URL:', defaultUrl);
+        return defaultUrl;
+    }
+
+    try {
+        // Use the apiBaseUrl directly from appConfig
+        const configUrl = window.appConfig.apiBaseUrl;
+        console.log('🔍 Config URL from appConfig:', configUrl);
+
+        // Validate the URL
+        if (!configUrl || configUrl === 'undefined' || configUrl.trim() === '') {
+            console.log('🔍 Invalid config URL, using default URL:', defaultUrl);
+            return defaultUrl;
+        }
+
+        // Test if it's a valid URL
+        new URL(configUrl);
+        console.log('🔍 Using config URL:', configUrl);
+        return configUrl;
+
+    } catch (error) {
+        console.error('🔍 Error with config URL:', error);
+        console.log('🔍 Using default URL:', defaultUrl);
+        return defaultUrl;
+    }
+}
+
+// Helper function to get Socket URL with fallback
+function getSocketUrl() {
+    const defaultUrl = 'http://localhost:5000';
+
+    // Always return a valid URL
+    if (!window.appConfig) {
+        console.log('🔍 No appConfig found, using default socket URL:', defaultUrl);
+        return defaultUrl;
+    }
+
+    if (typeof window.appConfig.getSocketUrl !== 'function') {
+        console.log('🔍 appConfig.getSocketUrl is not a function, using default socket URL:', defaultUrl);
+        return defaultUrl;
+    }
+
+    try {
+        // Use the socketUrl directly from appConfig
+        const configUrl = window.appConfig.socketUrl;
+        console.log('🔍 Config socket URL from appConfig:', configUrl);
+
+        // Validate the URL
+        if (!configUrl || configUrl === 'undefined' || configUrl.trim() === '') {
+            console.log('🔍 Invalid config socket URL, using default URL:', defaultUrl);
+            return defaultUrl;
+        }
+
+        // Test if it's a valid URL
+        new URL(configUrl);
+        console.log('🔍 Using config socket URL:', configUrl);
+        return configUrl;
+
+    } catch (error) {
+        console.error('🔍 Error with config socket URL:', error);
+        console.log('🔍 Using default socket URL:', defaultUrl);
+        return defaultUrl;
+    }
+}
+
+// Test API connection
+async function testApiConnection() {
+    try {
+        const apiUrl = getApiUrl();
+        console.log('🔍 API URL for testing:', apiUrl);
+
+        // Construct health URL safely - use the base URL without /api
+        let healthUrl;
+        if (apiUrl.endsWith('/api')) {
+            healthUrl = apiUrl.replace('/api', '') + '/health';
+        } else {
+            // If API URL doesn't end with /api, try to construct health URL
+            const baseUrl = apiUrl.replace(/\/api.*$/, '');
+            healthUrl = baseUrl + '/health';
+        }
+
+        console.log('🔍 Testing API connection to:', healthUrl);
+
+        // Validate the health URL before making the request
+        new URL(healthUrl);
+
+        // Create timeout manually for better browser compatibility
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch(healthUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        console.log('🔍 Health check response status:', response.status);
+
+        if (response.ok) {
+            const healthData = await response.json();
+            console.log('✅ API connection test successful:', healthData);
+            return true;
+        } else {
+            const errorText = await response.text();
+            console.error('❌ Health check failed:', { status: response.status, statusText: response.statusText, body: errorText });
+            throw new Error(`Health check failed with status: ${response.status} - ${response.statusText}`);
+        }
+    } catch (error) {
+        console.error('❌ API connection test failed:', error);
+
+        // Provide more specific error messages
+        if (error.name === 'AbortError') {
+            throw new Error('Connection timeout - server may be slow or unresponsive');
+        } else if (error.message.includes('fetch')) {
+            throw new Error('Network error - cannot reach server. Please check if backend is running on port 5000');
+        } else if (error.message.includes('CORS')) {
+            throw new Error('CORS error - server configuration issue');
+        } else {
+            throw new Error(`Connection failed: ${error.message}`);
+        }
+    }
+}
+
+// Initialize Socket.IO connection for real-time updates
+function initializeSocketConnection() {
+    try {
+        const socket = io(getSocketUrl());
+
+        socket.on('connect', () => {
+            console.log('🔌 Admin users connected to server for real-time updates');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('🔌 Admin users disconnected from server');
+        });
+
+        // Listen for user updates
+        socket.on('user:created', (data) => {
+            console.log('👤 Admin users: User created:', data);
+            loadUsers(); // Refresh users table
+            showAlert('New user created', 'success');
+        });
+
+        socket.on('user:updated', (data) => {
+            console.log('👤 Admin users: User updated:', data);
+            loadUsers(); // Refresh users table
+            showAlert('User updated', 'info');
+        });
+
+        socket.on('user:deleted', (data) => {
+            console.log('👤 Admin users: User deleted:', data);
+            loadUsers(); // Refresh users table
+            showAlert('User deleted', 'warning');
+        });
+
+        // Listen for task updates
+        socket.on('task:created', (data) => {
+            console.log('📋 Admin users: Task created:', data);
+            loadAllTasks(); // Refresh tasks table
+        });
+
+        socket.on('task:updated', (data) => {
+            console.log('📋 Admin users: Task updated:', data);
+            loadAllTasks(); // Refresh tasks table
+        });
+
+        socket.on('task:deleted', (data) => {
+            console.log('📋 Admin users: Task deleted:', data);
+            loadAllTasks(); // Refresh tasks table
+        });
+
+        // Store socket globally for use in other functions
+        window.socket = socket;
+
+    } catch (error) {
+        console.error('❌ Error initializing Socket.IO in admin users:', error);
+    }
+}
+
 // Load all users
 async function loadUsers() {
     try {
         const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        console.log('🔍 Loading users - Token available:', !!token);
+        console.log('🔍 Current user:', user);
+
         if (!token) {
+            console.log('❌ No token found - redirecting to login');
+            showAlert('Please login to access user management', 'error');
             window.location.href = 'index.html';
             return;
         }
 
-        const response = await fetch(window.appConfig.getApiUrl() + '/admin/users', {
+        // Check if user is admin
+        if (!user || user.role !== 'admin') {
+            console.log('❌ User is not admin - redirecting to dashboard');
+            showAlert('Admin privileges required to access user management', 'error');
+            window.location.href = 'dashboard.html';
+            return;
+        }
+
+        const apiUrl = getApiUrl();
+        const fullUrl = apiUrl + '/admin/users';
+
+        console.log('🔍 Loading users from:', fullUrl);
+        console.log('🔍 Token preview:', token.substring(0, 20) + '...');
+        console.log('🔍 Current page URL:', window.location.href);
+        console.log('🔍 API base URL:', apiUrl);
+
+        const response = await fetch(fullUrl, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
         });
 
+        console.log('🔍 Response status:', response.status);
+        console.log('🔍 Response ok:', response.ok);
+
         if (!response.ok) {
             if (response.status === 401) {
+                console.log('🔍 Unauthorized - token expired or invalid');
+                showAlert('Session expired. Please login again.', 'error');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
                 window.location.href = 'index.html';
                 return;
             }
-            throw new Error('Failed to fetch users');
+
+            if (response.status === 403) {
+                console.log('🔍 Forbidden - admin privileges required');
+                showAlert('Admin privileges required. You are not authorized to access user management.', 'error');
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            // Get error details from response
+            let errorMessage = `Failed to fetch users (Status: ${response.status})`;
+            try {
+                const errorData = await response.json();
+                if (errorData.error) {
+                    errorMessage += ` - ${errorData.error}`;
+                }
+            } catch (e) {
+                // If we can't parse the error response, use the status text
+                errorMessage += ` - ${response.statusText}`;
+            }
+
+            console.error('🔍 API Error:', errorMessage);
+            throw new Error(errorMessage);
         }
 
         allUsers = await response.json();
+        console.log('🔍 Users loaded successfully:', allUsers.length, 'users');
+        console.log('🔍 Users data:', allUsers);
+
+        if (allUsers.length === 0) {
+            console.log('⚠️ No users found in database');
+            showAlert('No users found in the system', 'info');
+        }
+
         renderUsersTable();
 
     } catch (error) {
         console.error('Error loading users:', error);
-        showAlert('Failed to load users', 'error');
+
+        // Provide more specific error messages
+        let errorMessage = 'Failed to load users';
+        if (error.message.includes('fetch') || error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            errorMessage = 'Cannot connect to server. Please check if the backend is running on port 5000.';
+        } else if (error.message.includes('401')) {
+            errorMessage = 'Authentication failed. Please login again.';
+        } else if (error.message.includes('403')) {
+            errorMessage = 'Access denied. Admin privileges required.';
+        } else if (error.message.includes('404')) {
+            errorMessage = 'API endpoint not found. Please check server configuration.';
+        } else if (error.message.includes('500')) {
+            errorMessage = 'Server error. Please try again later.';
+        } else if (error.message.includes('timeout')) {
+            errorMessage = 'Request timeout. Server may be slow or unresponsive.';
+        }
+
+        console.error('❌ User loading failed:', errorMessage);
+        showAlert(errorMessage, 'error');
     }
 }
 
@@ -99,30 +414,57 @@ async function renderUsersTable() {
     const endIndex = startIndex + usersPerPage;
     const usersToShow = filteredUsers.slice(startIndex, endIndex);
 
-    for (const user of usersToShow) {
+    console.log('🔍 Rendering users table:', { totalUsers: allUsers.length, filteredUsers: filteredUsers.length, usersToShow: usersToShow.length });
+
+    if (usersToShow.length === 0) {
+        // Show a message when no users are found
         const row = document.createElement('tr');
-        row.dataset.userId = user.id;
         row.innerHTML = `
-            <td>${user.staff_id}</td>
-            <td>${user.email || 'N/A'}</td>
-            <td><span class="role-badge ${user.role}">${(user.role || 'staff').toUpperCase()}</span></td>
-            <td>${formatDate(user.created_at)}</td>
-            <td>
-                <button class="btn small" onclick="startInlineEdit(${user.id})" title="Edit User">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn small" onclick="assignTask(${user.id})" title="Assign Task">
-                    <i class="fas fa-tasks"></i>
-                </button>
-                <button class="btn small warning" onclick="resetPassword(${user.id})" title="Reset Password">
-                    <i class="fas fa-key"></i>
-                </button>
-                <button class="btn small danger" onclick="deleteUser(${user.id})" title="Delete User">
-                    <i class="fas fa-trash"></i>
-                </button>
+            <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
+                ${allUsers.length === 0 ? 'No users found in the system' : 'No users match the current filter'}
             </td>
         `;
         tbody.appendChild(row);
+    } else {
+        // Load task counts for all users first
+        const userTaskCounts = {};
+        for (const user of usersToShow) {
+            try {
+                userTaskCounts[user.id] = await getUserTaskCount(user.id);
+            } catch (error) {
+                console.error(`Error getting task count for user ${user.id}:`, error);
+                userTaskCounts[user.id] = 0;
+            }
+        }
+
+        // Now render the rows
+        for (const user of usersToShow) {
+            const row = document.createElement('tr');
+            row.dataset.userId = user.id;
+            const taskCount = userTaskCounts[user.id] || 0;
+
+            row.innerHTML = `
+                <td>${user.staff_id}</td>
+                <td>${user.email || 'N/A'}</td>
+                <td><span class="role-badge ${user.role}">${(user.role || 'staff').toUpperCase()}</span></td>
+                <td>${formatDate(user.created_at)}</td>
+                <td>
+                    <button class="btn small" onclick="startInlineEdit(${user.id})" title="Edit User">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn small" onclick="viewUserTasks(${user.id})" title="View ${taskCount} tasks">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <button class="btn small warning" onclick="resetPassword(${user.id})" title="Reset Password">
+                        <i class="fas fa-key"></i>
+                    </button>
+                    <button class="btn small danger" onclick="deleteUser(${user.id})" title="Delete User">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        }
     }
 
     updatePagination(filteredUsers.length);
@@ -167,7 +509,7 @@ async function saveInlineUser(userId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + `/admin/users/${userId}`, {
+        const response = await fetch(getApiUrl() + `/admin/users/${userId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ staff_id, email, role })
@@ -202,7 +544,8 @@ function cancelInlineEdit(userId) {
 async function getUserTaskCount(userId) {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + `/tasks/user/${userId}`, {
+        const apiUrl = getApiUrl();
+        const response = await fetch(apiUrl + `/tasks/user/${userId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -216,6 +559,205 @@ async function getUserTaskCount(userId) {
     } catch (error) {
         console.error('Error fetching task count:', error);
         return 0;
+    }
+}
+
+// View user tasks
+function viewUserTasks(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+
+    // Filter tasks for this specific user
+    const userTasks = allTasks.filter(task => task.assigned_to === userId);
+
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'userTasksModal';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>Tasks for ${user.staff_id}</h2>
+                <span class="close" onclick="closeUserTasksModal()">&times;</span>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <p><strong>Total Tasks:</strong> ${userTasks.length}</p>
+                <p><strong>Pending:</strong> ${userTasks.filter(t => t.status === 'pending').length} | 
+                   <strong>In Progress:</strong> ${userTasks.filter(t => t.status === 'in_progress').length} | 
+                   <strong>Completed:</strong> ${userTasks.filter(t => t.status === 'completed').length}</p>
+            </div>
+            <div style="max-height: 400px; overflow-y: auto;">
+                ${userTasks.length === 0 ?
+            '<p style="text-align: center; color: #666; padding: 20px;">No tasks assigned to this user.</p>' :
+            `<table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #f5f5f5;">
+                                <th style="padding: 8px; border: 1px solid #ddd;">Title</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Status</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Priority</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Due Date</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${userTasks.map(task => `
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">${task.title}</td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <span class="task-status-badge ${task.status}">${toTaskLabel(task.status)}</span>
+                                    </td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <span class="task-priority-badge ${task.priority || 'medium'}">${toPriorityLabel(task.priority || 'medium')}</span>
+                                    </td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">${formatDue(task.due_date) || 'No due date'}</td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <button class="btn small" onclick="editTask(${task.id})" title="Edit Task">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn small danger" onclick="deleteTask(${task.id})" title="Delete Task">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`
+        }
+            </div>
+            <div class="form-actions" style="margin-top: 20px;">
+                <button class="btn primary" onclick="assignTask(${userId})">Assign New Task</button>
+                <button class="btn secondary" onclick="closeUserTasksModal()">Close</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.style.display = 'flex';
+}
+
+// Close user tasks modal
+function closeUserTasksModal() {
+    const modal = document.getElementById('userTasksModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Sync deadline reminder with newly assigned task
+async function syncDeadlineReminderWithNewTask(newTask) {
+    try {
+        // If the new task has a due date, update the deadline reminder
+        if (newTask && newTask.due_date) {
+            console.log('🔄 Syncing deadline reminder with new task:', newTask.title);
+
+            // Get current user's tasks to find the nearest deadline
+            const token = localStorage.getItem('token');
+            const apiUrl = window.appConfig ? getApiUrl() : 'http://localhost:5000/api';
+            const response = await fetch(apiUrl + '/tasks/my', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const tasks = await response.json();
+
+                // Find the nearest upcoming deadline
+                const now = new Date();
+                const candidates = tasks.filter(t => t.due_date && (t.status === 'pending' || t.status === 'in_progress'));
+
+                if (candidates.length > 0) {
+                    candidates.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+                    const nextTask = candidates.find(t => new Date(t.due_date) > now) || candidates[0];
+
+                    // Update the deadline reminder if it exists
+                    const deadlineInput = document.getElementById('deadlineInput');
+                    if (deadlineInput) {
+                        const deadlineLocal = toDateTimeLocal(nextTask.due_date);
+                        deadlineInput.value = deadlineLocal;
+                        localStorage.setItem('userDeadline', deadlineLocal);
+                        localStorage.setItem('userDeadlineTaskTitle', nextTask.title || 'Task');
+                        localStorage.setItem('userDeadlineTaskId', String(nextTask.id));
+
+                        // Trigger deadline countdown update if function exists
+                        if (typeof displayDeadlineCountdown === 'function') {
+                            displayDeadlineCountdown(deadlineLocal);
+                        }
+
+                        console.log('✅ Deadline reminder updated to:', nextTask.title, 'due (Ghana time):', new Date(nextTask.due_date).toLocaleString("en-US", { timeZone: "Africa/Accra" }));
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error syncing deadline reminder:', error);
+    }
+}
+
+// Helper function to convert ISO date to datetime-local format
+function toDateTimeLocal(iso) {
+    try {
+        const date = new Date(iso);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch {
+        return '';
+    }
+}
+
+// View user details
+function viewUserDetails(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'userDetailsModal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>User Details - ${user.staff_id}</h2>
+                <span class="close" onclick="closeUserDetailsModal()">&times;</span>
+            </div>
+            <div class="form-group">
+                <label><strong>Staff ID:</strong></label>
+                <p>${user.staff_id}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Email:</strong></label>
+                <p>${user.email || 'N/A'}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Role:</strong></label>
+                <p><span class="role-badge ${user.role}">${(user.role || 'staff').toUpperCase()}</span></p>
+            </div>
+            <div class="form-group">
+                <label><strong>Created Date:</strong></label>
+                <p>${formatDate(user.created_at)}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Last Login:</strong></label>
+                <p>${formatDate(user.last_login) || 'Never'}</p>
+            </div>
+            <div class="form-actions">
+                <button class="btn primary" onclick="editUser(${userId})">Edit User</button>
+                <button class="btn secondary" onclick="closeUserDetailsModal()">Close</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.style.display = 'flex';
+}
+
+// Close user details modal
+function closeUserDetailsModal() {
+    const modal = document.getElementById('userDetailsModal');
+    if (modal) {
+        modal.remove();
     }
 }
 
@@ -284,7 +826,8 @@ async function handleTaskAssignment(event, userId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + '/tasks', {
+        const apiUrl = window.appConfig ? getApiUrl() : 'http://localhost:5000/api';
+        const response = await fetch(apiUrl + '/tasks', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -299,6 +842,15 @@ async function handleTaskAssignment(event, userId) {
             showAlert('Task assigned successfully!', 'success');
             closeTaskAssignmentModal();
             loadUsers(); // Refresh the table
+
+            // Sync deadline reminder with the newly assigned task
+            syncDeadlineReminderWithNewTask(result.task);
+
+            // Notify user that their deadline reminder has been updated
+            if (result.task && result.task.due_date) {
+                const dueDate = new Date(result.task.due_date).toLocaleString("en-US", { timeZone: "Africa/Accra" });
+                console.log(`📅 Task "${result.task.title}" assigned with deadline (Ghana time): ${dueDate}`);
+            }
         } else {
             showAlert(result.error || 'Failed to assign task', 'error');
         }
@@ -356,15 +908,26 @@ function changePage(direction) {
 function formatDate(iso) {
     try {
         if (!iso) return 'N/A';
-        return new Date(iso).toLocaleDateString();
-    } catch { return 'N/A'; }
+        const date = new Date(iso);
+        if (isNaN(date.getTime())) return 'N/A';
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            timeZone: 'Africa/Accra'
+        });
+    } catch (error) {
+        console.error('Date formatting error:', error, 'for date:', iso);
+        return 'N/A';
+    }
 }
 
 // ================= Tasks (Admin overview) =================
 async function loadAllTasks() {
     try {
         const token = localStorage.getItem('token');
-        const resp = await fetch(window.appConfig.getApiUrl() + '/tasks/admin/all', {
+        const apiUrl = window.appConfig ? getApiUrl() : 'http://localhost:5000/api';
+        const resp = await fetch(apiUrl + '/tasks/admin/all', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!resp.ok) return;
@@ -517,7 +1080,8 @@ function filterTasks() {
 async function markTask(id, status) {
     try {
         const token = localStorage.getItem('token');
-        await fetch(window.appConfig.getApiUrl() + `/tasks/${id}`, {
+        const apiUrl = window.appConfig ? getApiUrl() : 'http://localhost:5000/api';
+        await fetch(apiUrl + `/tasks/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ status })
@@ -602,7 +1166,8 @@ async function handleEditTask(event, taskId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + `/tasks/${taskId}`, {
+        const apiUrl = window.appConfig ? getApiUrl() : 'http://localhost:5000/api';
+        const response = await fetch(apiUrl + `/tasks/${taskId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -638,7 +1203,8 @@ async function deleteTask(id) {
     if (!confirm('Delete this task?')) return;
     try {
         const token = localStorage.getItem('token');
-        await fetch(window.appConfig.getApiUrl() + `/tasks/${id}`, {
+        const apiUrl = window.appConfig ? getApiUrl() : 'http://localhost:5000/api';
+        await fetch(apiUrl + `/tasks/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -683,7 +1249,8 @@ async function addUser(event) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + endpoint, {
+        const apiUrl = window.appConfig ? getApiUrl() : 'http://localhost:5000/api';
+        const response = await fetch(apiUrl + endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -832,7 +1399,7 @@ async function updateUser(event) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + `/admin/users/${userId}`, {
+        const response = await fetch(getApiUrl() + `/admin/users/${userId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -894,7 +1461,7 @@ async function resetUserPassword(event) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + `/admin/users/${userId}/reset-password`, {
+        const response = await fetch(getApiUrl() + `/admin/users/${userId}/reset-password`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -925,7 +1492,7 @@ async function deleteUser(userId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + `/admin/users/${userId}`, {
+        const response = await fetch(getApiUrl() + `/admin/users/${userId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -957,6 +1524,10 @@ async function deleteUser(userId) {
         showAlert('Failed to delete user', 'error');
     }
 }
+
+
+
+
 
 // Show alert
 function showAlert(message, type = 'success') {
@@ -1017,6 +1588,13 @@ function showAlert(message, type = 'success') {
             }, 300);
         }
     }, 3000);
+}
+
+// Logout function
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = 'index.html';
 }
 
 // Close modals when clicking outside

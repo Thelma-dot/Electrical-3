@@ -35,17 +35,23 @@ document.addEventListener('DOMContentLoaded', () => {
         socket.on('disconnect', () => setLive(false));
 
         // Listen for real-time updates - reload when users save reports
-        socket.on('report:created', () => {
-            console.log('Report created - reloading admin reports table');
+        socket.on('report:created', (data) => {
+            console.log('Report created - reloading admin reports table:', data);
             loadReports();
+            // Show notification
+            showNotification('New report created by user', 'info');
         });
-        socket.on('report:updated', () => {
-            console.log('Report updated - reloading admin reports table');
+        socket.on('report:updated', (data) => {
+            console.log('Report updated - reloading admin reports table:', data);
             loadReports();
+            // Show notification
+            showNotification('Report updated by user', 'info');
         });
-        socket.on('report:deleted', () => {
-            console.log('Report deleted - reloading admin reports table');
+        socket.on('report:deleted', (data) => {
+            console.log('Report deleted - reloading admin reports table:', data);
             loadReports();
+            // Show notification
+            showNotification('Report deleted by user', 'warning');
         });
 
         // Initialize page
@@ -72,7 +78,7 @@ async function loadReports() {
             return;
         }
 
-        const response = await fetch(window.appConfig.getApiUrl() + '/admin/reports', {
+        const response = await fetch(window.appConfig.getApiUrl('/admin/reports'), {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -100,7 +106,7 @@ async function loadReports() {
 async function loadUsers() {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + '/admin/users', {
+        const response = await fetch(window.appConfig.getApiUrl('/admin/users'), {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -387,7 +393,7 @@ async function editReportStatus(reportId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + `/admin/reports/${reportId}/status`, {
+        const response = await fetch(window.appConfig.getApiUrl(`/admin/reports/${reportId}/status`), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -422,7 +428,7 @@ async function confirmDeleteReport() {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(window.appConfig.getApiUrl() + `/admin/reports/${reportToDelete.id}`, {
+        const response = await fetch(window.appConfig.getApiUrl(`/admin/reports/${reportToDelete.id}`), {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -525,6 +531,59 @@ function formatDate(iso) {
 
 function showAlert(message, type = 'error') {
     alert(message);
+}
+
+// Show notification function
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    // Style the notification
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : type === 'warning' ? '#f39c12' : '#3498db'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        max-width: 300px;
+        font-family: Arial, sans-serif;
+    `;
+
+    // Add to page
+    document.body.appendChild(notification);
+
+    // Show notification with animation
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
+
+// Logout function
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = 'index.html';
 }
 
 // Close modals when clicking outside

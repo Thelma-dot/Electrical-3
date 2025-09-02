@@ -36,9 +36,9 @@ class DashboardTasks {
             const showCompleted = document.getElementById('showCompletedTasks')?.checked || false;
             const statusFilter = document.getElementById('myTaskStatusFilter')?.value || '';
 
-            let endpoint = window.appConfig.getApiUrl() + '/tasks/my';
+            let endpoint = window.appConfig.getApiUrl('/tasks/my');
             if (showCompleted) {
-                endpoint = window.appConfig.getApiUrl() + '/tasks/my/completed';
+                endpoint = window.appConfig.getApiUrl('/tasks/my/completed');
             }
 
             const response = await fetch(endpoint, {
@@ -100,7 +100,7 @@ class DashboardTasks {
                     ${task.status || 'Pending'}
                 </span>
                 </td>
-                <td>${task.due_date ? new Date(task.due_date).toLocaleDateString() : 'N/A'}</td>
+                                 <td>${task.due_date ? new Date(task.due_date).toLocaleString("en-US", { timeZone: "Africa/Accra" }) : 'N/A'}</td>
                 <td>
                     <button class="btn btn-primary btn-sm" onclick="dashboardTasks.viewTaskDetails(${task.id})">
                             View
@@ -122,7 +122,7 @@ class DashboardTasks {
 
     async startTask(taskId) {
         try {
-            const response = await fetch(`${window.appConfig.getApiUrl()}/api/tasks/${taskId}`, {
+            const response = await fetch(window.appConfig.getApiUrl(`/tasks/${taskId}`), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ class DashboardTasks {
 
     async completeTask(taskId) {
         try {
-            const response = await fetch(`${window.appConfig.getApiUrl()}/api/tasks/${taskId}`, {
+            const response = await fetch(window.appConfig.getApiUrl(`/tasks/${taskId}`), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -177,7 +177,7 @@ class DashboardTasks {
     async viewTaskDetails(taskId) {
         try {
             // Fetch the specific task details
-            const response = await fetch(`${window.appConfig.getApiUrl()}/api/tasks/${taskId}`, {
+            const response = await fetch(window.appConfig.getApiUrl(`/tasks/${taskId}`), {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -210,7 +210,7 @@ class DashboardTasks {
         const statusClass = (task.status || 'pending').toLowerCase().replace(/[^a-z0-9]/g, '-');
         statusElement.innerHTML = `<span class="status-badge status-${statusClass}">${task.status || 'Pending'}</span>`;
 
-        document.getElementById('modalTaskDueDate').textContent = task.due_date ? new Date(task.due_date).toLocaleDateString() : 'N/A';
+        document.getElementById('modalTaskDueDate').textContent = task.due_date ? new Date(task.due_date).toLocaleString("en-US", { timeZone: "Africa/Accra" }) : 'N/A';
 
         // Show/hide action button based on task status
         const actionBtn = document.getElementById('modalTaskActionBtn');
@@ -298,10 +298,10 @@ class DashboardTasks {
                     <span>${task.assigned_to || 'Unassigned'}</span>
                 </div>
                 
-                <div class="meta-item">
-                    <span class="label">Due Date:</span>
-                    <span>${task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}</span>
-                </div>
+                                 <div class="meta-item">
+                     <span class="label">Due Date:</span>
+                     <span>${task.due_date ? new Date(task.due_date).toLocaleString("en-US", { timeZone: "Africa/Accra" }) : 'No due date'}</span>
+                 </div>
                 
                 <div class="meta-item">
                     <span class="label">Created:</span>
@@ -394,7 +394,7 @@ class DashboardTasks {
 
     async updateTaskDeadlineReminders() {
         try {
-            const response = await fetch(`${window.appConfig.getApiUrl()}/api/tasks/my`, {
+            const response = await fetch(window.appConfig.getApiUrl('/tasks/my'), {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -440,24 +440,55 @@ class DashboardTasks {
 
         deadlineReminders.innerHTML = upcomingTasks.map(task => {
             const dueDate = new Date(task.due_date);
-            const daysUntilDue = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
-            const isUrgent = daysUntilDue <= 1;
-            const isWarning = daysUntilDue <= 3;
+
+            // Calculate days until due more accurately using Ghana time
+            const ghanaNow = new Date(now.toLocaleString("en-US", { timeZone: "Africa/Accra" }));
+            const ghanaDueDate = new Date(dueDate.toLocaleString("en-US", { timeZone: "Africa/Accra" }));
+            const timeDiff = ghanaDueDate - ghanaNow;
+            const daysUntilDue = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            const hoursUntilDue = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+            // Debug logging
+            console.log(`📅 Task: ${task.title}`);
+            console.log(`   Due date (Ghana): ${dueDate.toLocaleString("en-US", { timeZone: "Africa/Accra" })}`);
+            console.log(`   Current time (Ghana): ${now.toLocaleString("en-US", { timeZone: "Africa/Accra" })}`);
+            console.log(`   Time diff (ms): ${timeDiff}`);
+            console.log(`   Days until due: ${daysUntilDue}`);
+            console.log(`   Hours until due: ${hoursUntilDue}`);
+
+            // Determine if it's due today, tomorrow, or later
+            let dueText;
+            if (daysUntilDue < 0) {
+                dueText = 'Overdue';
+            } else if (daysUntilDue === 0) {
+                if (hoursUntilDue <= 0) {
+                    dueText = 'Due now';
+                } else {
+                    dueText = `Due today (${hoursUntilDue}h left)`;
+                }
+            } else if (daysUntilDue === 1) {
+                dueText = 'Due tomorrow';
+            } else {
+                dueText = `Due in ${daysUntilDue} days`;
+            }
+
+            const isUrgent = daysUntilDue <= 0 || (daysUntilDue === 0 && hoursUntilDue <= 2);
+            const isWarning = daysUntilDue <= 1;
 
             return `
                 <div class="deadline-item ${isUrgent ? 'urgent' : isWarning ? 'warning' : 'normal'}">
                     <div class="deadline-header">
                         <span class="deadline-title">${task.title}</span>
                         <span class="deadline-days ${isUrgent ? 'urgent' : isWarning ? 'warning' : 'normal'}">
-                            ${daysUntilDue === 0 ? 'Due today' : daysUntilDue === 1 ? 'Due tomorrow' : `Due in ${daysUntilDue} days`}
+                            ${dueText}
                         </span>
                     </div>
-                    <div class="deadline-details">
-                        <span class="deadline-date">${dueDate.toLocaleDateString()}</span>
-                        <span class="deadline-priority priority-${(task.priority || 'medium').toLowerCase()}">
-                            ${task.priority || 'Medium'}
-                        </span>
-                    </div>
+                                         <div class="deadline-details">
+                         <span class="deadline-date">${dueDate.toLocaleString("en-US", { timeZone: "Africa/Accra" })}</span>
+                         <span class="deadline-priority priority-${(task.priority || 'medium').toLowerCase()}">
+                             ${task.priority || 'Medium'}
+                         </span>
+                     </div>
                 </div>
             `;
         }).join('');

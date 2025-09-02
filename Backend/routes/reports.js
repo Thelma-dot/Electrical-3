@@ -41,13 +41,13 @@ router.post("/", authenticateToken, async (req, res) => {
       [req.user.userId, title, jobDescription, location, remarks || '', reportDate || '', reportTime || '', toolsUsed || '', status || 'Pending']
     );
 
+    // Get the created report to return full data
+    const createdReport = await get('SELECT * FROM reports WHERE id = ?', [result.id]);
+
     // Emit realtime event
     try { req.app.locals.io.emit('report:created', { id: result.id, user_id: req.user.userId, title }); } catch { }
 
-    res.status(201).json({
-      message: "Report created successfully",
-      id: result.id
-    });
+    res.status(201).json(createdReport);
   } catch (error) {
     console.error("Error creating report:", error);
     res.status(500).json({ error: "Failed to create report" });

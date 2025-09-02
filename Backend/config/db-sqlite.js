@@ -40,7 +40,9 @@ function initializeTables() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       staff_id TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
+      name TEXT,
       email TEXT,
+      phone TEXT,
       role TEXT DEFAULT 'staff',
       last_login DATETIME,
       reset_token TEXT,
@@ -53,7 +55,7 @@ function initializeTables() {
         console.error("Error creating users table:", err.message);
       } else {
         console.log("✅ Users table created/verified");
-        createReportsTable();
+        ensureUserColumns();
       }
     }
   );
@@ -62,6 +64,75 @@ function initializeTables() {
 
   // Verify toolbox table structure
   verifyToolboxTable();
+}
+
+// Ensure required columns exist in users table
+function ensureUserColumns() {
+  db.all("PRAGMA table_info(users)", (err, columns) => {
+    if (err) {
+      console.error("Error checking users table structure:", err.message);
+      return;
+    }
+
+    const columnNames = columns.map(col => col.name);
+    const missingColumns = [];
+
+    if (!columnNames.includes('name')) {
+      missingColumns.push('name TEXT');
+    }
+    if (!columnNames.includes('phone')) {
+      missingColumns.push('phone TEXT');
+    }
+
+    if (missingColumns.length > 0) {
+      console.log("🔧 Adding missing columns to users table:", missingColumns);
+      missingColumns.forEach(column => {
+        const columnName = column.split(' ')[0];
+        db.run(`ALTER TABLE users ADD COLUMN ${column}`, (alterErr) => {
+          if (alterErr) {
+            console.error(`Error adding ${columnName} column:`, alterErr.message);
+          } else {
+            console.log(`✅ Added ${columnName} column to users table`);
+          }
+        });
+      });
+    }
+
+    createReportsTable();
+  });
+}
+
+// Ensure required columns exist in toolbox table
+function ensureToolboxColumns() {
+  db.all("PRAGMA table_info(toolbox)", (err, columns) => {
+    if (err) {
+      console.error("Error checking toolbox table structure:", err.message);
+      return;
+    }
+
+    const columnNames = columns.map(col => col.name);
+    const missingColumns = [];
+
+    if (!columnNames.includes('updated_at')) {
+      missingColumns.push('updated_at DATETIME DEFAULT CURRENT_TIMESTAMP');
+    }
+
+    if (missingColumns.length > 0) {
+      console.log("🔧 Adding missing columns to toolbox table:", missingColumns);
+      missingColumns.forEach(column => {
+        const columnName = column.split(' ')[0];
+        db.run(`ALTER TABLE toolbox ADD COLUMN ${column}`, (alterErr) => {
+          if (alterErr) {
+            console.error(`Error adding ${columnName} column:`, alterErr.message);
+          } else {
+            console.log(`✅ Added ${columnName} column to toolbox table`);
+          }
+        });
+      });
+    }
+
+    createSettingsTable();
+  });
 }
 
 // Create login_logs table for tracking login attempts
@@ -261,39 +332,104 @@ function createSampleReports() {
 
 function createSampleInventory() {
   const sampleInventory = [
+    // Admin user inventory
     {
       user_id: 1,
-      item_name: "Digital Multimeter",
-      category: "Testing Equipment",
-      product_type: "Electrical Testing",
-      quantity: 5,
-      unit: "piece",
-      status: "Available",
-      location: "Tool Room A"
+      product_type: "UPS",
+      status: "New",
+      size: "3kva",
+      serial_number: "UPS001",
+      date: new Date().toISOString().split('T')[0],
+      location: "Main Electrical Room",
+      issued_by: "Admin"
     },
     {
       user_id: 1,
-      item_name: "Safety Gloves",
-      category: "Safety Equipment",
-      product_type: "Personal Protection",
-      quantity: 20,
-      unit: "pair",
-      status: "Available",
-      location: "Safety Storage"
+      product_type: "AVR",
+      status: "New",
+      size: "6kva",
+      serial_number: "AVR001",
+      date: new Date().toISOString().split('T')[0],
+      location: "Building A",
+      issued_by: "Admin"
+    },
+    // Demo user h2412031 (ID: 2) inventory
+    {
+      user_id: 2,
+      product_type: "UPS",
+      status: "New",
+      size: "1.5kva",
+      serial_number: "UPS002",
+      date: new Date().toISOString().split('T')[0],
+      location: "Building B - Floor 2",
+      issued_by: "Calvin Odzor"
+    },
+    {
+      user_id: 2,
+      product_type: "AVR",
+      status: "Replaced",
+      size: "3kva",
+      serial_number: "AVR002",
+      date: new Date().toISOString().split('T')[0],
+      location: "Building B - Floor 1",
+      issued_by: "Calvin Odzor"
+    },
+    // Demo user h2402117 (ID: 4) inventory
+    {
+      user_id: 4,
+      product_type: "UPS",
+      status: "New",
+      size: "10kva",
+      serial_number: "UPS003",
+      date: new Date().toISOString().split('T')[0],
+      location: "Building C - Main Room",
+      issued_by: "Collins Oduro"
+    },
+    {
+      user_id: 4,
+      product_type: "AVR",
+      status: "New",
+      size: "20kva",
+      serial_number: "AVR003",
+      date: new Date().toISOString().split('T')[0],
+      location: "Building C - Storage",
+      issued_by: "Collins Oduro"
+    },
+    // Demo user h2402123 (ID: 3) inventory
+    {
+      user_id: 3,
+      product_type: "UPS",
+      status: "Replaced",
+      size: "6kva",
+      serial_number: "UPS004",
+      date: new Date().toISOString().split('T')[0],
+      location: "Building D - Workshop",
+      issued_by: "David"
+    },
+    // Demo user h2402140 (ID: 5) inventory
+    {
+      user_id: 5,
+      product_type: "AVR",
+      status: "New",
+      size: "30kva",
+      serial_number: "AVR004",
+      date: new Date().toISOString().split('T')[0],
+      location: "Building E - Control Room",
+      issued_by: "Evans Gyesi Arthur"
     }
   ];
 
   let inventoryCreated = 0;
   sampleInventory.forEach((item) => {
     db.run(
-      `INSERT OR IGNORE INTO inventory (user_id, item_name, category, product_type, quantity, unit, status, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [item.user_id, item.item_name, item.category, item.product_type, item.quantity, item.unit, item.status, item.location],
+      `INSERT OR IGNORE INTO inventory (user_id, product_type, status, size, serial_number, date, location, issued_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [item.user_id, item.product_type, item.status, item.size, item.serial_number, item.date, item.location, item.issued_by],
       function (err) {
         if (err) {
           console.error("❌ Error creating sample inventory item:", err.message);
         } else {
           if (this.changes > 0) {
-            console.log("✅ Created sample inventory item:", item.item_name);
+            console.log("✅ Created sample inventory item:", item.product_type, item.serial_number);
           }
         }
         inventoryCreated++;
@@ -311,6 +447,7 @@ function createSampleTasks() {
       title: "Monthly Safety Inspection",
       description: "Conduct monthly electrical safety inspection of all buildings",
       assigned_to: 1,
+      assigned_by: 1,
       status: "In Progress",
       priority: "High"
     },
@@ -318,6 +455,7 @@ function createSampleTasks() {
       title: "Equipment Calibration",
       description: "Calibrate all testing equipment for accuracy",
       assigned_to: 1,
+      assigned_by: 1,
       status: "Pending",
       priority: "Medium"
     }
@@ -326,16 +464,17 @@ function createSampleTasks() {
   let tasksCreated = 0;
   sampleTasks.forEach((task) => {
     db.run(
-      `INSERT OR IGNORE INTO tasks (title, description, assigned_to, status, priority) VALUES (?, ?, ?, ?, ?)`,
-      [task.title, task.description, task.assigned_to, task.status, task.priority],
+      `INSERT OR IGNORE INTO tasks (title, description, assigned_to, assigned_by, status, priority) VALUES (?, ?, ?, ?, ?, ?)`,
+      [task.title, task.description, task.assigned_to, task.assigned_by, task.status, task.priority],
       function (err) {
         if (err) {
-          console.error("❌ Error creating sample task:", err.message);
+          console.error(`❌ Error creating sample task:`, err.message);
         } else {
           if (this.changes > 0) {
-            console.log("✅ Created sample task:", task.title);
+            console.log(`✅ Created sample task: ${task.title}`);
           }
         }
+
         tasksCreated++;
         if (tasksCreated === sampleTasks.length) {
           console.log("🎉 Sample data creation complete!");
@@ -386,24 +525,15 @@ function createInventoryTable() {
     CREATE TABLE IF NOT EXISTS inventory (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
-      item_name TEXT NOT NULL,
-      category TEXT,
-      product_type TEXT,
-      quantity INTEGER DEFAULT 1,
-      unit TEXT DEFAULT 'piece',
+      product_type TEXT NOT NULL,
+      status TEXT DEFAULT 'New',
       size TEXT,
       serial_number TEXT,
-      status TEXT DEFAULT 'Available',
       date TEXT,
       location TEXT,
-      supplier TEXT,
-      purchase_date TEXT,
-      expiry_date TEXT,
       issued_by TEXT,
-      notes TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id)
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `,
     (err) => {
@@ -411,6 +541,8 @@ function createInventoryTable() {
         console.error("Error creating inventory table:", err.message);
       } else {
         console.log("✅ Inventory table created/verified");
+        // Run migration to ensure schema is correct
+        migrateInventoryTable();
         createToolboxTable();
       }
     }
@@ -440,6 +572,7 @@ function createToolboxTable() {
       verified_by TEXT NOT NULL,
       status TEXT DEFAULT 'draft',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     )
     `,
@@ -448,7 +581,7 @@ function createToolboxTable() {
         console.error("Error creating toolbox table:", err.message);
       } else {
         console.log("✅ Toolbox table created/verified");
-        createSettingsTable();
+        ensureToolboxColumns();
       }
     }
   );
@@ -489,11 +622,15 @@ function createTasksTable() {
       title TEXT NOT NULL,
       description TEXT,
       assigned_to INTEGER,
+      assigned_by INTEGER,
       status TEXT DEFAULT 'Pending',
       priority TEXT DEFAULT 'Medium',
       due_date TEXT,
+      hidden_from_user INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (assigned_to) REFERENCES users(id)
+      updated_at DATETIME,
+      FOREIGN KEY (assigned_to) REFERENCES users(id),
+      FOREIGN KEY (assigned_by) REFERENCES users(id)
     )
   `,
     (err) => {
@@ -501,10 +638,55 @@ function createTasksTable() {
         console.error("Error creating tasks table:", err.message);
       } else {
         console.log("✅ Tasks table created/verified");
+        updateTasksTableSchema();
         createLoginLogsTable();
       }
     }
   );
+}
+
+// Function to update existing tasks table schema
+function updateTasksTableSchema() {
+  console.log('🔧 Checking if tasks table schema update is needed...');
+
+  db.all("PRAGMA table_info(tasks)", (err, columns) => {
+    if (err) {
+      console.error("Error checking tasks table structure:", err.message);
+      return;
+    }
+
+    const columnNames = columns.map(col => col.name);
+    console.log('🔍 Current tasks table columns:', columnNames);
+
+    // Check if we need to add missing columns
+    const missingColumns = [];
+
+    if (!columnNames.includes('assigned_by')) {
+      missingColumns.push('assigned_by INTEGER');
+    }
+    if (!columnNames.includes('hidden_from_user')) {
+      missingColumns.push('hidden_from_user INTEGER DEFAULT 0');
+    }
+    if (!columnNames.includes('updated_at')) {
+      missingColumns.push('updated_at DATETIME');
+    }
+
+    if (missingColumns.length > 0) {
+      console.log('🔧 Adding missing columns to tasks table:', missingColumns);
+      missingColumns.forEach(column => {
+        const columnName = column.split(' ')[0];
+        db.run(`ALTER TABLE tasks ADD COLUMN ${column}`, (alterErr) => {
+          if (alterErr) {
+            console.error(`Error adding ${columnName} column:`, alterErr.message);
+          } else {
+            console.log(`✅ Added ${columnName} column to tasks table`);
+          }
+        });
+      });
+    } else {
+      console.log('✅ Tasks table schema is up to date');
+    }
+  });
 }
 
 // Function to update existing table schemas
@@ -568,6 +750,64 @@ function updateTableSchemas() {
       });
     } else {
       console.log("✅ Status column already exists in toolbox table");
+    }
+  });
+
+  // Check if tasks table needs schema update
+  updateTasksTableSchema();
+}
+
+// Function to migrate existing inventory table to new schema
+function migrateInventoryTable() {
+  console.log('🔧 Checking if inventory table migration is needed...');
+
+  db.all("PRAGMA table_info(inventory)", (err, columns) => {
+    if (err) {
+      console.error("Error checking inventory table structure:", err.message);
+      return;
+    }
+
+    const columnNames = columns.map(col => col.name);
+    console.log('🔍 Current inventory table columns:', columnNames);
+
+    // Check if we need to migrate from old schema
+    if (columnNames.includes('item_name') || !columnNames.includes('product_type')) {
+      console.log('🔧 Migrating inventory table to new schema...');
+
+      // Drop the old table completely
+      db.run('DROP TABLE IF EXISTS inventory', (err) => {
+        if (err) {
+          console.error("Error dropping old inventory table:", err.message);
+          return;
+        }
+
+        console.log('✅ Old inventory table dropped');
+
+        // Create new table with new schema
+        db.run(`
+          CREATE TABLE inventory (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            product_type TEXT NOT NULL,
+            status TEXT DEFAULT 'New',
+            size TEXT,
+            serial_number TEXT,
+            date TEXT,
+            location TEXT,
+            issued_by TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          )
+        `, (err) => {
+          if (err) {
+            console.error("Error creating new inventory table:", err.message);
+          } else {
+            console.log('✅ New inventory table created with correct schema');
+          }
+        });
+      });
+    } else {
+      console.log('✅ Inventory table schema is up to date');
     }
   });
 }

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .debug-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .info {
+            color: blue;
+        }
+
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔍 Admin Dashboard Debug</h1>
+
+    <div class="debug-section">
+        <h2>📋 Current Authentication Status</h2>
+        <div id="authStatus">Loading...</div>
+    </div>
+
+    <div class="debug-section">
+        <h2>🔑 Test Admin API Endpoints</h2>
+        <button onclick="testAdminUsersEndpoint()">Test /api/admin/users</button>
+        <button onclick="testAdminDashboardEndpoint()">Test /api/admin/dashboard</button>
+        <button onclick="testConfig()">Test App Config</button>
+        <div id="apiTestResults"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>🗄️ Local Storage Contents</h2>
+        <button onclick="showLocalStorage()">Show Local Storage</button>
+        <div id="localStorageContent"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>🚀 Quick Actions</h2>
+        <button onclick="clearAuth()">Clear Authentication</button>
+        <button onclick="goToLogin()">Go to Login</button>
+        <button onclick="goToAdminDashboard()">Go to Admin Dashboard</button>
+        <button onclick="testLoadUsers()">Test loadRecentUsers Function</button>
+    </div>
+
+    <script src="./config.js"></script>
+    <script>
+        // Check authentication status on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthStatus();
+        });
+
+        function checkAuthStatus() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+
+            const statusDiv = document.getElementById('authStatus');
+
+            if (!token) {
+                statusDiv.innerHTML = '<span class="error">❌ No authentication token found</span>';
+                return;
+            }
+
+            if (!user) {
+                statusDiv.innerHTML = '<span class="error">❌ No user data found</span>';
+                return;
+            }
+
+            try {
+                const userObj = JSON.parse(user);
+                const isAdmin = userObj.role === 'admin';
+
+                statusDiv.innerHTML = `
+                    <span class="success">✅ Authenticated</span><br>
+                    <strong>Staff ID:</strong> ${userObj.staff_id || userObj.staffid || 'N/A'}<br>
+                    <strong>Email:</strong> ${userObj.email || 'N/A'}<br>
+                    <strong>Role:</strong> <span class="${isAdmin ? 'success' : 'error'}">${userObj.role || 'N/A'}</span><br>
+                    <strong>Token:</strong> ${token.substring(0, 20)}...<br>
+                    <strong>Is Admin:</strong> ${isAdmin ? '✅ YES' : '❌ NO'}
+                `;
+            } catch (e) {
+                statusDiv.innerHTML = `<span class="error">❌ Error parsing user data: ${e.message}</span>`;
+            }
+        }
+
+        async function testAdminUsersEndpoint() {
+            const resultsDiv = document.getElementById('apiTestResults');
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                resultsDiv.innerHTML = '<span class="error">❌ No authentication token available</span>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<span class="info">🔄 Testing /api/admin/users endpoint...</span>';
+
+            try {
+                const response = await fetch(window.appConfig.getApiUrl('/admin/users'), {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.status === 401) {
+                    resultsDiv.innerHTML = '<span class="error">❌ Unauthorized - Token may be invalid or expired</span>';
+                    return;
+                }
+
+                const data = await response.json();
+                resultsDiv.innerHTML = `
+                    <span class="success">✅ Endpoint accessible</span><br>
+                    <strong>Status:</strong> ${response.status}<br>
+                    <strong>Users Found:</strong> ${Array.isArray(data) ? data.length : 'N/A'}<br>
+                    <strong>Response:</strong> <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        async function testAdminDashboardEndpoint() {
+            const resultsDiv = document.getElementById('apiTestResults');
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                resultsDiv.innerHTML = '<span class="error">❌ No authentication token available</span>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<span class="info">🔄 Testing /api/admin/dashboard endpoint...</span>';
+
+            try {
+                const response = await fetch(window.appConfig.getApiUrl('/admin/dashboard'), {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.status === 401) {
+                    resultsDiv.innerHTML = '<span class="error">❌ Unauthorized - Token may be invalid or expired</span>';
+                    return;
+                }
+
+                const data = await response.json();
+                resultsDiv.innerHTML = `
+                    <span class="success">✅ Endpoint accessible</span><br>
+                    <strong>Status:</strong> ${response.status}<br>
+                    <strong>Data:</strong> <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        function testConfig() {
+            const resultsDiv = document.getElementById('apiTestResults');
+            resultsDiv.innerHTML = `
+                <span class="success">✅ App Config Loaded</span><br>
+                <strong>Config:</strong> <pre>${JSON.stringify(window.appConfig, null, 2)}</pre>
+            `;
+        }
+
+        function showLocalStorage() {
+            const contentDiv = document.getElementById('localStorageContent');
+            const items = {};
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                try {
+                    const value = localStorage.getItem(key);
+                    items[key] = value;
+                } catch (e) {
+                    items[key] = `Error reading: ${e.message}`;
+                }
+            }
+
+            contentDiv.innerHTML = `<pre>${JSON.stringify(items, null, 2)}</pre>`;
+        }
+
+        function clearAuth() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            checkAuthStatus();
+            alert('Authentication cleared!');
+        }
+
+        function goToLogin() {
+            window.location.href = './index.html';
+        }
+
+        function goToAdminDashboard() {
+            window.location.href = './admin-dashboard.html';
+        }
+
+        async function testLoadUsers() {
+            const resultsDiv = document.getElementById('apiTestResults');
+            resultsDiv.innerHTML = '<span class="info">🔄 Testing loadRecentUsers function...</span>';
+
+            try {
+                // Simulate the loadRecentUsers function
+                const mockUsers = [
+                    { id: 1, staff_id: 'ADMIN001', email: 'admin@test.com', role: 'admin', created_at: '2024-01-01' },
+                    { id: 2, staff_id: 'STAFF001', email: 'staff1@test.com', role: 'staff', created_at: '2024-01-02' }
+                ];
+
+                resultsDiv.innerHTML = `
+                    <span class="success">✅ Function test successful</span><br>
+                    <strong>Mock Users:</strong> <pre>${JSON.stringify(mockUsers, null, 2)}</pre><br>
+                    <strong>Note:</strong> This is just a test - the real function needs valid API data
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `<span class="error">❌ Function test error: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+
+</html>

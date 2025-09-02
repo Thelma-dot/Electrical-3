@@ -58,6 +58,263 @@
         .back-btn:hover {
             background: #004080;
         }
+
+        /* Sidebar Greeting Styles */
+        .sidebar-greeting {
+            text-align: center;
+            padding: 20px 15px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 2px solid #e2e8f0;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            animation: slideInFromTop 0.6s ease-out;
+        }
+
+        .sidebar-greeting::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(52, 152, 219, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .sidebar-greeting:hover::before {
+            left: 100%;
+        }
+
+        .sidebar-greeting:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.2);
+            border-color: #3498db;
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+        }
+
+        .sidebar-greeting:active {
+            transform: translateY(0);
+            transition: transform 0.1s ease;
+        }
+
+        /* Animation for page load */
+        @keyframes slideInFromTop {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+
+        /* Greeting text styling */
+        .sidebar-greeting #greeting {
+            margin: 0;
+            color: #3498db;
+            font-size: 18px;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(52, 152, 219, 0.1);
+        }
+
+        .sidebar-greeting #roleSubtitle {
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        /* Reports Table Styling */
+        #reportsTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #reportsTable th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        #reportsTable td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        #reportsTable tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status.completed {
+            background: #d4edda;
+            color: #155724;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status.cancelled {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status.in-progress {
+            background: #fff3cd;
+            color: #856404;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status.pending {
+            background: #cce5ff;
+            color: #004085;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .view-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+
+        .view-btn:hover {
+            background: #2980b9;
+        }
+
+        /* Actions column styling */
+        #reportsTable td:last-child {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .edit-btn,
+        .delete-btn {
+            padding: 6px 12px;
+            margin: 0 2px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+            min-width: 60px;
+            height: 32px;
+            display: inline-block;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .edit-btn {
+            background: #2c3e50;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #34495e;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        /* Reports Section Styles */
+        .reports-section {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .reports-section h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding: 1rem;
+            text-align: center;
+            width: 100%;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #374151;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            min-width: 80px;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination span {
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-weight: 500;
+            min-width: 100px;
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -65,6 +322,13 @@
     <div class="container">
         <aside class="sidebar">
             <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
+
+            <!-- User Greeting in Sidebar -->
+            <div class="sidebar-greeting">
+                <p id="greeting"></p>
+                <div id="roleSubtitle"></div>
+            </div>
+
             <nav>
                 <a href="./dashboard.html">📊 Dashboard</a>
                 <a href="./generate_report.html">📄 Generate Report</a>
@@ -103,6 +367,7 @@
                             <th>Title</th>
                             <th>Job Description</th>
                             <th>Location</th>
+                            <th>Remarks</th>
                             <th>Date</th>
                             <th>Time</th>
                             <th>Status</th>
@@ -129,7 +394,7 @@
         </main>
     </div>
 
-    <script src="./dark-mode.js"></script>
+
     <script src="./script.js"></script>
     <script>
         // Reports page specific functionality
@@ -140,22 +405,74 @@
         // Helper function to format date for input field
         function formatDateForInput(dateString) {
             if (!dateString) return '';
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return '';
-            return date.toISOString().split('T')[0];
+
+            try {
+                // Handle different date formats
+                let dateStr = dateString.toString().trim();
+
+                // If it's already in YYYY-MM-DD format, return as is
+                if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                    return dateStr;
+                }
+
+                // Try to parse the date
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) {
+                    console.warn('⚠️ Invalid date format:', dateString);
+                    return '';
+                }
+
+                // Return in YYYY-MM-DD format
+                return date.toISOString().split('T')[0];
+
+            } catch (error) {
+                console.error('❌ Error formatting date:', error, 'Input:', dateString);
+                return '';
+            }
         }
 
         // Helper function to format time for input field
         function formatTimeForInput(timeString) {
             if (!timeString) return '';
-            // If time is in HH:MM:SS format, extract HH:MM
-            if (timeString.includes(':')) {
-                const parts = timeString.split(':');
-                if (parts.length >= 2) {
-                    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+
+            try {
+                // Handle different time formats
+                let timeStr = timeString.toString().trim();
+
+                // If it's already in HH:MM format, validate and return
+                if (/^\d{1,2}:\d{2}$/.test(timeStr)) {
+                    const parts = timeStr.split(':');
+                    const hours = parts[0].padStart(2, '0');
+                    const minutes = parts[1].padStart(2, '0');
+                    return `${hours}:${minutes}`;
                 }
+
+                // If time is in HH:MM:SS format, extract HH:MM
+                if (timeStr.includes(':')) {
+                    const parts = timeStr.split(':');
+                    if (parts.length >= 2) {
+                        const hours = parts[0].padStart(2, '0');
+                        const minutes = parts[1].padStart(2, '0');
+                        return `${hours}:${minutes}`;
+                    }
+                }
+
+                // If it's a number (like 1430 for 14:30), convert it
+                if (/^\d{3,4}$/.test(timeStr)) {
+                    const padded = timeStr.padStart(4, '0');
+                    const hours = padded.substring(0, 2);
+                    const minutes = padded.substring(2, 4);
+                    return `${hours}:${minutes}`;
+                }
+
+                // Default fallback - return empty string if format is invalid
+                console.warn('⚠️ Invalid time format:', timeString);
+                return '';
+
+            } catch (error) {
+                console.error('❌ Error formatting time:', error, 'Input:', timeString);
+                return '';
             }
-            return timeString;
         }
 
         // Helper function to format date for display
@@ -187,28 +504,150 @@
             }
         }
 
+        // Create sample data for testing
+        function createSampleReports() {
+            return [
+                {
+                    id: 1,
+                    title: "Electrical Panel Maintenance",
+                    job_description: "Routine maintenance of main electrical panel in Building A",
+                    location: "Building A - Electrical Room",
+                    remarks: "All connections checked and tightened. Panel cleaned.",
+                    report_date: "2024-01-15",
+                    report_time: "09:30",
+                    status: "Completed",
+                    tools_used: "Multimeter, Screwdriver Set, Cleaning Supplies"
+                },
+                {
+                    id: 2,
+                    title: "Light Fixture Installation",
+                    job_description: "Install new LED light fixtures in conference room",
+                    location: "Conference Room 2",
+                    remarks: "Installation completed successfully. All fixtures tested.",
+                    report_date: "2024-01-14",
+                    report_time: "14:00",
+                    status: "Completed",
+                    tools_used: "Drill, Wire Strippers, Voltage Tester"
+                },
+                {
+                    id: 3,
+                    title: "Power Outlet Repair",
+                    job_description: "Repair faulty power outlet in office area",
+                    location: "Office Floor 3 - Room 301",
+                    remarks: "Outlet replaced. Circuit tested and working properly.",
+                    report_date: "2024-01-13",
+                    report_time: "11:15",
+                    status: "In Progress",
+                    tools_used: "Outlet Tester, Wire Nuts, Electrical Tape"
+                }
+            ];
+        }
+
         // Load reports when page loads
         document.addEventListener('DOMContentLoaded', function () {
+            console.log('🚀 Reports page loaded, starting to load reports...');
             loadReports();
+
+            // Add keyboard event listener for search input
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        searchReports();
+                    }
+                });
+            }
+
+            // Listen for storage changes (when reports are added from other tabs/pages)
+            window.addEventListener('storage', function (e) {
+                console.log('📋 Storage event received:', e.key, e.newValue ? 'has new value' : 'no new value');
+                if (e.key === 'reports' && e.newValue) {
+                    console.log('📋 Reports updated in localStorage, refreshing...');
+                    console.log('📋 About to call loadReports() from storage event...');
+                    loadReports();
+                }
+            });
+
+            // Listen for page visibility changes (when user returns to this tab)
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) {
+                    console.log('📋 Page became visible, checking for new reports...');
+                    loadReports();
+                }
+            });
+
+            // Listen for custom events from other pages
+            window.addEventListener('reportGenerated', function (e) {
+                console.log('📋 Report generated event received, refreshing...');
+                console.log('📋 Event detail:', e.detail);
+                showNotification('New report generated!', 'success');
+                console.log('📋 About to call loadReports()...');
+                loadReports();
+            });
+
+            window.addEventListener('reportUpdated', function (e) {
+                console.log('📋 Report updated event received, refreshing...');
+                showNotification('Report updated!', 'info');
+                loadReports();
+            });
+
+            window.addEventListener('reportDeleted', function (e) {
+                console.log('📋 Report deleted event received, refreshing...');
+                showNotification('Report deleted!', 'warning');
+                loadReports();
+            });
+
+            // Check for new reports every 10 seconds (more frequent for better UX)
+            setInterval(function () {
+                if (!document.hidden) {
+                    console.log('📋 Periodic check for new reports...');
+                    loadReports();
+                }
+            }, 10000);
+
+            // Also check when the page gains focus (user switches back to this tab)
+            window.addEventListener('focus', function () {
+                console.log('📋 Window gained focus, checking for new reports...');
+                loadReports();
+            });
         });
 
         async function loadReports() {
             try {
+                console.log('🔍 Starting to load reports...');
+                console.log('🔍 Current URL:', window.location.href);
+                console.log('🔍 App Config:', window.appConfig);
+                console.log('🔍 loadReports() called at:', new Date().toLocaleTimeString());
+
                 const token = localStorage.getItem('token');
                 if (!token) {
+                    console.log('❌ No token found, redirecting to login');
                     window.location.href = './index.html';
                     return;
                 }
 
-                const response = await fetch('http://localhost:5000/api/reports', {
+                const apiUrl = window.appConfig.getApiUrl('/reports');
+                console.log('🔍 Making API request to:', apiUrl);
+                console.log('🔍 Using token:', token ? 'Token present' : 'No token');
+                console.log('🔍 Token preview:', token.substring(0, 20) + '...');
+
+                const response = await fetch(apiUrl, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
+                console.log('🔍 API response status:', response.status);
                 if (response.ok) {
                     allReports = await response.json();
                     console.log('📋 Received reports data:', allReports);
+                    console.log('📋 Number of reports:', allReports.length);
+
+                    if (allReports.length === 0) {
+                        console.log('⚠️ No reports found in the response');
+                    } else {
+                        console.log('✅ Reports found, proceeding to display');
+                    }
 
                     // Normalize field names for consistency - handle all possible field name variations
                     allReports = allReports.map(report => ({
@@ -229,26 +668,90 @@
                         });
                     });
 
+                    // Save reports to localStorage for cross-page synchronization
+                    localStorage.setItem('reports', JSON.stringify(allReports));
+                    console.log('💾 Reports saved to localStorage for synchronization');
+
                     displayReports(allReports);
                 } else {
-                    console.error('Failed to load reports');
+                    console.error('❌ Failed to load reports. Status:', response.status);
+                    const errorText = await response.text();
+                    console.error('❌ Error response:', errorText);
+
+                    // Show user-friendly error message
+                    const errorMessage = document.createElement('div');
+                    errorMessage.style.cssText = 'background: #f8d7da; color: #721c24; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px solid #f5c6cb;';
+                    errorMessage.innerHTML = '<strong>Error:</strong> Failed to load reports. Please try refreshing the page.';
+
+                    const reportsSection = document.querySelector('.reports-section');
+                    if (reportsSection) {
+                        reportsSection.insertBefore(errorMessage, reportsSection.firstChild);
+                    }
+
                     displayReports([]);
                 }
             } catch (error) {
                 console.error('Error loading reports:', error);
-                displayReports([]);
+
+                // Show user-friendly error message
+                const errorMessage = document.createElement('div');
+                errorMessage.style.cssText = 'background: #f8d7da; color: #721c24; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px solid #f5c6cb;';
+                errorMessage.innerHTML = '<strong>Network Error:</strong> Unable to connect to the server. Please check your internet connection and try again.';
+
+                const reportsSection = document.querySelector('.reports-section');
+                if (reportsSection) {
+                    reportsSection.insertBefore(errorMessage, reportsSection.firstChild);
+                }
+
+                // Try to load from localStorage as fallback
+                const localReports = JSON.parse(localStorage.getItem('reports') || '[]');
+                if (localReports.length > 0) {
+                    console.log('📋 Loading reports from localStorage as fallback:', localReports);
+                    allReports = localReports;
+                    displayReports(allReports);
+                } else {
+                    // Show sample data for demonstration
+                    console.log('📋 No local reports found, showing sample data for demonstration');
+                    allReports = createSampleReports();
+                    displayReports(allReports);
+
+                    // Add a notice that this is sample data
+                    const sampleNotice = document.createElement('div');
+                    sampleNotice.style.cssText = 'background: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px solid #bee5eb;';
+                    sampleNotice.innerHTML = '<strong>Demo Mode:</strong> Showing sample reports. Connect to the backend server to see your actual reports.';
+
+                    const reportsSection = document.querySelector('.reports-section');
+                    if (reportsSection) {
+                        reportsSection.insertBefore(sampleNotice, reportsSection.firstChild);
+                    }
+                }
             }
         }
 
         function displayReports(reports) {
+            console.log('📊 Displaying reports:', reports);
+            console.log('📊 Reports array length:', reports.length);
+            console.log('📊 Reports array type:', typeof reports);
+            console.log('📊 Is reports an array?', Array.isArray(reports));
+            console.log('📊 displayReports() called at:', new Date().toLocaleTimeString());
+
             const tbody = document.getElementById('reportsTableBody');
+            console.log('📊 Table body element:', tbody);
+
+            if (!tbody) {
+                console.error('❌ Table body element not found!');
+                return;
+            }
+
             tbody.innerHTML = '';
 
             if (reports.length === 0) {
+                console.log('📊 No reports to display, showing no results message');
                 document.getElementById('noResultsMessage').style.display = 'block';
                 return;
             }
 
+            console.log('📊 Reports found, hiding no results message');
             document.getElementById('noResultsMessage').style.display = 'none';
 
             // Apply pagination
@@ -259,7 +762,9 @@
             // Update pagination info
             updateReportsPaginationInfo(reports.length);
 
-            reportsToShow.forEach((report) => {
+            console.log(`📊 About to display ${reportsToShow.length} reports on page ${currentReportsPage}`);
+            reportsToShow.forEach((report, index) => {
+                console.log(`📊 Creating row ${index + 1} for report:`, report);
                 const row = document.createElement('tr');
                 // Format date and time properly - ensure we get the correct field values
                 const reportDate = report.report_date || report.reportDate || report.date;
@@ -283,25 +788,55 @@
                 const formattedDate = reportDate ? formatDateForDisplay(reportDate) : 'N/A';
                 const formattedTime = reportTime ? formatTimeForDisplay(reportTime) : 'N/A';
 
+                const statusClass = (report.status || '').toLowerCase().replace(' ', '-');
+                const toolsDisplay = Array.isArray(toolsUsed) ? toolsUsed.join(', ') : (toolsUsed || 'N/A');
+
+                // Debug status for button logic
+                console.log(`📊 Report ${report.id} status: "${report.status}" (class: ${statusClass})`);
+
+                const actionsHtml = report.status && report.status.toLowerCase() === 'completed' ?
+                    `<button class="view-btn" data-report-id="${report.id}">View</button>` :
+                    `<button class="edit-btn" data-report-id="${report.id}">Edit</button>
+                     <button class="delete-btn" data-report-id="${report.id}">Delete</button>`;
+
+                console.log(`📊 Report ${report.id} actions HTML:`, actionsHtml);
+
                 row.innerHTML = `
                     <td>${report.title || 'N/A'}</td>
                     <td>${report.job_description || report.jobDescription || 'N/A'}</td>
                     <td>${report.location || 'N/A'}</td>
+                    <td>${report.remarks || 'N/A'}</td>
                     <td>${formattedDate}</td>
                     <td>${formattedTime}</td>
-                    <td><span class="status ${(report.status || '').toLowerCase().replace(' ', '-')}">${report.status || 'N/A'}</td>
-                                         <td>${Array.isArray(toolsUsed) ?
-                        toolsUsed.join(', ') :
-                        (toolsUsed || 'N/A')}</td>
-                    <td>
-                        ${report.status && report.status.toLowerCase() === 'completed' ?
-                        `<button onclick="viewReport(${report.id})" class="view-btn">View</button>` :
-                        `<button onclick="editReport(${report.id})" class="edit-btn">Edit</button>
-                             <button onclick="deleteReport(${report.id})" class="delete-btn">Delete</button>`
-                    }
-                    </td>
+                    <td><span class="status ${statusClass}">${report.status || 'N/A'}</span></td>
+                    <td>${toolsDisplay}</td>
+                    <td>${actionsHtml}</td>
                 `;
+                console.log(`📊 Adding row to table:`, row.innerHTML);
                 tbody.appendChild(row);
+            });
+            console.log(`📊 Finished adding ${reportsToShow.length} rows to table`);
+
+            // Add event listeners for action buttons
+            tbody.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const reportId = parseInt(btn.getAttribute('data-report-id'));
+                    viewReport(reportId);
+                });
+            });
+
+            tbody.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const reportId = parseInt(btn.getAttribute('data-report-id'));
+                    editReport(reportId);
+                });
+            });
+
+            tbody.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const reportId = parseInt(btn.getAttribute('data-report-id'));
+                    deleteReport(reportId);
+                });
             });
         }
 
@@ -335,16 +870,90 @@
         }
 
         function searchReports() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const filteredReports = allReports.filter(report =>
-                (report.title || '').toLowerCase().includes(searchTerm) ||
-                (report.job_description || report.jobDescription || '').toLowerCase().includes(searchTerm) ||
-                (report.location || '').toLowerCase().includes(searchTerm) ||
-                (report.status || '').toLowerCase().includes(searchTerm) ||
-                (report.tools_used || report.toolsUsed || '').toLowerCase().includes(searchTerm)
-            );
+            const searchInput = document.getElementById('searchInput');
+            if (!searchInput) {
+                console.error('Search input element not found');
+                return;
+            }
+
+            const searchTerm = searchInput.value.trim().toLowerCase();
+
+            // If search term is empty, show all reports
+            if (!searchTerm) {
+                currentReportsPage = 1;
+                displayReports(allReports);
+                return;
+            }
+
+            const filteredReports = allReports.filter(report => {
+                const title = (report.title || '').toLowerCase();
+                const jobDesc = (report.job_description || report.jobDescription || '').toLowerCase();
+                const location = (report.location || '').toLowerCase();
+                const remarks = (report.remarks || '').toLowerCase();
+                const status = (report.status || '').toLowerCase();
+                const toolsUsed = (report.tools_used || report.toolsUsed || '').toLowerCase();
+
+                return title.includes(searchTerm) ||
+                    jobDesc.includes(searchTerm) ||
+                    location.includes(searchTerm) ||
+                    remarks.includes(searchTerm) ||
+                    status.includes(searchTerm) ||
+                    toolsUsed.includes(searchTerm);
+            });
+
             currentReportsPage = 1; // Reset to first page on new search
             displayReports(filteredReports);
+        }
+
+        // Show notification function
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 10000;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+
+            // Set background color based on type
+            switch (type) {
+                case 'success':
+                    notification.style.background = '#10b981';
+                    break;
+                case 'warning':
+                    notification.style.background = '#f59e0b';
+                    break;
+                case 'error':
+                    notification.style.background = '#ef4444';
+                    break;
+                default:
+                    notification.style.background = '#3b82f6';
+            }
+
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
         }
 
         async function viewReport(reportId) {
@@ -361,30 +970,90 @@
                 <div style="background: white; padding: 30px; border-radius: 8px; max-width: 500px; max-height: 80vh; overflow-y: auto;">
                     <h2>Report Details</h2>
                     <table style="width: 100%; border-collapse: collapse;">
-                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Title:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.title}</td></tr>
-                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Description:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.job_description || report.jobDescription}</td></tr>
-                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Location:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.location}</td></tr>
-                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Date:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${formatDateForDisplay(report.report_date || report.reportDate)}</td></tr>
-                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Time:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${formatTimeForDisplay(report.report_time || report.reportTime)}</td></tr>
-                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Status:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.status}</td></tr>
-                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Tools Used:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${Array.isArray(report.tools_used || report.toolsUsed) ? (report.tools_used || report.toolsUsed).join(', ') : (report.tools_used || report.toolsUsed || 'N/A')}</td></tr>
-                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Remarks:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${report.remarks || 'N/A'}</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Title:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;" id="viewTitle">Loading...</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Description:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;" id="viewDescription">Loading...</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Location:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;" id="viewLocation">Loading...</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Date:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;" id="viewDate">Loading...</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Time:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;" id="viewTime">Loading...</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Status:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;" id="viewStatus">Loading...</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Tools Used:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;" id="viewToolsUsed">Loading...</td></tr>
+                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Remarks:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;" id="viewRemarks">Loading...</td></tr>
                     </table>
                     <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
-                                                 <button onclick="printReport(${report.id})" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">🖨️ Print</button>
-                                                 <button onclick="this.parentElement.parentElement.parentElement.remove()" style="padding: 10px 20px; background: #2c3e50; color: white; border: none; border-radius: 4px; cursor: pointer;">❌ Close</button>
+                        <button id="viewPrintBtn" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">🖨️ Print</button>
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="padding: 10px 20px; background: #2c3e50; color: white; border: none; border-radius: 4px; cursor: pointer;">❌ Close</button>
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
+
+            // Set all values safely after modal is created
+            try {
+                // Set title
+                const titleCell = document.getElementById('viewTitle');
+                if (titleCell) titleCell.textContent = report.title || 'N/A';
+
+                // Set description
+                const descCell = document.getElementById('viewDescription');
+                if (descCell) descCell.textContent = report.job_description || report.jobDescription || 'N/A';
+
+                // Set location
+                const locationCell = document.getElementById('viewLocation');
+                if (locationCell) locationCell.textContent = report.location || 'N/A';
+
+                // Set date
+                const dateCell = document.getElementById('viewDate');
+                if (dateCell) dateCell.textContent = formatDateForDisplay(report.report_date || report.reportDate);
+
+                // Set time
+                const timeCell = document.getElementById('viewTime');
+                if (timeCell) timeCell.textContent = formatTimeForDisplay(report.report_time || report.reportTime);
+
+                // Set status
+                const statusCell = document.getElementById('viewStatus');
+                if (statusCell) statusCell.textContent = report.status || 'N/A';
+
+                // Set tools used
+                const toolsCell = document.getElementById('viewToolsUsed');
+                if (toolsCell) {
+                    const tools = report.tools_used || report.toolsUsed;
+                    const toolsValue = Array.isArray(tools) ? tools.join(', ') : (tools || 'N/A');
+                    toolsCell.textContent = toolsValue;
+                }
+
+                // Set remarks
+                const remarksCell = document.getElementById('viewRemarks');
+                if (remarksCell) remarksCell.textContent = report.remarks || 'N/A';
+
+                // Set print button onclick
+                const printBtn = document.getElementById('viewPrintBtn');
+                if (printBtn) {
+                    printBtn.onclick = () => printReport(report.id);
+                }
+
+            } catch (error) {
+                console.error('❌ Error setting view modal values:', error);
+            }
         }
 
+        // Print report function
+        function printReport(reportId) {
+            console.log('🖨️ Print button clicked for report ID:', reportId);
+            // Print functionality has been removed
+        }
+
+        // Edit report function
         async function editReport(reportId) {
+            console.log('✏️ Edit button clicked for report ID:', reportId);
+
             const report = allReports.find(r => r.id === reportId);
-            if (!report) return;
+            if (!report) {
+                console.error('❌ Report not found:', reportId);
+                showNotification('Report not found', 'error');
+                return;
+            }
 
-            console.log('📝 Original report data for editing:', report);
-
+            // Create edit modal
             const modal = document.createElement('div');
             modal.style.cssText = `
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -392,241 +1061,182 @@
             `;
 
             modal.innerHTML = `
-                <div class="edit-modal" style="background: white; padding: 30px; border-radius: 8px; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                <div style="background: white; padding: 30px; border-radius: 8px; max-width: 600px; max-height: 80vh; overflow-y: auto; width: 90%;">
                     <h2>Edit Report</h2>
-                    <form id="editReportForm">
-                        <div style="margin-bottom: 15px;">
+                    <form id="editReportForm" style="display: flex; flex-direction: column; gap: 15px;">
+                        <div>
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Title:</label>
-                            <input type="text" id="editTitle" value="${report.title}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <input type="text" id="editTitle" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
                         </div>
-                        <div style="margin-bottom: 15px;">
+                        <div>
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Job Description:</label>
-                            <textarea id="editJobDescription" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 80px;">${report.job_description || report.jobDescription || ''}</textarea>
+                            <textarea id="editJobDescription" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 80px;" required></textarea>
                         </div>
-                        <div style="margin-bottom: 15px;">
+                        <div>
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Location:</label>
-                            <input type="text" id="editLocation" value="${report.location || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <input type="text" id="editLocation" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
                         </div>
-                        <div style="margin-bottom: 15px;">
+                        <div>
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Date:</label>
-                            <input type="date" id="editDate" value="${formatDateForInput(report.report_date || report.reportDate)}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <input type="date" id="editDate" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
                         </div>
-                        <div style="margin-bottom: 15px;">
+                        <div>
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Time:</label>
-                            <input type="time" id="editTime" value="${formatTimeForInput(report.report_time || report.reportTime)}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <input type="time" id="editTime" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
                         </div>
-                        <div style="margin-bottom: 15px;">
+                        <div>
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Status:</label>
-                            <select id="editStatus" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                <option value="Pending" ${(report.status || '').toLowerCase() === 'pending' ? 'selected' : ''}>Pending</option>
-                                <option value="In Progress" ${(report.status || '').toLowerCase().includes('progress') ? 'selected' : ''}>In Progress</option>
-                                <option value="Completed" ${(report.status || '').toLowerCase() === 'completed' ? 'selected' : ''}>Completed</option>
-                                <option value="Cancelled" ${(report.status || '').toLowerCase() === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                            <select id="editStatus" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+                                <option value="Pending">Pending</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
                             </select>
                         </div>
-                        <div style="margin-bottom: 15px;">
+                        <div>
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Tools Used:</label>
-                            <input type="text" id="editToolsUsed" value="${Array.isArray(report.tools_used || report.toolsUsed) ? (report.tools_used || report.toolsUsed).join(', ') : (report.tools_used || report.toolsUsed || '')}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <input type="text" id="editToolsUsed" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Separate multiple tools with commas">
                         </div>
-                        <div style="margin-bottom: 15px;">
+                        <div>
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Remarks:</label>
-                            <textarea id="editRemarks" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 80px;">${report.remarks || ''}</textarea>
+                            <textarea id="editRemarks" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 80px;"></textarea>
                         </div>
-                        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center; align-items: center;">
-                            <button type="submit" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; min-width: 120px; height: 40px; font-size: 14px; font-weight: 500;">💾 Save Changes</button>
-                            <button type="button" onclick="this.parentElement.parentElement.parentElement.remove()" style="padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; min-width: 120px; height: 40px; font-size: 14px; font-weight: 500;">❌ Cancel</button>
+                        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                            <button type="submit" style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer;">💾 Save Changes</button>
+                            <button type="button" id="cancelEditBtn" style="padding: 10px 20px; background: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer;">❌ Cancel</button>
                         </div>
                     </form>
                 </div>
             `;
+
             document.body.appendChild(modal);
 
-            // Handle form submission
-            document.getElementById('editReportForm').addEventListener('submit', async function (e) {
-                e.preventDefault();
-                await saveReportChanges(reportId, modal);
+            // Populate form fields after modal is created
+            document.getElementById('editTitle').value = report.title || '';
+            document.getElementById('editJobDescription').value = report.job_description || report.jobDescription || '';
+            document.getElementById('editLocation').value = report.location || '';
+            document.getElementById('editDate').value = formatDateForInput(report.report_date || report.reportDate);
+            document.getElementById('editTime').value = formatTimeForInput(report.report_time || report.reportTime);
+            document.getElementById('editStatus').value = report.status || 'Pending';
+
+            // Handle tools used - convert array to comma-separated string
+            const toolsUsed = report.tools_used || report.toolsUsed;
+            const toolsValue = Array.isArray(toolsUsed) ? toolsUsed.join(', ') : (toolsUsed || '');
+            document.getElementById('editToolsUsed').value = toolsValue;
+
+            document.getElementById('editRemarks').value = report.remarks || '';
+
+            // Add event listener for cancel button
+            document.getElementById('cancelEditBtn').addEventListener('click', () => {
+                modal.remove();
             });
 
-            // Handle Escape key to close modal
-            const handleEscape = (e) => {
-                if (e.key === 'Escape') {
-                    modal.remove();
-                    document.removeEventListener('keydown', handleEscape);
-                }
-            };
-            document.addEventListener('keydown', handleEscape);
+            // Handle form submission
+            const form = document.getElementById('editReportForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
 
-            // Handle clicking outside modal to close
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.remove();
-                    document.removeEventListener('keydown', handleEscape);
+                const formData = {
+                    title: document.getElementById('editTitle').value,
+                    jobDescription: document.getElementById('editJobDescription').value,
+                    location: document.getElementById('editLocation').value,
+                    date: document.getElementById('editDate').value,
+                    time: document.getElementById('editTime').value,
+                    status: document.getElementById('editStatus').value,
+                    toolsUsed: document.getElementById('editToolsUsed').value.split(',').map(tool => tool.trim()).filter(tool => tool),
+                    remarks: document.getElementById('editRemarks').value
+                };
+
+                console.log('📝 Form data being sent:', formData);
+                console.log('📝 Report ID:', reportId);
+                console.log('📝 Individual field values:');
+                console.log('  - Title:', document.getElementById('editTitle').value);
+                console.log('  - Job Description:', document.getElementById('editJobDescription').value);
+                console.log('  - Location:', document.getElementById('editLocation').value);
+                console.log('  - Status:', document.getElementById('editStatus').value);
+                console.log('  - Date:', document.getElementById('editDate').value);
+                console.log('  - Time:', document.getElementById('editTime').value);
+
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        window.location.href = './index.html';
+                        return;
+                    }
+
+                    const response = await fetch(window.appConfig.getApiUrl(`/reports/${reportId}`), {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.ok) {
+                        const updatedReport = await response.json();
+                        console.log('✅ Report updated successfully:', updatedReport);
+
+                        showNotification('Report updated successfully!', 'success');
+                        modal.remove();
+
+                        // Update the report in our local array with the server response
+                        const reportIndex = allReports.findIndex(r => r.id === reportId);
+                        if (reportIndex !== -1) {
+                            allReports[reportIndex] = updatedReport;
+                            console.log('📝 Updated report in local array:', allReports[reportIndex]);
+                        }
+
+                        loadReports(); // Refresh the reports list
+
+                        // Dispatch custom event for other pages
+                        window.dispatchEvent(new CustomEvent('reportUpdated', { detail: { reportId, formData, updatedReport } }));
+                    } else {
+                        console.error('❌ Update failed with status:', response.status);
+                        const errorText = await response.text();
+                        console.error('❌ Error response:', errorText);
+
+                        let errorMessage = 'Failed to update report';
+                        try {
+                            const errorData = JSON.parse(errorText);
+                            errorMessage = errorData.error || errorMessage;
+                        } catch (e) {
+                            errorMessage = errorText || errorMessage;
+                        }
+
+                        showNotification(errorMessage, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error updating report:', error);
+                    showNotification('Network error. Please try again.', 'error');
                 }
             });
         }
 
-        async function saveReportChanges(reportId, modal) {
+        // Delete report function
+        async function deleteReport(reportId) {
+            console.log('🗑️ Delete button clicked for report ID:', reportId);
+
+            const report = allReports.find(r => r.id === reportId);
+            if (!report) {
+                console.error('❌ Report not found:', reportId);
+                showNotification('Report not found', 'error');
+                return;
+            }
+
+            // Show confirmation dialog
+            const confirmed = confirm(`Are you sure you want to delete the report "${report.title || 'Untitled'}"?\n\nThis action cannot be undone.`);
+            if (!confirmed) {
+                return;
+            }
+
             try {
-                const title = document.getElementById('editTitle').value.trim();
-                const jobDescription = document.getElementById('editJobDescription').value.trim();
-                const location = document.getElementById('editLocation').value.trim();
-                const date = document.getElementById('editDate').value;
-                const time = document.getElementById('editTime').value;
-                const status = document.getElementById('editStatus').value;
-                const toolsUsed = document.getElementById('editToolsUsed').value.trim();
-                const remarks = document.getElementById('editRemarks').value.trim();
-
-                console.log('🔍 Form values collected:', { title, jobDescription, location, date, time, status, toolsUsed, remarks });
-                console.log('🔍 Form element values:', {
-                    title: document.getElementById('editTitle').value,
-                    date: document.getElementById('editDate').value,
-                    time: document.getElementById('editTime').value,
-                    toolsUsed: document.getElementById('editToolsUsed').value
-                });
-
-                if (!title || !jobDescription || !location || !date || !status) {
-                    alert('Please fill in all required fields');
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = './index.html';
                     return;
                 }
 
-                // Show loading state
-                const submitBtn = modal.querySelector('button[type="submit"]');
-                const originalText = submitBtn.textContent;
-                submitBtn.textContent = '⏳ Saving...';
-                submitBtn.disabled = true;
-
-                // When editing and saving, automatically mark the report as completed
-                const finalStatus = 'Completed';
-
-                const reportData = {
-                    title,
-                    jobDescription,
-                    location,
-                    remarks,
-                    report_date: date,
-                    report_time: time,
-                    tools_used: toolsUsed,
-                    status: finalStatus
-                };
-
-                console.log('💾 Sending report data to backend:', reportData);
-
-                const token = localStorage.getItem('token');
-                const response = await fetch(`http://localhost:5000/api/reports/${reportId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(reportData)
-                });
-
-                if (response.ok) {
-                    const updatedReport = await response.json();
-                    console.log('✅ Received updated report from backend:', updatedReport);
-                    console.log('🔍 Checking field mapping in updated report:', {
-                        report_date: updatedReport.report_date,
-                        report_time: updatedReport.report_time,
-                        tools_used: updatedReport.tools_used,
-                        reportDate: updatedReport.reportDate,
-                        reportTime: updatedReport.reportTime,
-                        toolsUsed: updatedReport.toolsUsed
-                    });
-
-                    // Normalize the field names to ensure consistency - handle all possible field name variations
-                    const normalizedReport = {
-                        ...updatedReport,
-                        report_date: updatedReport.report_date || updatedReport.reportDate || updatedReport.date,
-                        report_time: updatedReport.report_time || updatedReport.reportTime || updatedReport.time,
-                        tools_used: updatedReport.tools_used || updatedReport.toolsUsed || updatedReport.tools,
-                        job_description: updatedReport.job_description || updatedReport.jobDescription
-                    };
-
-                    // Update the report in the local array
-                    const index = allReports.findIndex(r => r.id === reportId);
-                    if (index !== -1) {
-                        allReports[index] = normalizedReport;
-                        console.log('💾 Updated local report array with normalized fields:', allReports[index]);
-                    }
-
-                    // Refresh the display
-                    displayReports(allReports);
-
-                    // Close modal
-                    modal.remove();
-
-                    alert('✅ Report updated and marked as completed successfully!');
-                } else {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || 'Failed to update report');
-                }
-            } catch (error) {
-                console.error('Error updating report:', error);
-                alert(`Failed to update report: ${error.message}`);
-
-                // Reset button state
-                const submitBtn = modal.querySelector('button[type="submit"]');
-                submitBtn.textContent = '💾 Save Changes';
-                submitBtn.disabled = false;
-            }
-        }
-
-        async function markReportComplete(reportId) {
-            if (!confirm('Are you sure you want to mark this report as completed?')) return;
-
-            try {
-                const token = localStorage.getItem('token');
-                const report = allReports.find(r => r.id === reportId);
-                if (!report) return;
-
-                const reportData = {
-                    title: report.title,
-                    jobDescription: report.job_description || report.jobDescription,
-                    location: report.location,
-                    remarks: report.remarks,
-                    report_date: report.report_date || report.reportDate,
-                    report_time: report.report_time || report.reportTime,
-                    tools_used: report.tools_used || report.toolsUsed,
-                    status: 'Completed'
-                };
-
-                const response = await fetch(`http://localhost:5000/api/reports/${reportId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(reportData)
-                });
-
-                if (response.ok) {
-                    const updatedReport = await response.json();
-                    console.log('✅ Received updated report from backend (markComplete):', updatedReport);
-
-                    // Update the report in the local array
-                    const index = allReports.findIndex(r => r.id === reportId);
-                    if (index !== -1) {
-                        allReports[index] = updatedReport;
-                    }
-
-                    // Refresh the display
-                    displayReports(allReports);
-                    alert('✅ Report marked as completed successfully!');
-                } else {
-                    alert('Failed to mark report as completed');
-                }
-            } catch (error) {
-                console.error('Error marking report as completed:', error);
-                alert('Error marking report as completed');
-            }
-        }
-
-        async function deleteReport(reportId) {
-            if (!confirm('Are you sure you want to delete this report?')) return;
-
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`http://localhost:5000/api/reports/${reportId}`, {
+                const response = await fetch(window.appConfig.getApiUrl(`/reports/${reportId}`), {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -634,410 +1244,29 @@
                 });
 
                 if (response.ok) {
-                    loadReports();
+                    showNotification('Report deleted successfully!', 'success');
+                    loadReports(); // Refresh the reports list
+
+                    // Dispatch custom event for other pages
+                    window.dispatchEvent(new CustomEvent('reportDeleted', { detail: { reportId } }));
                 } else {
-                    alert('Failed to delete report');
+                    const errorData = await response.json();
+                    showNotification(errorData.error || 'Failed to delete report', 'error');
                 }
             } catch (error) {
                 console.error('Error deleting report:', error);
-                alert('Error deleting report');
+                showNotification('Network error. Please try again.', 'error');
             }
         }
 
-        function printReport(reportId) {
-            const report = allReports.find(r => r.id === reportId);
-            if (!report) return;
 
-            // Create a new window for printing
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Report - ${report.title}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; }
-                        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-                        .report-details { margin-bottom: 30px; }
-                        .report-details table { width: 100%; border-collapse: collapse; }
-                        .report-details td { padding: 8px; border-bottom: 1px solid #ddd; }
-                        .report-details td:first-child { font-weight: bold; width: 30%; }
-                        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #666; }
-                        @media print { body { margin: 0; } }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>Electrical Management System</h1>
-                        <h2>${report.title}</h2>
-                    </div>
-                    
-                    <div class="report-details">
-                        <table>
-                            <tr><td>Job Description:</td><td>${report.job_description || report.jobDescription || 'N/A'}</td></tr>
-                            <tr><td>Location:</td><td>${report.location || 'N/A'}</td></tr>
-                            <tr><td>Date:</td><td>${report.report_date || report.reportDate || 'N/A'}</td></tr>
-                            <tr><td>Time:</td><td>${report.report_time || report.reportTime || 'N/A'}</td></tr>
-                            <tr><td>Status:</td><td>${report.status || 'N/A'}</td></tr>
-                            <tr><td>Tools Used:</td><td>${Array.isArray(report.tools_used || report.toolsUsed) ? (report.tools_used || report.toolsUsed).join(', ') : (report.tools_used || report.toolsUsed || 'N/A')}</td></tr>
-                            <tr><td>Remarks:</td><td>${report.remarks || 'N/A'}</td></tr>
-                        </table>
-                    </div>
-                    
-                    <div class="footer">
-                        <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-                    </div>
-                </body>
-                </html>
-            `);
 
-            printWindow.document.close();
-            printWindow.focus();
 
-            // Wait for content to load then print
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.close();
-            }, 500);
-        }
 
-        function viewReport(reportId) {
-            const report = allReports.find(r => r.id === reportId);
-            if (!report) return;
-
-            // Create a modal for viewing the report
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
-            `;
-
-            modal.innerHTML = `
-                <div class="view-modal" style="background: white; padding: 30px; border-radius: 8px; max-width: 700px; max-height: 80vh; overflow-y: auto;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2 style="margin: 0; color: #2c3e50;">📋 Report Details</h2>
-                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                        <div>
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Title:</label>
-                            <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #3498db;">${report.title || 'N/A'}</div>
-                        </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Status:</label>
-                            <div style="padding: 10px; background: #d4edda; color: #155724; border-radius: 4px; border-left: 4px solid #28a745; font-weight: bold;">${report.status || 'N/A'}</div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Job Description:</label>
-                        <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #3498db; min-height: 60px; white-space: pre-wrap;">${report.job_description || report.jobDescription || 'N/A'}</div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                        <div>
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Location:</label>
-                            <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #3498db;">${report.location || 'N/A'}</div>
-                        </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Date:</label>
-                            <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #3498db;">${report.report_date || report.reportDate ? formatDateForDisplay(report.report_date || report.reportDate) : 'N/A'}</div>
-                        </div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                        <div>
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Time:</label>
-                            <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #3498db;">${report.report_time || report.reportTime ? formatTimeForDisplay(report.report_time || report.reportTime) : 'N/A'}</div>
-                        </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Tools Used:</label>
-                            <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #3498db;">${Array.isArray(report.tools_used || report.toolsUsed) ? (report.tools_used || report.toolsUsed).join(', ') : (report.tools_used || report.toolsUsed || 'N/A')}</div>
-                        </div>
-                    </div>
-                    
-                    ${report.remarks ? `
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Remarks:</label>
-                        <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #3498db; min-height: 60px; white-space: pre-wrap;">${report.remarks}</div>
-                    </div>
-                    ` : ''}
-                    
-                    <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; align-items: center;">
-                                                 <button onclick="printReport(${report.id})" style="padding: 12px 24px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">🖨️ Print Report</button>
-                                                 <button onclick="this.parentElement.parentElement.parentElement.remove()" style="padding: 12px 24px; background: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">❌ Close</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-
-            // Handle Escape key to close modal
-            const handleEscape = (e) => {
-                if (e.key === 'Escape') {
-                    modal.remove();
-                    document.removeEventListener('keydown', handleEscape);
-                }
-            };
-            document.addEventListener('keydown', handleEscape);
-
-            // Handle clicking outside modal to close
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.remove();
-                    document.removeEventListener('keydown', handleEscape);
-                }
-            });
-        }
-
-        // CSS for status badges and table styling
-        const style = document.createElement('style');
-        style.textContent = `
-            #reportsTable {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 20px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-            
-            #reportsTable th {
-                background: #f8f9fa;
-                padding: 12px;
-                text-align: left;
-                font-weight: 600;
-                border-bottom: 2px solid #dee2e6;
-            }
-            
-            #reportsTable td {
-                padding: 12px;
-                border-bottom: 1px solid #dee2e6;
-            }
-            
-            #reportsTable tr:hover {
-                background-color: #f8f9fa;
-            }
-            
-            .status.completed { 
-                background: #d4edda; 
-                color: #155724; 
-                padding: 4px 8px;
-                border-radius: 12px;
-                font-size: 12px;
-                font-weight: bold;
-            }
-            
-
-            
-            .view-btn {
-                background: #3498db;
-                color: white;
-                border: none;
-                padding: 4px 12px;
-                border-radius: 6px;
-                cursor: pointer;
-                font-size: 12px;
-                font-weight: 500;
-                transition: background-color 0.3s ease;
-            }
-            
-            .view-btn:hover {
-                background: #2980b9;
-            }
-            
-            /* Actions column styling */
-            #reportsTable td:last-child {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                flex-wrap: wrap;
-            }
-            
-            /* View modal styling */
-            .view-modal {
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-                border: 1px solid #e9ecef;
-            }
-            
-            .view-modal h2 {
-                color: #2c3e50;
-                border-bottom: 2px solid #3498db;
-                padding-bottom: 10px;
-            }
-            
-            .view-modal label {
-                color: #555;
-                font-size: 14px;
-                margin-bottom: 8px;
-            }
-            
-            .view-modal div[style*="background: #f8f9fa"] {
-                border: 1px solid #e9ecef;
-                font-size: 14px;
-                line-height: 1.4;
-            }
-                font-size: 12px;
-                font-weight: bold;
-                display: inline-block;
-                text-align: center;
-                min-width: 80px;
-            }
-            
-            .status.in-progress { 
-                background: #fff3cd; 
-                color: #856404; 
-                padding: 4px 8px;
-                border-radius: 12px;
-                font-size: 12px;
-                font-weight: bold;
-            }
-            
-            .status.pending { 
-                background: #cce5ff; 
-                color: #004085; 
-                padding: 4px 8px;
-                border-radius: 12px;
-                font-size: 12px;
-                font-weight: bold;
-            }
-            
-            .edit-btn, .delete-btn {
-                padding: 6px 12px;
-                margin: 0 2px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 12px;
-                transition: background-color 0.3s;
-                min-width: 60px;
-                height: 32px;
-            }
-            
-            .edit-btn { 
-                background: #2c3e50; 
-                color: white; 
-            }
-            
-            .edit-btn:hover {
-                background: #34495e;
-            }
-            
-            .delete-btn { 
-                background: #e74c3c; 
-                color: white; 
-            }
-            
-            .delete-btn:hover {
-                background: #c0392b;
-            }
-            
-            /* Edit modal styling */
-            .edit-modal input, .edit-modal textarea, .edit-modal select {
-                font-family: inherit;
-                font-size: 14px;
-            }
-            
-            .edit-modal input:focus, .edit-modal textarea:focus, .edit-modal select:focus {
-                outline: none;
-                border-color: #3498db;
-                box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
-            }
-            
-            .edit-modal button[type="submit"]:hover {
-                background: #2c3e50 !important;
-            }
-            
-            .edit-modal button[type="button"]:hover {
-                background: #7f8c8d !important;
-            }
-            
-            .edit-modal h2 {
-                color: #2c3e50;
-                margin-bottom: 20px;
-                text-align: center;
-                border-bottom: 2px solid #ecf0f1;
-                padding-bottom: 10px;
-            }
-            
-            .edit-modal label {
-                color: #34495e;
-                font-weight: 600;
-            }
-            
-            .edit-modal input, .edit-modal textarea, .edit-modal select {
-                transition: all 0.3s ease;
-            }
-            
-            .edit-modal input:hover, .edit-modal textarea:hover, .edit-modal select:hover {
-                border-color: #bdc3c7;
-            }
-            
-            /* Reports Section Styles */
-            .reports-section {
-                margin-top: 2rem;
-                padding: 2rem;
-                background: white;
-                border-radius: 12px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
-            
-            .reports-section h2 {
-                font-size: 1.8rem;
-                font-weight: 600;
-                color: #1f2937;
-                margin-bottom: 1.5rem;
-                text-align: center;
-                border-bottom: 2px solid #e5e7eb;
-                padding-bottom: 0.5rem;
-            }
-            
-            /* Pagination Styles */
-            .pagination {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 1rem;
-                margin-top: 2rem;
-                padding: 1rem;
-                text-align: center;
-                width: 100%;
-            }
-            
-            .pagination button {
-                padding: 0.5rem 1rem;
-                border: 1px solid #d1d5db;
-                background: white;
-                color: #374151;
-                border-radius: 0.375rem;
-                cursor: pointer;
-                font-size: 0.875rem;
-                font-weight: 500;
-                transition: all 0.2s;
-                min-width: 80px;
-            }
-            
-            .pagination button:hover:not(:disabled) {
-                background: #f3f4f6;
-                border-color: #9ca3af;
-                transform: translateY(-1px);
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            }
-            
-            .pagination button:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
-            
-            .pagination span {
-                font-size: 0.875rem;
-                color: #6b7280;
-                font-weight: 500;
-                min-width: 100px;
-                text-align: center;
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 
+    <!-- Configuration Script -->
+    <script src="./config.js"></script>
     <!-- User Greeting Script -->
     <script src="./user-greeting.js"></script>
 </body>

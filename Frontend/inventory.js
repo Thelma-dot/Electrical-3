@@ -5,17 +5,73 @@ let currentInventoryId = null;
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', function () {
+    console.log('🚀 Inventory page DOMContentLoaded event fired');
+    console.log('🔑 Checking authentication...');
+
+    const token = localStorage.getItem('token');
+    console.log('🔑 Token exists:', !!token);
+    if (token) {
+        console.log('🔑 Token preview:', token.substring(0, 20) + '...');
+    } else {
+        console.log('❌ No token found, redirecting to login');
+        window.location.href = './index.html';
+        return;
+    }
+
+    // Always show the table structure first
+    const inventoryTable = document.getElementById('inventoryTable');
+    if (inventoryTable) {
+        inventoryTable.classList.remove('hidden');
+        console.log('🎨 Table structure made visible on page load');
+    }
+
+    // Test modal functionality
+    const modal = document.getElementById('addModal');
+    console.log('🔍 Modal element found on page load:', !!modal);
+    if (modal) {
+        console.log('🔍 Modal initial display style:', modal.style.display);
+        console.log('🔍 Modal computed display style:', window.getComputedStyle(modal).display);
+    }
+
     showLoading(); // Show loading state first
+    console.log('📱 Loading state shown');
 
     // Clean up old update records
     cleanupOldUpdateRecords();
+    console.log('🧹 Cleanup completed');
 
-    loadInventory();
+    // Ensure config is loaded before calling loadInventory
+    if (window.appConfig && window.appConfig.getApiUrl) {
+        loadInventory();
+        console.log('📦 loadInventory called');
+    } else {
+        console.log('⏳ Waiting for config to load...');
+        // Wait for config to be available
+        const checkConfig = setInterval(() => {
+            if (window.appConfig && window.appConfig.getApiUrl) {
+                clearInterval(checkConfig);
+                console.log('✅ Config loaded, calling loadInventory');
+                loadInventory();
+            }
+        }, 100);
+
+        // Fallback timeout after 5 seconds
+        setTimeout(() => {
+            clearInterval(checkConfig);
+            if (!window.appConfig || !window.appConfig.getApiUrl) {
+                console.error('❌ Config failed to load after timeout');
+                showError('Configuration failed to load. Please refresh the page.');
+            }
+        }, 5000);
+    }
+
     setupEventListeners();
+    console.log('🎧 Event listeners set up');
 
     // Check for recently updated items to restore their completed status
     setTimeout(() => {
         checkRecentlyUpdatedItems();
+        console.log('🔄 Recently updated items checked');
     }, 1000);
 });
 
@@ -63,7 +119,13 @@ async function searchInventory() {
             return;
         }
 
-        const response = await fetch(`${window.appConfig.getApiUrl()}/inventory/search?query=${encodeURIComponent(query)}&page=${page}&limit=50`, {
+        // Ensure appConfig is loaded
+        if (!window.appConfig || !window.appConfig.getApiUrl) {
+            showError('Configuration not loaded. Please refresh the page.');
+            return;
+        }
+
+        const response = await fetch(`${window.appConfig.getApiUrl('/inventory/search')}?query=${encodeURIComponent(query)}&page=${page}&limit=50`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -246,7 +308,13 @@ async function addInventory() {
             return;
         }
 
-        const response = await fetch(`${window.appConfig.getApiUrl()}/inventory`, {
+        // Ensure appConfig is loaded
+        if (!window.appConfig || !window.appConfig.getApiUrl) {
+            alert('Configuration not loaded. Please refresh the page.');
+            return;
+        }
+
+        const response = await fetch(`${window.appConfig.getApiUrl('/inventory')}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -287,7 +355,8 @@ async function addInventory() {
             // Clear form
             clearInventoryForm();
 
-            // Real-time updates removed - no fallback needed
+            // Emit real-time update event for dashboard
+            emitInventoryUpdate('created', newItem);
 
         } else {
             console.error('❌ Invalid inventory data received:', newItem);
@@ -302,6 +371,9 @@ async function addInventory() {
 
             // Clear form
             clearInventoryForm();
+
+            // Emit real-time update event for dashboard
+            emitInventoryUpdate('created', newItem);
         }
 
     } catch (err) {
@@ -381,10 +453,17 @@ function clearInventoryForm() {
 
 // Modal functions
 function showAddModal() {
+    console.log('🔍 showAddModal function called');
     const modal = document.getElementById('addModal');
+    console.log('🔍 Modal element found:', !!modal);
     if (modal) {
+        console.log('🔍 Setting modal display to block');
         modal.style.display = 'block';
+        console.log('🔍 Modal display style:', modal.style.display);
         setCurrentDate();
+        console.log('🔍 Current date set');
+    } else {
+        console.error('❌ Modal element not found!');
     }
 }
 
@@ -425,31 +504,50 @@ async function retryOperation(operation, maxRetries = 3) {
 
 // Enhanced loadInventory with retry
 async function loadInventory() {
+    console.log('🔍 loadInventory function called');
     try {
         const token = localStorage.getItem('token');
+        console.log('🔑 Token found:', token ? 'Yes' : 'No');
         if (!token) {
             console.error('No authentication token found');
             showError('Please log in to view inventory');
+            window.location.href = './index.html';
             return;
         }
 
         await retryOperation(async () => {
-            const response = await fetch(`${window.appConfig.getApiUrl()}/inventory?page=1&limit=50`, {
+            // Ensure appConfig is loaded
+            if (!window.appConfig || !window.appConfig.getApiUrl) {
+                console.error('❌ appConfig not loaded yet');
+                throw new Error('Configuration not loaded. Please refresh the page.');
+            }
+
+            const apiUrl = `${window.appConfig.getApiUrl('/inventory')}?page=1&limit=50`;
+            console.log('🌐 Making API call to:', apiUrl);
+            console.log('🔑 Using token:', token.substring(0, 20) + '...');
+
+            const response = await fetch(apiUrl, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
+            console.log('📡 Response status:', response.status);
+            console.log('📡 Response ok:', response.ok);
+
             if (response.ok) {
                 const result = await response.json();
+                console.log('📦 API Response:', result);
 
                 // Handle new pagination structure
                 if (result.data && Array.isArray(result.data)) {
+                    console.log('✅ Using result.data format, items count:', result.data.length);
                     displayInventory(result.data);
                 } else if (Array.isArray(result)) {
-                    // Fallback for old format
+                    console.log('✅ Using direct result format, items count:', result.length);
                     displayInventory(result);
                 } else {
+                    console.error('❌ Invalid response format:', result);
                     throw new Error('Invalid response format from server');
                 }
             } else if (response.status === 401) {
@@ -478,6 +576,14 @@ async function loadInventory() {
 // Show error message
 function showError(message) {
     const inventoryBody = document.getElementById('inventoryBody');
+    const inventoryTable = document.getElementById('inventoryTable');
+
+    // Always show the table, even when showing errors
+    if (inventoryTable) {
+        inventoryTable.classList.remove('hidden');
+        console.log('🎨 Table made visible when showing error');
+    }
+
     if (inventoryBody) {
         inventoryBody.innerHTML = `<tr><td colspan="8" class="error-message">${message}</td></tr>`;
     }
@@ -486,19 +592,32 @@ function showError(message) {
 // Show loading message
 function showLoading() {
     const inventoryBody = document.getElementById('inventoryBody');
+    const inventoryTable = document.getElementById('inventoryTable');
+
+    // Always show the table, even when loading
+    if (inventoryTable) {
+        inventoryTable.classList.remove('hidden');
+        console.log('🎨 Table made visible during loading');
+    }
+
     if (inventoryBody) {
         inventoryBody.innerHTML = '<tr><td colspan="8" class="loading">Loading inventory...</td></tr>';
     }
 }
 
 function displayInventory(inventory) {
+    console.log('🎨 displayInventory called with:', inventory);
+    console.log('🎨 Inventory type:', typeof inventory);
+    console.log('🎨 Inventory length:', Array.isArray(inventory) ? inventory.length : 'Not an array');
+
     const inventoryBody = document.getElementById('inventoryBody');
+    console.log('🎨 Found inventoryBody:', !!inventoryBody);
     if (!inventoryBody) return;
 
     inventoryBody.innerHTML = '';
 
     if (!inventory || inventory.length === 0) {
-        inventoryBody.innerHTML = '<tr><td colspan="8" class="loading">No inventory items found. Click "Add New Inventory" to get started.</td></tr>';
+        inventoryBody.innerHTML = '<tr><td colspan="8" class="empty-state">📦 No inventory items found yet. Click "Add New Inventory" to get started!</td></tr>';
         // Reset pagination when no items
         if (typeof updateInventoryPaginationInfo === 'function') {
             updateInventoryPaginationInfo(0);
@@ -545,7 +664,12 @@ function displayInventory(inventory) {
         inventoryBody.appendChild(row);
     });
 
-    document.getElementById('inventoryTable').classList.remove('hidden');
+    // Always show the table, even when empty
+    const inventoryTable = document.getElementById('inventoryTable');
+    if (inventoryTable) {
+        inventoryTable.classList.remove('hidden');
+        console.log('🎨 Table is now visible');
+    }
 
     // Apply pagination after displaying inventory
     if (typeof renderInventoryWithPagination === 'function') {
@@ -716,8 +840,14 @@ async function saveInventoryChanges(inventoryId, row, button) {
             updatedData[field] = value.trim();
         });
 
+        // Ensure appConfig is loaded
+        if (!window.appConfig || !window.appConfig.getApiUrl) {
+            alert('Configuration not loaded. Please refresh the page.');
+            return;
+        }
+
         // Send update request to backend
-        const response = await fetch(`${window.appConfig.getApiUrl()}/inventory/${inventoryId}`, {
+        const response = await fetch(`${window.appConfig.getApiUrl(`/inventory/${inventoryId}`)}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -771,8 +901,8 @@ async function saveInventoryChanges(inventoryId, row, button) {
 
             // Don't reload inventory - keep the completed status visible
 
-            // Emit update event
-            // emitInventoryUpdate('updated', { id: inventoryId, ...updatedData }); // REMOVED
+            // Emit update event for dashboard
+            emitInventoryUpdate('updated', { id: inventoryId, ...updatedData });
 
         } else if (response.status === 401) {
             alert('Authentication failed. Please log in again.');
@@ -858,7 +988,7 @@ async function deleteInventory(inventoryId) {
             return;
         }
 
-        const response = await fetch(`${window.appConfig.getApiUrl()}/inventory/${inventoryId}`, {
+        const response = await fetch(`${window.appConfig.getApiUrl(`/inventory/${inventoryId}`)}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -869,8 +999,8 @@ async function deleteInventory(inventoryId) {
             alert('✅ Inventory item deleted successfully!');
             loadInventory(); // Reload the table
 
-            // Emit update event
-            // emitInventoryUpdate('deleted', { id: inventoryId }); // REMOVED
+            // Emit update event for dashboard
+            emitInventoryUpdate('deleted', { id: inventoryId });
 
         } else if (response.status === 401) {
             alert('Authentication failed. Please log in again.');
@@ -920,50 +1050,68 @@ window.addEventListener('unhandledrejection', function (event) {
     event.preventDefault();
 });
 
-// Real-time update emitter - REMOVED
-// function emitInventoryUpdate(type, data) {
-//     console.log(`📡 Emitting inventory update: ${type}`, data);
-//     console.log('📊 Event details:', { type, data, timestamp: new Date().toISOString() });
+// Real-time update emitter
+function emitInventoryUpdate(type, data) {
+    console.log(`📡 Emitting inventory update: ${type}`, data);
+    console.log('📊 Event details:', { type, data, timestamp: new Date().toISOString() });
 
-//     // Emit custom event for other components to listen to
-//     const event = new CustomEvent('inventoryUpdate', {
-//         detail: {
-//             type: type, // 'created', 'updated', 'deleted'
-//             data: data,
-//             timestamp: new Date().toISOString()
-//         }
-//     });
-//     window.dispatchEvent(event);
-//     console.log('✅ Custom event dispatched');
+    // Emit custom event for other components to listen to
+    const event = new CustomEvent('inventoryUpdate', {
+        detail: {
+            type: type, // 'created', 'updated', 'deleted'
+            data: data,
+            timestamp: new Date().toISOString()
+        }
+    });
+    window.dispatchEvent(event);
+    console.log('✅ Custom event dispatched');
 
-//     // Store update in localStorage for cross-tab communication
-//     try {
-//         const updateData = {
-//             type: type,
-//             data: data,
-//             timestamp: new Date().toISOString(),
-//             userId: getCurrentUserId()
-//         };
-//         localStorage.setItem('inventoryUpdate', JSON.stringify(updateData));
-//         console.log('✅ LocalStorage update stored');
+    // Store update in localStorage for cross-tab communication
+    try {
+        const updateData = {
+            type: type,
+            data: data,
+            timestamp: new Date().toISOString(),
+            userId: getCurrentUserId()
+        };
+        localStorage.setItem('inventoryUpdate', JSON.stringify(updateData));
+        console.log('✅ LocalStorage update stored');
 
-//         // Trigger storage event for other tabs
-//         setTimeout(() => {
-//             localStorage.removeItem('inventoryUpdate');
-//         }, 100);
-//     } catch (error) {
-//         console.error('Error storing inventory update:', error);
-//     }
+        // Trigger storage event for other tabs
+        setTimeout(() => {
+            localStorage.removeItem('inventoryUpdate');
+        }, 100);
+    } catch (error) {
+        console.error('Error storing inventory update:', error);
+    }
 
-//     // Enhanced Socket.IO emission with retry mechanism
-//     emitToSocketIO(type, data);
+    // Enhanced Socket.IO emission with retry mechanism
+    // emitToSocketIO(type, data); // REMOVED
 
-//     // Broadcast to all open windows/tabs
-//     broadcastToOtherTabs(type, data);
+    // Broadcast to all open windows/tabs
+    // broadcastToOtherWindows(type, data); // REMOVED
 
-//     // Notify parent window if this is in an iframe
-//     notifyParentWindow(type, data);
-// }
+    // Notify parent window if this is in an iframe
+    // notifyParentWindow(type, data); // REMOVED
+
+    // Emit Socket.IO event for real-time dashboard updates
+    if (window.socket && window.socket.connected) {
+        try {
+            window.socket.emit(`inventory:${type}`, {
+                inventoryId: data.id,
+                userId: getCurrentUserId(),
+                inventory: data,
+                timestamp: new Date().toISOString(),
+                action: type
+            });
+            console.log(`✅ Socket.IO event 'inventory:${type}' emitted successfully`);
+        } catch (error) {
+            console.error(`❌ Error emitting Socket.IO event 'inventory:${type}':`, error);
+        }
+    } else {
+        console.log('⚠️ Socket.IO not available, skipping real-time emission');
+    }
+}
 
 // Socket.IO emission function - REMOVED
 // function emitToSocketIO(type, data) {
@@ -971,7 +1119,7 @@ window.addEventListener('unhandledrejection', function (event) {
 // }
 
 // Broadcast to other tabs/windows function - REMOVED
-// function broadcastToOtherTabs(type, data) {
+// function broadcastToOtherWindows(type, data) {
 //     // All cross-tab communication removed
 // }
 
@@ -1047,6 +1195,14 @@ function showErrorNotification(message) {
 // Show info notification
 function showInfoNotification(message) {
     return showNotification(message, 'info');
+}
+
+// Show error message (for compatibility)
+function showError(message) {
+    const inventoryBody = document.getElementById('inventoryBody');
+    if (inventoryBody) {
+        inventoryBody.innerHTML = `<tr><td colspan="8" class="error-message">${message}</td></tr>`;
+    }
 }
 
 // Check for recently updated items and restore their state
@@ -1274,3 +1430,14 @@ function printInventoryDetails(inventoryId) {
         alert('Print failed. Please try again.');
     }
 }
+
+// Make functions globally accessible for HTML onclick handlers
+window.showAddModal = showAddModal;
+window.hideAddModal = hideAddModal;
+window.addInventory = addInventory;
+window.toggleEditMode = toggleEditMode;
+window.cancelEdit = cancelEdit;
+window.deleteInventory = deleteInventory;
+window.exportToExcel = exportToExcel;
+window.viewInventory = viewInventory;
+window.printInventoryDetails = printInventoryDetails;

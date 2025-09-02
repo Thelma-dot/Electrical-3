@@ -175,12 +175,13 @@
         </div>
     </div>
 
+    <script src="./config.js"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
         // Connect to realtime to update admin reports table instantly
         document.addEventListener('DOMContentLoaded', () => {
             try {
-                const socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
+                const socket = io(window.appConfig.getSocketUrl(), { transports: ['websocket', 'polling'] });
                 const badge = document.getElementById('liveBadgeAdmin');
                 const setLive = (on) => { if (!badge) return; badge.style.background = on ? '#27ae60' : '#e74c3c'; badge.querySelector('.status').textContent = on ? 'LIVE' : 'OFFLINE'; };
                 socket.on('connect', () => setLive(true));

@@ -27,75 +27,7 @@ let previousAdminData = {
     totalUsers: 0
 };
 
-// Test API endpoint
-async function testAPIEndpoint() {
-    try {
-        console.log('🧪 Testing API endpoint...');
 
-        const token = localStorage.getItem('token');
-        if (!token) {
-            console.error('❌ No token found');
-            return;
-        }
-
-        // Test the test endpoint first
-        const testResponse = await fetch(window.appConfig.getApiUrl('/admin/dashboard/test'), {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        console.log('🧪 Test endpoint response status:', testResponse.status);
-
-        if (testResponse.ok) {
-            const testData = await testResponse.json();
-            console.log('🧪 Test endpoint data:', testData);
-
-            // Try to create chart with test data
-            updateAdminCharts(testData);
-
-            // Update status
-            const statusElement = document.getElementById('adminBarChartStatus');
-            if (statusElement) {
-                statusElement.textContent = 'Test API successful - chart should be visible';
-                statusElement.style.color = '#27ae60';
-            }
-        } else {
-            console.error('❌ Test endpoint failed:', testResponse.status);
-            showChartError(`Test API failed: ${testResponse.status}`);
-        }
-
-        // Also test the real endpoint
-        const realResponse = await fetch(window.appConfig.getApiUrl('/admin/dashboard'), {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        console.log('🧪 Real endpoint response status:', realResponse.status);
-
-        if (realResponse.ok) {
-            const realData = await realResponse.json();
-            console.log('🧪 Real endpoint data:', realData);
-
-            // Update status
-            const statusElement = document.getElementById('adminBarChartStatus');
-            if (statusElement) {
-                statusElement.textContent = 'Real API successful - chart should be visible';
-                statusElement.style.color = '#27ae60';
-            }
-        } else {
-            console.error('❌ Real endpoint failed:', realResponse.status);
-            showChartError(`Real API failed: ${realResponse.status}`);
-        }
-
-    } catch (error) {
-        console.error('❌ Test API error:', error);
-        showChartError(`Test API error: ${error.message}`);
-    }
-}
 
 // Show chart error in fallback display
 function showChartError(message) {
@@ -116,62 +48,30 @@ function showChartError(message) {
     }
 }
 
-// Test function to manually create chart
-function testChartCreation() {
-    console.log('🧪 Testing chart creation...');
+// Test Socket.IO connection
+function testSocketConnection() {
+    if (socket && socket.connected) {
+        console.log('🧪 Testing Socket.IO connection...');
 
-    const barCtx = document.getElementById('adminBarChart');
-    const fallbackDiv = document.getElementById('adminBarChartFallback');
-    const statusElement = document.getElementById('adminBarChartStatus');
-
-    console.log('🧪 Canvas element found:', barCtx);
-    console.log('🧪 Fallback div found:', fallbackDiv);
-
-    if (barCtx) {
-        // Hide fallback and show canvas
-        if (fallbackDiv) fallbackDiv.style.display = 'none';
-        barCtx.style.display = 'block';
-
-        // Create a simple test chart
-        const testChart = new Chart(barCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Test 1', 'Test 2', 'Test 3'],
-                datasets: [{
-                    label: 'Test Data',
-                    data: [10, 20, 30],
-                    backgroundColor: ['#e74c3c', '#3498db', '#2ecc71'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
+        // Test basic connection
+        socket.emit('test:connection', {
+            type: 'admin-dashboard',
+            timestamp: new Date().toISOString()
         });
 
-        console.log('🧪 Test chart created successfully:', testChart);
+        // Test inventory event
+        socket.emit('test:inventory:event', {
+            type: 'admin-dashboard-test',
+            timestamp: new Date().toISOString()
+        });
 
-        // Update status
-        if (statusElement) statusElement.textContent = 'Test chart loaded successfully';
-
-        return testChart;
+        console.log('🧪 Socket.IO test events emitted');
     } else {
-        console.error('🧪 Test failed: Canvas element not found');
-        showChartError('Test failed: Canvas element not found');
-        return null;
+        console.log('⚠️ Socket.IO not connected, skipping connection test');
     }
 }
+
+
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
@@ -193,11 +93,12 @@ document.addEventListener('DOMContentLoaded', () => {
         statusElement.textContent = 'Initializing dashboard...';
     }
 
-    // Test chart creation first
+
+
+    // Test Socket.IO connection
     setTimeout(() => {
-        console.log('🧪 Testing chart creation after 1 second...');
-        testChartCreation();
-    }, 1000);
+        testSocketConnection();
+    }, 2000);
 
     loadDashboardData();
     setActiveNavLink();
@@ -248,36 +149,95 @@ function initializeSocketConnection() {
             console.error('🔌 Socket.IO error:', error);
         });
 
+        // Test event listeners
+        socket.on('test:connection:response', (data) => {
+            console.log('🧪 Socket.IO connection test response:', data);
+        });
+
+        socket.on('test:response', (data) => {
+            console.log('🧪 Socket.IO test response:', data);
+        });
+
         // Listen for inventory updates
         socket.on('admin:inventory:created', (data) => {
             console.log('📦 Admin: Inventory created:', data);
             refreshInventoryStats();
+            // Also refresh dashboard data to update charts
+            loadAdminCharts();
         });
 
         socket.on('admin:inventory:updated', (data) => {
             console.log('📦 Admin: Inventory updated:', data);
             refreshInventoryStats();
+            // Also refresh dashboard data to update charts
+            loadAdminCharts();
         });
 
         socket.on('admin:inventory:deleted', (data) => {
             console.log('📦 Admin: Inventory deleted:', data);
             refreshInventoryStats();
+            // Also refresh dashboard data to update charts
+            loadAdminCharts();
         });
 
         // Listen for toolbox updates
         socket.on('admin:toolbox:created', (data) => {
             console.log('🛠️ Admin: Toolbox created:', data);
             refreshToolboxStats();
+            // Also refresh dashboard data to update charts
+            loadAdminCharts();
         });
 
         socket.on('admin:toolbox:updated', (data) => {
             console.log('🛠️ Admin: Toolbox updated:', data);
             refreshToolboxStats();
+            // Also refresh dashboard data to update charts
+            loadAdminCharts();
         });
 
         socket.on('admin:toolbox:deleted', (data) => {
             console.log('🛠️ Admin: Toolbox deleted:', data);
             refreshToolboxStats();
+            // Also refresh dashboard data to update charts
+            loadAdminCharts();
+        });
+
+        // Listen for report updates
+        socket.on('report:created', (data) => {
+            console.log('📊 Admin: Report created:', data);
+            // Refresh dashboard data to update charts
+            loadAdminCharts();
+        });
+
+        socket.on('report:updated', (data) => {
+            console.log('📊 Admin: Report updated:', data);
+            // Refresh dashboard data to update charts
+            loadAdminCharts();
+        });
+
+        socket.on('report:deleted', (data) => {
+            console.log('📊 Admin: Report deleted:', data);
+            // Refresh dashboard data to update charts
+            loadAdminCharts();
+        });
+
+        // Listen for user updates
+        socket.on('user:created', (data) => {
+            console.log('👤 Admin: User created:', data);
+            // Refresh dashboard data to update user statistics
+            loadDashboardData();
+        });
+
+        socket.on('user:updated', (data) => {
+            console.log('👤 Admin: User updated:', data);
+            // Refresh dashboard data to update user statistics
+            loadDashboardData();
+        });
+
+        socket.on('user:deleted', (data) => {
+            console.log('👤 Admin: User deleted:', data);
+            // Refresh dashboard data to update user statistics
+            loadDashboardData();
         });
 
     } catch (error) {
@@ -490,7 +450,13 @@ function loadCharts(users) {
         if (rolesCtx) {
             // Destroy existing chart if it exists
             if (userRolesChartInstance) {
-                userRolesChartInstance.destroy();
+                try {
+                    userRolesChartInstance.destroy();
+                    userRolesChartInstance = null;
+                } catch (destroyError) {
+                    console.warn('Warning: Error destroying user roles chart:', destroyError);
+                    userRolesChartInstance = null;
+                }
             }
 
             const adminCount = users.filter(u => u.role === 'admin').length;
@@ -523,7 +489,13 @@ function loadCharts(users) {
         if (trendCtx) {
             // Destroy existing chart if it exists
             if (userTrendChartInstance) {
-                userTrendChartInstance.destroy();
+                try {
+                    userTrendChartInstance.destroy();
+                    userTrendChartInstance = null;
+                } catch (destroyError) {
+                    console.warn('Warning: Error destroying user trend chart:', destroyError);
+                    userTrendChartInstance = null;
+                }
             }
 
             // Group users by month
@@ -646,6 +618,8 @@ async function loadLoginStats() {
     }
 }
 
+
+
 // Load admin dashboard charts
 async function loadAdminCharts() {
     try {
@@ -653,6 +627,13 @@ async function loadAdminCharts() {
         if (!token) {
             window.location.href = 'index.html';
             return;
+        }
+
+        // Show loading indicator on chart
+        const statusElement = document.getElementById('adminBarChartStatus');
+        if (statusElement) {
+            statusElement.textContent = 'Updating chart...';
+            statusElement.style.color = '#3498db';
         }
 
         // Fetch admin dashboard data (reports, inventory, tasks)
@@ -737,9 +718,16 @@ function updateAdminCharts(data) {
             if (fallbackDiv) fallbackDiv.style.display = 'none';
             barCtx.style.display = 'block';
 
+            // Always destroy existing chart instance before creating new one
             if (adminBarChartInstance) {
                 console.log('🔍 Debug: Destroying existing bar chart instance');
-                adminBarChartInstance.destroy();
+                try {
+                    adminBarChartInstance.destroy();
+                    adminBarChartInstance = null;
+                } catch (destroyError) {
+                    console.warn('Warning: Error destroying chart:', destroyError);
+                    adminBarChartInstance = null;
+                }
             }
 
             console.log('🔍 Debug: Creating new bar chart with data:', [
@@ -779,7 +767,10 @@ function updateAdminCharts(data) {
             console.log('🔍 Debug: Bar chart created successfully:', adminBarChartInstance);
 
             // Update status
-            if (statusElement) statusElement.textContent = 'Chart loaded successfully';
+            if (statusElement) {
+                statusElement.textContent = 'Chart loaded successfully';
+                statusElement.style.color = '#27ae60';
+            }
 
         } else {
             console.error('❌ Debug: Bar chart canvas not found or data missing');
@@ -793,8 +784,15 @@ function updateAdminCharts(data) {
         // Update revenue chart (performance chart)
         const revenueCtx = document.getElementById('adminRevenueChart');
         if (revenueCtx && data) {
+            // Always destroy existing chart instance before creating new one
             if (adminRevenueChartInstance) {
-                adminRevenueChartInstance.destroy();
+                try {
+                    adminRevenueChartInstance.destroy();
+                    adminRevenueChartInstance = null;
+                } catch (destroyError) {
+                    console.warn('Warning: Error destroying revenue chart:', destroyError);
+                    adminRevenueChartInstance = null;
+                }
             }
 
             // Calculate performance metrics
@@ -990,3 +988,33 @@ function logout() {
     localStorage.removeItem('user');
     window.location.href = 'index.html';
 }
+
+// Cleanup function to destroy all charts
+function destroyAllCharts() {
+    try {
+        if (userRolesChartInstance) {
+            userRolesChartInstance.destroy();
+            userRolesChartInstance = null;
+        }
+        if (userTrendChartInstance) {
+            userTrendChartInstance.destroy();
+            userTrendChartInstance = null;
+        }
+        if (adminBarChartInstance) {
+            adminBarChartInstance.destroy();
+            adminBarChartInstance = null;
+        }
+        if (adminRevenueChartInstance) {
+            adminRevenueChartInstance.destroy();
+            adminRevenueChartInstance = null;
+        }
+        console.log('✅ All charts destroyed successfully');
+    } catch (error) {
+        console.warn('Warning: Error destroying charts:', error);
+    }
+}
+
+
+
+// Cleanup charts when page is unloaded
+window.addEventListener('beforeunload', destroyAllCharts);
