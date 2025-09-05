@@ -6,13 +6,11 @@ const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   try {
-    // Initialize SQLite database
-    const sqlite3 = require("sqlite3").verbose();
-    const dbPath = path.join(__dirname, "electrical_management.db");
-    const db = new sqlite3.Database(dbPath);
+    // Use the database instance from db-sqlite.js instead of creating a new one
+    const { db } = require("./config/db-sqlite");
 
-    console.log("✅ SQLite database connection established");
-    console.log(`📁 Database path: ${dbPath}`);
+    console.log("✅ Using shared SQLite database connection");
+    console.log("📁 Database will be initialized by db-sqlite.js");
 
     // Start HTTP + Socket.IO server
     const http = require('http').createServer(app);
@@ -37,10 +35,16 @@ async function startServer() {
 
     io.on('connection', (socket) => {
       console.log('🔌 Client connected', socket.id);
+      console.log('🔌 Total connected clients:', io.engine.clientsCount);
 
       // Log when admin pages connect
       socket.on('admin:connected', (data) => {
         console.log('👑 Admin connected:', data);
+      });
+
+      // Log all events for debugging
+      socket.onAny((eventName, ...args) => {
+        console.log('🔍 Server received event:', eventName, args);
       });
 
       // Handle inventory-related events
@@ -57,9 +61,50 @@ async function startServer() {
         socket.broadcast.emit('toolbox:update', data);
       });
 
+      // Handle toolbox creation events
+      socket.on('toolbox:created', (data) => {
+        console.log('🛠️ Toolbox created event received:', data);
+        // Broadcast to all other clients
+        socket.broadcast.emit('toolbox:created', data);
+      });
+
+      // Handle toolbox update events
+      socket.on('toolbox:updated', (data) => {
+        console.log('🛠️ Toolbox updated event received:', data);
+        // Broadcast to all other clients
+        socket.broadcast.emit('toolbox:updated', data);
+      });
+
+      // Handle toolbox deletion events
+      socket.on('toolbox:deleted', (data) => {
+        console.log('🛠️ Toolbox deleted event received:', data);
+        // Broadcast to all other clients
+        socket.broadcast.emit('toolbox:deleted', data);
+      });
+
+      // Handle admin toolbox events
+      socket.on('admin:toolbox:created', (data) => {
+        console.log('👑 Admin toolbox created event received:', data);
+        // Broadcast to all other clients
+        socket.broadcast.emit('admin:toolbox:created', data);
+      });
+
+      socket.on('admin:toolbox:updated', (data) => {
+        console.log('👑 Admin toolbox updated event received:', data);
+        // Broadcast to all other clients
+        socket.broadcast.emit('admin:toolbox:updated', data);
+      });
+
+      socket.on('admin:toolbox:deleted', (data) => {
+        console.log('👑 Admin toolbox deleted event received:', data);
+        // Broadcast to all other clients
+        socket.broadcast.emit('admin:toolbox:deleted', data);
+      });
+
       // Handle test events
       socket.on('test:event', (data) => {
         console.log('🧪 Test event received:', data);
+
         socket.emit('test:response', { message: 'Test event received successfully' });
       });
 
@@ -90,6 +135,24 @@ async function startServer() {
         console.log('✅ Test inventory event emitted');
       });
 
+      // Test toolbox event emission
+      socket.on('test:toolbox:event', (data) => {
+        console.log('🧪 Test toolbox event received:', data);
+        // Emit test toolbox events to verify Socket.IO is working
+        io.emit('toolbox:created', {
+          toolboxId: 'test-toolbox-123',
+          userId: 'test-user',
+          timestamp: new Date().toISOString(),
+          action: 'test-created'
+        });
+        io.emit('admin:toolbox:created', {
+          toolboxId: 'test-toolbox-123',
+          userId: 'test-user',
+          timestamp: new Date().toISOString()
+        });
+        console.log('✅ Test toolbox events emitted');
+      });
+
       socket.on('disconnect', () => {
         console.log('🔌 Client disconnected', socket.id);
       });
@@ -100,7 +163,7 @@ async function startServer() {
       console.log(`📍 Port: ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
       console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || "http://127.0.0.1:5500"}`);
-      console.log(`💾 Database: SQLite (${dbPath})`);
+      console.log(`💾 Database: SQLite (electrical_management.db)`);
       console.log(`📊 Health Check: http://localhost:${PORT}/health`);
       console.log('🔌 Socket.IO enabled for real-time updates');
     });

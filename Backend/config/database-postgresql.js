@@ -28,7 +28,7 @@ pool.on('error', (err) => {
 // Initialize database tables
 async function initializeDatabase() {
   const client = await pool.connect();
-  
+
   try {
     // Create tables
     const tables = [
@@ -150,12 +150,14 @@ async function initializeDatabase() {
 
     console.log('✅ All tables created successfully');
 
-    // Insert demo data
+    // Demo data creation disabled - start with clean database
+    // Only create admin user for system access
     await insertDemoUsers(client);
-    console.log('✅ Demo users inserted successfully');
-    
-    await insertDemoData(client);
-    console.log('✅ Demo data inserted successfully');
+    console.log('✅ Admin user created successfully');
+    console.log('🎉 Database initialization complete - no sample data created');
+
+    // await insertDemoData(client);
+    // console.log('✅ Demo data inserted successfully');
 
   } catch (error) {
     console.error('❌ Error in database initialization:', error);
@@ -178,7 +180,7 @@ async function insertDemoUsers(client) {
   for (const user of demoUsers) {
     try {
       const hashedPassword = await bcrypt.hash(user.password, parseInt(process.env.BCRYPT_ROUNDS) || 10);
-      
+
       // Check if user exists
       const existingUser = await client.query(
         'SELECT id FROM users WHERE staff_id = $1',
@@ -208,23 +210,23 @@ async function insertDemoUsers(client) {
 // Insert demo data (reports, inventory, tasks, toolbox)
 async function insertDemoData(client) {
   const demoReports = [
-    { userID: 2, title: "Report 1", jobDescription: "Job 1", location: "Location A", remarks: "Remarks 1" },
-    { userID: 2, title: "Report 2", jobDescription: "Job 2", location: "Location B", remarks: "Remarks 2" },
-    { userID: 3, title: "Report 3", jobDescription: "Job 3", location: "Location A", remarks: "Remarks 3" },
+    { userID: 2, title: "Electrical Maintenance Report", jobDescription: "Routine electrical maintenance and safety checks", location: "Building A - Floor 1", remarks: "All systems functioning normally" },
+    { userID: 3, title: "Circuit Breaker Inspection", jobDescription: "Monthly inspection of main circuit breakers", location: "Main Electrical Room", remarks: "No issues found, all breakers operational" },
+    { userID: 4, title: "Equipment Calibration Report", jobDescription: "Calibrate all testing equipment for accuracy", location: "Building C - Storage", remarks: "All equipment calibrated successfully" },
   ];
-  
+
   const demoInventory = [
-    { userID: 2, productType: "Tool", status: "New", size: "Medium", serialNumber: "INV001", date: "2023-01-01", location: "Warehouse A", issuedBy: "User A" },
-    { userID: 2, productType: "Equipment", status: "Used", size: "Large", serialNumber: "INV002", date: "2023-02-01", location: "Warehouse B", issuedBy: "User B" },
-    { userID: 3, productType: "Material", status: "New", size: "Small", serialNumber: "INV003", date: "2023-03-01", location: "Warehouse A", issuedBy: "User A" },
+    { userID: 2, productType: "UPS", status: "New", size: "3kva", serialNumber: "UPS001", date: "2023-01-01", location: "Main Electrical Room", issuedBy: "Calvin Odzor" },
+    { userID: 3, productType: "AVR", status: "Used", size: "6kva", serialNumber: "AVR001", date: "2023-02-01", location: "Building B - Floor 1", issuedBy: "David" },
+    { userID: 4, productType: "UPS", status: "New", size: "10kva", serialNumber: "UPS002", date: "2023-03-01", location: "Building C - Main Room", issuedBy: "Collins Oduro" },
   ];
-  
+
   const demoTasks = [
-    { userID: 2, title: "Task 1", description: "Description 1", status: "Pending", priority: "High", dueDate: "2023-10-01", assignedBy: "User A" },
-    { userID: 2, title: "Task 2", description: "Description 2", status: "Completed", priority: "Medium", dueDate: "2023-10-10", assignedBy: "User B" },
-    { userID: 3, title: "Task 3", description: "Description 3", status: "Pending", priority: "Low", dueDate: "2023-10-20", assignedBy: "User A" },
+    { userID: 2, title: "Monthly Safety Inspection", description: "Conduct monthly electrical safety inspection of all buildings", status: "In Progress", priority: "High", dueDate: "2023-10-01", assignedBy: "Calvin Odzor" },
+    { userID: 3, title: "Equipment Calibration", description: "Calibrate all testing equipment for accuracy", status: "Pending", priority: "Medium", dueDate: "2023-10-10", assignedBy: "David" },
+    { userID: 4, title: "System Maintenance", description: "Perform routine maintenance on electrical systems", status: "Pending", priority: "Low", dueDate: "2023-10-20", assignedBy: "Collins Oduro" },
   ];
-  
+
   const demoToolbox = [
     { userID: 2, workActivity: "Activity 1", date: "2023-09-01", workLocation: "Location X", nameCompany: "Company A", sign: "Sign 1", ppeNo: "PPE001", toolsUsed: "Tool 1, Tool 2", hazards: "Hazard 1", circulars: "Circular 1", riskAssessment: "Risk 1", permit: "Permit 1", remarks: "Remarks 1", preparedBy: "User A", verifiedBy: "User B" },
     { userID: 2, workActivity: "Activity 2", date: "2023-09-10", workLocation: "Location Y", nameCompany: "Company B", sign: "Sign 2", ppeNo: "PPE002", toolsUsed: "Tool 3, Tool 4", hazards: "Hazard 2", circulars: "Circular 2", riskAssessment: "Risk 2", permit: "Permit 2", remarks: "Remarks 2", preparedBy: "User A", verifiedBy: "User B" },
@@ -285,9 +287,9 @@ async function run(sql, params = []) {
   const client = await pool.connect();
   try {
     const result = await client.query(sql, params);
-    return { 
-      id: result.rows[0]?.id || result.insertId, 
-      changes: result.rowCount 
+    return {
+      id: result.rows[0]?.id || result.insertId,
+      changes: result.rowCount
     };
   } finally {
     client.release();

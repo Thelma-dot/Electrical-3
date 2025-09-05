@@ -19,6 +19,8 @@ function isStrongPassword(password) {
 
 // ====================== Page Initialization ======================
 document.addEventListener("DOMContentLoaded", () => {
+  console.log('🚀 DOM Content Loaded, initializing page features...');
+
   // Apply saved settings
   applySavedSettings();
 
@@ -32,17 +34,37 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initializePageFeatures() {
+  console.log('🔧 Initializing page features...');
+  console.log('🔍 DOM ready state:', document.readyState);
+  console.log('🔍 Document body:', document.body);
+  console.log('🔍 All elements with id:', document.querySelectorAll('[id]'));
+
   // Dashboard page features
   if (document.getElementById('progressChart')) {
     initCharts();
   }
 
   // Login page features
-  if (document.getElementById('LoginForm')) {
+  const loginForm = document.getElementById('LoginForm');
+  console.log('🔍 LoginForm element:', loginForm);
+  if (loginForm) {
     console.log('🔍 LoginForm found, initializing...');
     initLoginForm();
   } else {
     console.log('❌ LoginForm not found');
+    console.log('🔍 Available forms:', document.querySelectorAll('form'));
+    console.log('🔍 Form with id LoginForm:', document.querySelector('form[id="LoginForm"]'));
+
+    // Retry after a short delay in case of timing issues
+    setTimeout(() => {
+      const retryLoginForm = document.getElementById('LoginForm');
+      if (retryLoginForm) {
+        console.log('🔍 LoginForm found on retry, initializing...');
+        initLoginForm();
+      } else {
+        console.log('❌ LoginForm still not found after retry');
+      }
+    }, 100);
   }
 
   // Reset password page features

@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>Toolbox Form Submitted</title>
   <link rel="icon" type="image/png" href="./images/logo_gpha.png">
   <link rel="stylesheet" href="./dashboard.css">
@@ -1294,7 +1294,117 @@
     // Print toolbox function
     function printToolbox(toolboxId) {
       console.log('🖨️ Print button clicked for toolbox ID:', toolboxId);
-      // Print functionality has been removed
+
+      const toolbox = allToolboxes.find(t => getToolboxId(t) === toolboxId);
+      if (!toolbox) {
+        alert('Toolbox not found for printing');
+        return;
+      }
+
+      // Create print-friendly HTML
+      const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Toolbox - ${toolbox.work_activity || 'Untitled'}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .toolbox-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+            .toolbox-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+            .toolbox-subtitle { font-size: 16px; color: #666; }
+            .detail-section { margin-bottom: 20px; }
+            .detail-row { margin: 10px 0; }
+            .detail-label { font-weight: bold; display: inline-block; width: 150px; }
+            .detail-value { display: inline-block; }
+            .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+            .status-pending { background: #f39c12; color: white; }
+            .status-in-progress { background: #3498db; color: white; }
+            .status-completed { background: #27ae60; color: white; }
+            @media print { body { margin: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="toolbox-header">
+            <div class="toolbox-title">${toolbox.work_activity || 'Untitled Toolbox'}</div>
+            <div class="toolbox-subtitle">Electrical Management System</div>
+          </div>
+          
+          <div class="detail-section">
+            <div class="detail-row">
+              <span class="detail-label">Work Activity:</span>
+              <span class="detail-value">${toolbox.work_activity || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Date:</span>
+              <span class="detail-value">${toolbox.date || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Work Location:</span>
+              <span class="detail-value">${toolbox.work_location || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Company:</span>
+              <span class="detail-value">${toolbox.name_company || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Status:</span>
+              <span class="detail-value">
+                <span class="status-badge status-${(toolbox.status || '').toLowerCase().replace(' ', '-')}">
+                  ${toolbox.status || 'N/A'}
+                </span>
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">PPE Number:</span>
+              <span class="detail-value">${toolbox.ppe_no || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Tools Used:</span>
+              <span class="detail-value">${toolbox.tools_used || toolbox.toolsUsed || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Hazards:</span>
+              <span class="detail-value">${toolbox.hazards || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Prepared By:</span>
+              <span class="detail-value">${toolbox.prepared_by || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Verified By:</span>
+              <span class="detail-value">${toolbox.verified_by || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Remarks:</span>
+              <span class="detail-value">${toolbox.remarks || 'N/A'}</span>
+            </div>
+          </div>
+          
+          <div style="margin-top: 40px; text-align: center; font-size: 12px; color: #666;">
+            <p>Generated on: ${new Date().toLocaleString()}</p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Create a new window for printing
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+
+      // Wait for content to load then print
+      printWindow.onload = function () {
+        printWindow.print();
+        printWindow.close();
+      };
+
+      // Fallback if onload doesn't fire
+      setTimeout(() => {
+        if (printWindow && !printWindow.closed) {
+          printWindow.print();
+          printWindow.close();
+        }
+      }, 1000);
     }
 
   </script>

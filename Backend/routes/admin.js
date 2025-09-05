@@ -3,6 +3,62 @@ const router = express.Router();
 const { authenticateToken, requireAdmin } = require("../middleware/auth");
 const { run, get, all } = require("../config/db-sqlite");
 
+console.log("🔧 Admin routes file loaded successfully");
+
+// Basic health check endpoint (MUST BE FIRST)
+router.get("/health", (req, res) => {
+    console.log("🏥 Admin health check called");
+    res.json({
+        status: "healthy",
+        message: "Admin routes are working",
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Simple test endpoint without authentication (MUST BE FIRST)
+router.get("/test", (req, res) => {
+    console.log("🧪 Simple admin test endpoint called");
+    res.json({
+        message: "Simple admin test endpoint working",
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Immediate response test endpoint
+router.get("/immediate", (req, res) => {
+    console.log("⚡ Immediate response test called");
+    res.json({
+        message: "Immediate response working",
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Simple toolbox test endpoint without authentication
+router.get("/toolbox-test", (req, res) => {
+    console.log("🧪 Simple toolbox test endpoint called");
+    try {
+        const { db } = require("../config/db-sqlite");
+        if (!db) {
+            return res.status(500).json({ error: "Database not available" });
+        }
+
+        db.get("SELECT COUNT(*) as count FROM toolbox", (err, row) => {
+            if (err) {
+                console.error("❌ Database test failed:", err);
+                return res.status(500).json({ error: "Database test failed", details: err.message });
+            }
+            res.json({
+                message: "Simple toolbox test endpoint working",
+                timestamp: new Date().toISOString(),
+                toolboxCount: row.count
+            });
+        });
+    } catch (error) {
+        console.error("❌ Toolbox test error:", error);
+        res.status(500).json({ error: "Toolbox test failed", details: error.message });
+    }
+});
+
 // List users
 router.get("/users", authenticateToken, requireAdmin, async (req, res) => {
     try {
@@ -588,14 +644,164 @@ router.get("/toolbox", authenticateToken, requireAdmin, async (req, res) => {
     }
 });
 
+// Test endpoint for admin toolbox
+router.get("/toolbox/test", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log("🧪 Admin toolbox test endpoint called");
+        res.json({
+            message: "Admin toolbox test endpoint working",
+            timestamp: new Date().toISOString(),
+            user: req.user ? { id: req.user.id, role: req.user.role } : 'No user'
+        });
+    } catch (err) {
+        console.error("❌ Admin toolbox test error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Simple toolbox endpoint test (no database operations)
+router.get("/toolbox/simple", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log("🔍 Simple toolbox endpoint called");
+        console.log("👤 User:", req.user ? { id: req.user.id, role: req.user.role } : 'No user');
+
+        res.json({
+            message: "Simple toolbox endpoint working",
+            timestamp: new Date().toISOString(),
+            user: req.user ? { id: req.user.id, role: req.user.role } : 'No user'
+        });
+    } catch (err) {
+        console.error("Simple toolbox error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 // Admin Toolbox Management Routes - Get all toolboxes
 router.get("/toolbox/all", authenticateToken, requireAdmin, async (req, res) => {
     try {
-        console.log("Admin get all toolboxes request received");
+        console.log("🔍 Admin get all toolboxes request received");
+        console.log("🔍 Request URL:", req.originalUrl);
+        console.log("🔍 Request method:", req.method);
+        console.log("🔍 User authenticated:", !!req.user);
+        console.log("🔍 User role:", req.user ? req.user.role : 'No user');
+
         const toolboxController = require('../controllers/toolboxController');
+        console.log("🔍 Calling getAllToolboxes controller...");
         await toolboxController.getAllToolboxes(req, res);
+        console.log("🔍 getAllToolboxes controller completed");
     } catch (err) {
-        console.error("Admin get all toolboxes error:", err);
+        console.error("❌ Admin get all toolboxes error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Admin Toolbox Management Routes - Get single toolbox by ID
+router.get("/toolbox/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        console.log("Admin get toolbox by ID request received for ID:", req.params.id);
+        const toolboxController = require('../controllers/toolboxController');
+        await toolboxController.getAdminToolboxById(req, res);
+    } catch (err) {
+        console.error("Admin get toolbox by ID error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Admin Toolbox Management Routes - Update toolbox item
+router.put("/toolbox/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { workActivity, date, workLocation, nameCompany, sign, ppeNo, toolsUsed, hazards, circulars, riskAssessment, permit, remarks, preparedBy, verifiedBy, status } = req.body;
+        console.log("Admin update toolbox request received for ID:", id, req.body);
+
+        // Check if toolbox item exists
+        const toolboxItem = await get("SELECT * FROM toolbox WHERE id = ?", [id]);
+        if (!toolboxItem) {
+            return res.status(404).json({ error: "Toolbox item not found" });
+        }
+
+        // Update the toolbox item
+        await run(`
+            UPDATE toolbox 
+            SET work_activity = ?, date = ?, work_location = ?, name_company = ?, 
+                sign = ?, ppe_no = ?, tools_used = ?, hazards = ?, circulars = ?, 
+                risk_assessment = ?, permit = ?, remarks = ?, prepared_by = ?, 
+                verified_by = ?, status = ?
+            WHERE id = ?
+        `, [workActivity, date, workLocation, nameCompany, sign, ppeNo, toolsUsed, hazards, circulars, riskAssessment, permit, remarks, preparedBy, verifiedBy, status, id]);
+
+        console.log(`Toolbox item ${id} updated successfully`);
+
+        // Get updated item for real-time update
+        const updatedItem = await get("SELECT * FROM toolbox WHERE id = ?", [id]);
+
+        // Emit real-time updates for both admin and user views
+        try {
+            // Emit admin-specific update
+            req.app.locals.io.emit('admin:toolbox:updated', {
+                toolboxId: id,
+                toolbox: updatedItem,
+                timestamp: new Date().toISOString()
+            });
+
+            // Also emit general toolbox update so users can see changes
+            req.app.locals.io.emit('toolbox:updated', {
+                toolboxId: id,
+                toolbox: updatedItem,
+                timestamp: new Date().toISOString()
+            });
+
+            console.log('✅ Emitted both admin:toolbox:updated and toolbox:updated events');
+        } catch (e) {
+            console.log('Socket not available for real-time updates');
+        }
+
+        res.json({ message: "Toolbox item updated successfully" });
+    } catch (err) {
+        console.error("Admin update toolbox error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Admin Toolbox Management Routes - Delete toolbox item
+router.delete("/toolbox/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log("Admin delete toolbox request received for ID:", id);
+
+        // Check if toolbox item exists
+        const toolboxItem = await get("SELECT * FROM toolbox WHERE id = ?", [id]);
+        if (!toolboxItem) {
+            return res.status(404).json({ error: "Toolbox item not found" });
+        }
+
+        // Delete the toolbox item
+        await run("DELETE FROM toolbox WHERE id = ?", [id]);
+
+        console.log(`Toolbox item ${id} deleted successfully`);
+
+        // Emit real-time updates for both admin and user views
+        try {
+            // Emit admin-specific update
+            req.app.locals.io.emit('admin:toolbox:deleted', {
+                toolboxId: id,
+                timestamp: new Date().toISOString()
+            });
+
+            // Also emit general toolbox update so users can see changes
+            req.app.locals.io.emit('toolbox:deleted', {
+                toolboxId: id,
+                timestamp: new Date().toISOString()
+            });
+
+            console.log('✅ Emitted both admin:toolbox:deleted and toolbox:deleted events');
+        } catch (e) {
+            console.log('Socket not available for real-time updates');
+        }
+
+        res.json({ message: "Toolbox item deleted successfully" });
+    } catch (err) {
+        console.error("Admin delete toolbox error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });

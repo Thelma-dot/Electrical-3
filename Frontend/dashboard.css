@@ -722,6 +722,7 @@ p {
   .main-content {
     margin-left: 0;
     padding: 10px;
+    width: 100%;
   }
 
   .sidebar {
@@ -731,9 +732,10 @@ p {
     width: 280px;
     height: 100vh;
     z-index: 999;
-    padding: 20px;
+    padding: 80px 20px 20px;
     transform: translateX(0);
     transition: transform 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
   }
 
   .sidebar.mobile-open {
@@ -741,14 +743,23 @@ p {
   }
 
   .sidebar nav a {
-    font-size: 0.9rem;
+    font-size: 1rem;
     padding: 12px;
     margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .sidebar nav a i {
+    font-size: 1.2rem;
+    width: 20px;
   }
 
   .header h1 {
     font-size: 24px;
     text-align: center;
+    margin-bottom: 15px;
   }
 
   .header h5 {
@@ -757,17 +768,88 @@ p {
   }
 
   .stats {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 15px;
+    margin-bottom: 20px;
   }
 
   .card {
     padding: 15px;
+    text-align: center;
+  }
+
+  .card h3 {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .card p {
+    font-size: 18px;
   }
 
   .charts {
     flex-direction: column;
     gap: 15px;
+  }
+
+  .chart {
+    min-width: 100%;
+    padding: 15px;
+  }
+
+  .chart-container {
+    height: 250px;
+  }
+
+  .tasks-section {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  .tasks-section h2 {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  .task-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .task-controls label {
+    font-size: 14px;
+  }
+
+  .task-controls select,
+  .task-controls button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table {
+    min-width: 600px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 8px 6px;
+    font-size: 0.9rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .btn-small {
+    padding: 6px 10px;
+    font-size: 11px;
   }
 }
 
@@ -781,17 +863,19 @@ p {
   }
 
   .sidebar {
-    padding: 10px;
+    width: 100%;
+    padding: 60px 15px 15px;
   }
 
   .sidebar nav a {
-    font-size: 0.85rem;
-    padding: 8px;
+    font-size: 0.9rem;
+    padding: 10px;
     margin-bottom: 6px;
   }
 
   .header h1 {
     font-size: 20px;
+    margin-bottom: 10px;
   }
 
   .header h5 {
@@ -801,6 +885,7 @@ p {
   .stats {
     grid-template-columns: 1fr;
     gap: 10px;
+    margin-bottom: 15px;
   }
 
   .card {
@@ -808,11 +893,65 @@ p {
   }
 
   .card h3 {
-    font-size: 14px;
+    font-size: 13px;
+    margin-bottom: 6px;
   }
 
   .card p {
+    font-size: 16px;
+  }
+
+  .chart {
+    padding: 12px;
+  }
+
+  .chart-container {
+    height: 200px;
+  }
+
+  .chart h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .tasks-section {
+    padding: 12px;
+    margin-bottom: 15px;
+  }
+
+  .tasks-section h2 {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 6px 4px;
+    font-size: 0.8rem;
+  }
+
+  .data-table td:nth-child(2) {
+    max-width: 120px;
+    font-size: 0.75rem;
+  }
+
+  .btn-small {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .priority-badge,
+  .status-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .mobile-menu-toggle {
+    width: 45px;
+    height: 45px;
     font-size: 18px;
+    top: 15px;
+    right: 15px;
   }
 }
 
@@ -825,6 +964,123 @@ p {
 
   .card:active {
     transform: scale(0.98);
+  }
+
+  .btn:active {
+    transform: scale(0.95);
+  }
+
+  .mobile-menu-toggle:active {
+    transform: scale(0.9);
+  }
+
+  .task-controls button:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Additional mobile optimizations */
+@media (max-width: 768px) {
+
+  /* Improve touch targets */
+  .sidebar nav a,
+  .btn,
+  .btn-small,
+  .btn-primary,
+  .btn-warning,
+  .btn-danger {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Better spacing for mobile */
+  .main-content {
+    padding: 10px;
+  }
+
+  .header h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  /* Improve form elements on mobile */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+    /* Prevents zoom on iOS */
+    padding: 12px;
+  }
+
+  /* Better button spacing */
+  .btn {
+    padding: 12px 20px;
+    margin: 5px;
+    font-size: 16px;
+  }
+
+  /* Improve table readability */
+  .data-table {
+    font-size: 14px;
+  }
+
+  .data-table th {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Better chart responsiveness */
+  .chart {
+    margin-bottom: 20px;
+  }
+
+  .chart canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Improve task controls */
+  .task-controls {
+    gap: 15px;
+  }
+
+  .task-controls select,
+  .task-controls button {
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+
+  /* Better deadline section */
+  .settings-section {
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .settings-section h2 {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  /* Improve deadline input */
+  .deadline-input-section {
+    padding: 15px;
+  }
+
+  .deadline-input-section input {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  .deadline-input-section button {
+    padding: 12px 20px;
+    font-size: 16px;
   }
 }
 

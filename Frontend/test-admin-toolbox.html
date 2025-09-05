@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin Toolbox API</title>
+</head>
+
+<body>
+    <h1>Test Admin Toolbox API</h1>
+    <button onclick="testAPI()">Test API Call</button>
+    <div id="result"></div>
+
+    <script src="./config.js"></script>
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+
+            try {
+                const token = localStorage.getItem('token');
+                console.log('Token:', token);
+
+                if (!token) {
+                    resultDiv.innerHTML = 'No token found. Please login first.';
+                    return;
+                }
+
+                const apiUrl = window.appConfig.getApiUrl('/admin/toolbox/all');
+                console.log('API URL:', apiUrl);
+
+                const response = await fetch(apiUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = `Error: ${response.status} - ${error}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+
+</html>

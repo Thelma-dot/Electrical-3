@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>Dashboard</title>
   <link rel="icon" type="image/png" href="./images/logo_gpha.png">
   <link rel="stylesheet" href="./dashboard.css">
@@ -12,7 +12,15 @@
 
 <body>
   <div class="container">
-    <aside class="sidebar">
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" onclick="closeMobileMenu()"></div>
+
+    <aside class="sidebar" id="sidebar">
       <img src="./images/logo_gpha.png" alt="User Avatar" class="avatar">
 
       <!-- User Greeting in Sidebar -->
@@ -374,13 +382,13 @@
 
         // Show success message after everything is updated
         alert('Profile updated successfully!');
-        
+
         // Force multiple display updates to ensure visibility
         console.log('Starting aggressive profile display refresh...');
-        
+
         // Immediate update
         displayProfile(updatedProfile);
-        
+
         // Force DOM reflow and multiple updates
         setTimeout(() => {
           console.log('First delayed refresh');
@@ -388,32 +396,32 @@
           // Force a DOM reflow
           document.body.offsetHeight;
         }, 50);
-        
+
         setTimeout(() => {
           console.log('Second delayed refresh');
           displayProfile(updatedProfile);
         }, 150);
-        
+
         setTimeout(() => {
           console.log('Third delayed refresh');
           displayProfile(updatedProfile);
         }, 300);
-        
+
         // Final update with DOM manipulation to ensure visibility
         setTimeout(() => {
           console.log('Final aggressive refresh');
           displayProfile(updatedProfile);
-          
+
           // Force the display elements to be visible and updated
           const elements = [
             'displayNameText',
-            'displayStaffIdText', 
+            'displayStaffIdText',
             'displayEmailText',
             'displayPhoneText',
             'displayCreatedText',
             'displayLastLoginText'
           ];
-          
+
           elements.forEach(id => {
             const element = document.getElementById(id);
             if (element) {
@@ -440,6 +448,52 @@
       const modal = document.getElementById('editProfileModal');
       if (modal) modal.style.display = 'none';
     }
+
+    // Mobile menu functionality
+    function toggleMobileMenu() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.querySelector('.mobile-overlay');
+      const toggle = document.querySelector('.mobile-menu-toggle');
+
+      sidebar.classList.toggle('mobile-open');
+      overlay.classList.toggle('active');
+
+      // Change icon
+      const icon = toggle.querySelector('i');
+      if (sidebar.classList.contains('mobile-open')) {
+        icon.className = 'fas fa-times';
+      } else {
+        icon.className = 'fas fa-bars';
+      }
+    }
+
+    function closeMobileMenu() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.querySelector('.mobile-overlay');
+      const toggle = document.querySelector('.mobile-menu-toggle');
+
+      sidebar.classList.remove('mobile-open');
+      overlay.classList.remove('active');
+
+      // Change icon back
+      const icon = toggle.querySelector('i');
+      icon.className = 'fas fa-bars';
+    }
+
+    // Close mobile menu when clicking on nav links
+    document.addEventListener('DOMContentLoaded', function () {
+      const navLinks = document.querySelectorAll('nav a');
+      navLinks.forEach(link => {
+        link.addEventListener('click', closeMobileMenu);
+      });
+    });
+
+    // Close mobile menu on window resize if screen becomes large
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 768) {
+        closeMobileMenu();
+      }
+    });
   </script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.35.5/apexcharts.min.js"></script>

@@ -1,5 +1,7 @@
 const Toolbox = require('../models/Toolbox');
 const db = require('../config/db-sqlite'); // Correct import path for SQLite database
+const fs = require('fs');
+const path = require('path');
 
 exports.createToolbox = async (req, res) => {
   try {
@@ -45,6 +47,8 @@ exports.createToolbox = async (req, res) => {
     // Emit real-time update to all connected clients
     if (req.app.locals.io) {
       console.log('🔌 Emitting toolbox:created event');
+      console.log('🔌 Socket.IO instance available:', !!req.app.locals.io);
+      console.log('🔌 Connected clients count:', req.app.locals.io.engine.clientsCount);
 
       // Emit to all connected clients for dashboard updates
       req.app.locals.io.emit('toolbox:created', {
@@ -62,6 +66,14 @@ exports.createToolbox = async (req, res) => {
       });
 
       console.log('✅ Real-time events emitted successfully');
+      console.log('✅ Events emitted: toolbox:created, admin:toolbox:created');
+      console.log('✅ Event data sent:', {
+        toolboxId,
+        userId,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      console.log('❌ Socket.IO not available for real-time updates');
     }
 
     res.status(201).json({ message: 'Toolbox form created successfully', toolboxId });
@@ -90,26 +102,88 @@ exports.getAllToolboxes = async (req, res) => {
   try {
     console.log('🔍 getAllToolboxes called - Admin request received');
     console.log('👤 User making request:', req.user ? { id: req.user.id, role: req.user.role } : 'No user');
+    console.log('🔍 Request headers:', req.headers);
+    console.log('🔍 Request method:', req.method);
+    console.log('🔍 Request URL:', req.url);
 
-    const query = `
-      SELECT t.*, u.name as user_name, u.email as user_email 
-      FROM toolbox t 
-      LEFT JOIN users u ON t.user_id = u.id 
-      ORDER BY t.created_at DESC
-    `;
+    // Check if database is available
+    if (!db) {
+      console.error('❌ Database instance not available');
+      return res.status(500).json({ error: 'Database not available' });
+    }
 
-    console.log('📊 Executing query:', query);
+    // Check if database is in a valid state
+    console.log('📊 Database state check...');
+    console.log('📊 Database open state:', db.open);
+    console.log('📊 Database filename:', db.filename);
 
-    db.all(query, (err, toolboxes) => {
-      if (err) {
-        console.error('❌ Database error:', err);
-        return res.status(500).json({ error: 'Database error' });
+    // Check if database file exists and is readable
+    const dbPath = path.join(__dirname, '..', 'electrical_management.db');
+    console.log('📊 Database file path:', dbPath);
+
+    try {
+      const stats = fs.statSync(dbPath);
+      console.log('📊 Database file exists, size:', stats.size, 'bytes');
+      console.log('📊 Database file is readable:', fs.constants.R_OK);
+    } catch (fileErr) {
+      console.error('❌ Database file check failed:', fileErr.message);
+      return res.status(500).json({ error: 'Database file not accessible' });
+    }
+
+    // First, let's test if the database is accessible with a simple query
+    console.log('📊 Testing database connection...');
+
+    // Add timeout to database operations
+    const dbTimeout = setTimeout(() => {
+      console.error('⏰ Database operation timed out after 10 seconds');
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Database operation timed out' });
       }
+    }, 10000);
 
-      console.log('✅ Query successful - Found toolboxes:', toolboxes.length);
-      console.log('📋 Toolbox data:', toolboxes);
+    db.get('SELECT 1 as test', (testErr, testRow) => {
+      clearTimeout(dbTimeout);
 
-      res.json(toolboxes);
+      if (testErr) {
+        console.error('❌ Database connection test failed:', testErr);
+        return res.status(500).json({ error: 'Database connection failed' });
+      }
+      console.log('✅ Database connection test successful:', testRow);
+
+      // Now run the actual query with another timeout
+      const queryTimeout = setTimeout(() => {
+        console.error('⏰ Main query timed out after 10 seconds');
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Query timed out' });
+        }
+      }, 10000);
+
+      const query = `
+        SELECT t.*, u.name as user_name, u.email as user_email 
+        FROM toolbox t 
+        LEFT JOIN users u ON t.user_id = u.id 
+        ORDER BY t.created_at DESC
+      `;
+
+      console.log('📊 Executing main query:', query);
+      console.log('📊 Database instance:', !!db);
+
+      db.all(query, (err, toolboxes) => {
+        clearTimeout(queryTimeout);
+        console.log('📊 Database query callback executed');
+        console.log('📊 Error:', err);
+        console.log('📊 Toolboxes found:', toolboxes ? toolboxes.length : 'null');
+
+        if (err) {
+          console.error('❌ Database error:', err);
+          return res.status(500).json({ error: 'Database error' });
+        }
+
+        console.log('✅ Query successful - Found toolboxes:', toolboxes.length);
+        console.log('📋 Toolbox data:', toolboxes);
+
+        res.json(toolboxes);
+      });
     });
   } catch (err) {
     console.error('❌ getAllToolboxes error:', err);

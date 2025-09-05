@@ -9,7 +9,10 @@ const db = new sqlite3.Database(dbPath, (err) => {
     console.error("❌ Error opening database:", err.message);
   } else {
     console.log("✅ Connected to SQLite database");
-    initializeDatabase();
+    // Add a small delay to ensure database is ready
+    setTimeout(() => {
+      initializeDatabase();
+    }, 100);
   }
 });
 
@@ -278,14 +281,14 @@ function finishUserSetup() {
 function createSampleData() {
   console.log("🔧 Creating sample data for dashboard...");
 
-  // Create sample reports
-  createSampleReports();
+  // Sample data creation disabled - start with clean database
+  // createSampleReports();
 }
 
 function createSampleReports() {
   const sampleReports = [
     {
-      user_id: 1, // admin user
+      user_id: 2, // h2412031 staff user
       title: "Electrical Maintenance - Building A",
       job_description: "Routine electrical maintenance and safety checks",
       location: "Building A - Floor 1",
@@ -296,7 +299,7 @@ function createSampleReports() {
       status: "Completed"
     },
     {
-      user_id: 1,
+      user_id: 3, // h2402123 staff user
       title: "Circuit Breaker Inspection",
       job_description: "Monthly inspection of main circuit breakers",
       location: "Main Electrical Room",
@@ -323,7 +326,7 @@ function createSampleReports() {
         }
         reportsCreated++;
         if (reportsCreated === sampleReports.length) {
-          createSampleInventory();
+          console.log("🎉 Database initialization complete - no sample data created");
         }
       }
     );
@@ -332,27 +335,7 @@ function createSampleReports() {
 
 function createSampleInventory() {
   const sampleInventory = [
-    // Admin user inventory
-    {
-      user_id: 1,
-      product_type: "UPS",
-      status: "New",
-      size: "3kva",
-      serial_number: "UPS001",
-      date: new Date().toISOString().split('T')[0],
-      location: "Main Electrical Room",
-      issued_by: "Admin"
-    },
-    {
-      user_id: 1,
-      product_type: "AVR",
-      status: "New",
-      size: "6kva",
-      serial_number: "AVR001",
-      date: new Date().toISOString().split('T')[0],
-      location: "Building A",
-      issued_by: "Admin"
-    },
+    // Staff user inventory (removed admin user items)
     // Demo user h2412031 (ID: 2) inventory
     {
       user_id: 2,
@@ -434,7 +417,7 @@ function createSampleInventory() {
         }
         inventoryCreated++;
         if (inventoryCreated === sampleInventory.length) {
-          createSampleTasks();
+          console.log("🎉 Database initialization complete - no sample data created");
         }
       }
     );
@@ -446,16 +429,16 @@ function createSampleTasks() {
     {
       title: "Monthly Safety Inspection",
       description: "Conduct monthly electrical safety inspection of all buildings",
-      assigned_to: 1,
-      assigned_by: 1,
+      assigned_to: 2, // h2412031 staff user
+      assigned_by: 2,
       status: "In Progress",
       priority: "High"
     },
     {
       title: "Equipment Calibration",
       description: "Calibrate all testing equipment for accuracy",
-      assigned_to: 1,
-      assigned_by: 1,
+      assigned_to: 3, // h2402123 staff user
+      assigned_by: 3,
       status: "Pending",
       priority: "Medium"
     }
@@ -477,7 +460,7 @@ function createSampleTasks() {
 
         tasksCreated++;
         if (tasksCreated === sampleTasks.length) {
-          console.log("🎉 Sample data creation complete!");
+          console.log("🎉 Database initialization complete - no sample data created");
 
           // Now that all tables and data are created, update table schemas if needed
           console.log("🔧 Updating table schemas...");

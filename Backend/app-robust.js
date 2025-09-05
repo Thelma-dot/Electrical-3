@@ -99,10 +99,12 @@ const loadRoutes = () => {
   }
 
   try {
+    console.log("🔧 Loading admin routes...");
     app.use("/api/admin", require("./routes/admin"));
-    console.log("✅ Admin routes loaded");
+    console.log("✅ Admin routes loaded successfully");
   } catch (error) {
-    console.log("⚠️ Admin routes not available:", error.message);
+    console.log("❌ Admin routes failed to load:", error.message);
+    console.log("❌ Error details:", error);
   }
 };
 
@@ -124,6 +126,14 @@ app.get("/health", (req, res) => {
 app.get("/api/test", (req, res) => {
   res.json({
     message: "Backend is working!",
+    timestamp: new Date().toISOString(),
+    status: "success"
+  });
+});
+
+app.get("/api/admin-test", (req, res) => {
+  res.json({
+    message: "Admin test endpoint working!",
     timestamp: new Date().toISOString(),
     status: "success"
   });
