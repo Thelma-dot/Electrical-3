@@ -76,11 +76,26 @@ function testSocketConnection() {
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
+    console.log('🔍 Admin dashboard initialization:', {
+        hasToken: !!token,
+        tokenPreview: token ? token.substring(0, 20) + '...' : 'None'
+    });
+    
     if (!token) {
+        console.log('❌ No token found, redirecting to login');
         window.location.href = 'index.html';
         return;
     }
-    if (!isAdmin()) {
+    
+    const adminCheck = isAdmin();
+    console.log('🔍 Admin role check:', {
+        isAdmin: adminCheck,
+        userData: JSON.parse(localStorage.getItem('user') || '{}'),
+        tokenPayload: token ? JSON.parse(atob(token.split('.')[1] || 'e30=')) : null
+    });
+    
+    if (!adminCheck) {
+        console.log('❌ User is not admin, redirecting to regular dashboard');
         window.location.href = 'dashboard.html';
         return;
     }
@@ -115,13 +130,29 @@ document.addEventListener('DOMContentLoaded', () => {
 // Check if user is admin
 function isAdmin() {
     const user = JSON.parse(localStorage.getItem('user'));
-    if (user && user.role === 'admin') return true;
+    console.log('🔍 isAdmin() check - user data:', user);
+    
+    if (user && user.role === 'admin') {
+        console.log('✅ Admin role found in user data');
+        return true;
+    }
+    
     try {
         const token = localStorage.getItem('token');
-        if (!token) return false;
+        if (!token) {
+            console.log('❌ No token found');
+            return false;
+        }
+        
         const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.role === 'admin';
-    } catch {
+        console.log('🔍 Token payload:', payload);
+        
+        const isAdminRole = payload.role === 'admin';
+        console.log('🔍 Admin role from token:', isAdminRole);
+        
+        return isAdminRole;
+    } catch (error) {
+        console.log('❌ Error parsing token:', error);
         return false;
     }
 }

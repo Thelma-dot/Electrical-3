@@ -119,6 +119,8 @@ router.put("/:id", authenticateToken, async (req, res) => {
       remarks,
       date,
       time,
+      reportDate,
+      reportTime,
       toolsUsed,
       status
     } = req.body;
@@ -127,12 +129,16 @@ router.put("/:id", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Title, job description, location, and status are required" });
     }
 
+    // Handle both field name variations for backward compatibility
+    const finalDate = reportDate || date || '';
+    const finalTime = reportTime || time || '';
+
     await run(
       `UPDATE reports 
        SET title = ?, job_description = ?, location = ?, remarks = ?, 
            report_date = ?, report_time = ?, tools_used = ?, status = ?
        WHERE id = ? AND user_id = ?`,
-      [title, jobDescription, location, remarks || '', date || '', time || '', toolsUsed || '', status, id, req.user.userId]
+      [title, jobDescription, location, remarks || '', finalDate, finalTime, toolsUsed || '', status, id, req.user.userId]
     );
 
     // Get the updated report

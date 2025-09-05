@@ -101,6 +101,13 @@ async function generateReport() {
 
     try {
         const token = localStorage.getItem('token');
+        if (!token) {
+            alert('❌ Authentication required. Please log in again.');
+            window.location.href = 'index.html';
+            return;
+        }
+
+        console.log('📤 Sending report data:', reportData);
         const response = await fetch(window.appConfig.getApiUrl('/reports'), {
             method: 'POST',
             headers: {
@@ -110,8 +117,20 @@ async function generateReport() {
             body: JSON.stringify(reportData)
         });
 
+        console.log('📡 Response status:', response.status);
+        console.log('📡 Response ok:', response.ok);
+
         if (!response.ok) {
-            throw new Error('Failed to create report');
+            let errorMessage = 'Failed to create report';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+                console.log('❌ Server error:', errorData);
+            } catch (parseError) {
+                console.log('❌ Could not parse error response:', parseError);
+                errorMessage = `Server error (${response.status})`;
+            }
+            throw new Error(errorMessage);
         }
 
         const newReport = await response.json();
@@ -160,7 +179,7 @@ async function generateReport() {
 
     } catch (error) {
         console.error('Error generating report:', error);
-        alert('Failed to generate report. Please try again.');
+        alert(`❌ Failed to generate report: ${error.message}`);
     }
 }
 
@@ -201,6 +220,13 @@ async function updateReport() {
 
     try {
         const token = localStorage.getItem('token');
+        if (!token) {
+            alert('❌ Authentication required. Please log in again.');
+            window.location.href = 'index.html';
+            return;
+        }
+
+        console.log('📤 Updating report data:', reportData);
         const response = await fetch(window.appConfig.getApiUrl(`/reports/${currentReportId}`), {
             method: 'PUT',
             headers: {
@@ -210,8 +236,20 @@ async function updateReport() {
             body: JSON.stringify(reportData)
         });
 
+        console.log('📡 Update response status:', response.status);
+        console.log('📡 Update response ok:', response.ok);
+
         if (!response.ok) {
-            throw new Error('Failed to update report');
+            let errorMessage = 'Failed to update report';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+                console.log('❌ Update server error:', errorData);
+            } catch (parseError) {
+                console.log('❌ Could not parse update error response:', parseError);
+                errorMessage = `Server error (${response.status})`;
+            }
+            throw new Error(errorMessage);
         }
 
         const updatedReport = await response.json();
@@ -266,7 +304,7 @@ async function updateReport() {
 
     } catch (error) {
         console.error('Error updating report:', error);
-        alert('Failed to update report. Please try again.');
+        alert(`❌ Failed to update report: ${error.message}`);
     }
 }
 

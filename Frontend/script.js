@@ -111,6 +111,9 @@ function initLoginForm() {
 
   console.log('✅ Login form elements found, adding event listener');
 
+  // Clear form fields to prevent autocomplete issues
+  clearLoginForm();
+
   form.addEventListener("submit", (e) => {
     console.log('📝 Form submitted, preventing default');
     e.preventDefault();
@@ -129,6 +132,24 @@ function initLoginForm() {
   } else {
     console.log('❌ Login button not found');
   }
+}
+
+// Clear login form to prevent autocomplete issues
+function clearLoginForm() {
+  const staffIdInput = document.getElementById('staffID');
+  const passwordInput = document.getElementById('password');
+
+  if (staffIdInput) {
+    staffIdInput.value = '';
+    staffIdInput.setAttribute('autocomplete', 'off');
+  }
+
+  if (passwordInput) {
+    passwordInput.value = '';
+    passwordInput.setAttribute('autocomplete', 'off');
+  }
+
+  console.log('🧹 Login form cleared');
 }
 
 // ====================== Tasks (User) ======================
@@ -319,6 +340,13 @@ async function login() {
     return;
   }
 
+  // Clear any existing tokens to prevent conflicts
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('userData');
+  localStorage.removeItem('adminToken');
+  localStorage.removeItem('adminUser');
+
   try {
     const requestBody = {
       staffid: staffID,
@@ -328,16 +356,6 @@ async function login() {
     console.log('📤 Sending request to:', window.appConfig.getApiUrl('/auth/login'));
     console.log('📦 Request body:', requestBody);
 
-    // Debug: Check if there are any stored admin credentials
-    const storedAdminToken = localStorage.getItem('adminToken');
-    const storedAdminUser = localStorage.getItem('adminUser');
-    console.log('🔍 Stored admin credentials check:', {
-      hasAdminToken: !!storedAdminToken,
-      hasAdminUser: !!storedAdminUser,
-      adminToken: storedAdminToken ? storedAdminToken.substring(0, 20) + '...' : 'None',
-      adminUser: storedAdminUser ? JSON.parse(storedAdminUser).staff_id : 'None'
-    });
-
     const response = await fetch(window.appConfig.getApiUrl('/auth/login'), {
       method: 'POST',
       headers: {
@@ -346,16 +364,33 @@ async function login() {
       body: JSON.stringify(requestBody)
     });
 
+    console.log('📡 Response status:', response.status);
+    console.log('📡 Response ok:', response.ok);
 
     // Handle HTTP errors
     if (!response.ok) {
-      const errorData = await response.json();
-      console.log('❌ Login failed:', { status: response.status, statusText: response.statusText, error: errorData });
-      showAlert(errorData.error || 'Login failed');
+      let errorMessage = 'Login failed';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
+        console.log('❌ Login failed:', { status: response.status, statusText: response.statusText, error: errorData });
+      } catch (parseError) {
+        console.log('❌ Could not parse error response:', parseError);
+        errorMessage = `Server error (${response.status})`;
+      }
+      showAlert(errorMessage);
       return;
     }
 
     const data = await response.json();
+    console.log('📦 Login response data:', data);
+
+    // Validate response data
+    if (!data.token || !data.user) {
+      console.error('❌ Invalid response: missing token or user data');
+      showAlert('Invalid response from server. Please try again.');
+      return;
+    }
 
     // Save user data and token
     localStorage.setItem('user', JSON.stringify(data.user));
@@ -380,27 +415,54 @@ async function login() {
     };
     localStorage.setItem('userData', JSON.stringify(userData));
 
-    // Redirect based on role
-    const userRole = (data.user && data.user.role) || (JSON.parse(atob(data.token.split('.')[1] || 'e30='))?.role);
+    // Verify token is valid before redirecting
+    try {
+      const tokenPayload = JSON.parse(atob(data.token.split('.')[1] || 'e30='));
+      console.log('🔍 Token payload:', tokenPayload);
 
-    console.log('🔍 Login redirect logic:', {
-      userData: data.user,
-      userRole: userRole,
-      tokenPayload: JSON.parse(atob(data.token.split('.')[1] || 'e30=')),
-      willRedirectTo: userRole === 'admin' ? 'admin-dashboard.html' : 'dashboard.html'
-    });
+      // Redirect based on role
+      const userRole = data.user.role || tokenPayload.role;
 
-    if (userRole === 'admin') {
-      console.log('👑 Redirecting admin to admin dashboard');
-      window.location.href = 'admin-dashboard.html';
-    } else {
-      console.log('👤 Redirecting user to regular dashboard');
-      window.location.href = 'dashboard.html';
+      console.log('🔍 Login redirect logic:', {
+        userData: data.user,
+        userRole: userRole,
+        tokenPayload: tokenPayload,
+        willRedirectTo: userRole === 'admin' ? 'admin-dashboard.html' : 'dashboard.html'
+      });
+
+      // Additional debug logging
+      console.log('🔍 Detailed user analysis:', {
+        hasUser: !!data.user,
+        userRole: data.user?.role,
+        tokenExists: !!data.token,
+        tokenDecoded: tokenPayload,
+        staffId: data.user?.staff_id,
+        isAdminRole: userRole === 'admin'
+      });
+
+      // Add a small delay to ensure localStorage is updated
+      setTimeout(() => {
+        if (userRole === 'admin') {
+          console.log('👑 Redirecting admin to admin dashboard');
+          window.location.href = 'admin-dashboard.html';
+        } else {
+          console.log('👤 Redirecting user to regular dashboard');
+          window.location.href = 'dashboard.html';
+        }
+      }, 100);
+
+    } catch (tokenError) {
+      console.error('❌ Token validation error:', tokenError);
+      showAlert('Invalid token received. Please try again.');
+      // Clear invalid data
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('userData');
     }
 
   } catch (err) {
     console.error('Login error:', err);
-    showAlert('Network error. Please try again.');
+    showAlert('Network error. Please check your connection and try again.');
   }
 }
 

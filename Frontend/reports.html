@@ -765,6 +765,11 @@
             console.log(`📊 About to display ${reportsToShow.length} reports on page ${currentReportsPage}`);
             reportsToShow.forEach((report, index) => {
                 console.log(`📊 Creating row ${index + 1} for report:`, report);
+                console.log(`📊 Report ${report.id} status details:`, {
+                    originalStatus: report.status,
+                    type: typeof report.status,
+                    length: report.status ? report.status.length : 0
+                });
                 const row = document.createElement('tr');
                 // Format date and time properly - ensure we get the correct field values
                 const reportDate = report.report_date || report.reportDate || report.date;
@@ -794,7 +799,13 @@
                 // Debug status for button logic
                 console.log(`📊 Report ${report.id} status: "${report.status}" (class: ${statusClass})`);
 
-                const actionsHtml = report.status && report.status.toLowerCase() === 'completed' ?
+                // Normalize status for comparison - handle various case combinations
+                const normalizedStatus = (report.status || '').toLowerCase().trim();
+                const isCompleted = normalizedStatus === 'completed';
+
+                console.log(`📊 Report ${report.id} normalized status: "${normalizedStatus}", isCompleted: ${isCompleted}`);
+
+                const actionsHtml = isCompleted ?
                     `<button class="view-btn" data-report-id="${report.id}">View</button>` :
                     `<button class="edit-btn" data-report-id="${report.id}">Edit</button>
                      <button class="delete-btn" data-report-id="${report.id}">Delete</button>`;
@@ -1233,20 +1244,32 @@
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
+                // Get form values
+                const title = document.getElementById('editTitle').value.trim();
+                const jobDescription = document.getElementById('editJobDescription').value.trim();
+                const location = document.getElementById('editLocation').value.trim();
+                const status = document.getElementById('editStatus').value;
+
+                // Validate required fields
+                if (!title || !jobDescription || !location || !status) {
+                    showNotification('Please fill in all required fields (Title, Job Description, Location, and Status)', 'error');
+                    return;
+                }
+
                 const formData = {
-                    title: document.getElementById('editTitle').value,
-                    jobDescription: document.getElementById('editJobDescription').value,
-                    location: document.getElementById('editLocation').value,
+                    title: title,
+                    jobDescription: jobDescription,
+                    location: location,
                     date: document.getElementById('editDate').value,
                     time: document.getElementById('editTime').value,
-                    status: document.getElementById('editStatus').value,
+                    status: status,
                     toolsUsed: document.getElementById('editToolsUsed').value.split(',').map(tool => tool.trim()).filter(tool => tool).join(', '),
-                    remarks: document.getElementById('editRemarks').value
+                    remarks: document.getElementById('editRemarks').value.trim()
                 };
 
                 console.log('📝 Form data being sent:', formData);
                 console.log('📝 Report ID:', reportId);
-                le.log('📝 Individual field values:');
+                console.log('📝 Individual field values:');
                 console.log('  - Title:', document.getElementById('editTitle').value);
                 console.log('  - Job Description:', document.getElementById('editJobDescription').value);
                 console.log('  - Location:', document.getElementById('editLocation').value);
@@ -1260,6 +1283,12 @@
                         window.location.href = './index.html';
                         return;
                     }
+
+                    // Show loading state
+                    const saveButton = form.querySelector('button[type="submit"]');
+                    const originalText = saveButton.textContent;
+                    saveButton.textContent = '💾 Saving...';
+                    saveButton.disabled = true;
 
                     const response = await fetch(window.appConfig.getApiUrl(`/reports/${reportId}`), {
                         method: 'PUT',
@@ -1280,11 +1309,26 @@
                         // Update the report in our local array with the server response
                         const reportIndex = allReports.findIndex(r => r.id === reportId);
                         if (reportIndex !== -1) {
+                            console.log('📝 Before update - Report status:', allReports[reportIndex].status);
                             allReports[reportIndex] = updatedReport;
+                            console.log('📝 After update - Report status:', allReports[reportIndex].status);
                             console.log('📝 Updated report in local array:', allReports[reportIndex]);
+
+                            // Check if status is now "Completed" for button logic
+                            const normalizedStatus = (allReports[reportIndex].status || '').toLowerCase().trim();
+                            const isCompleted = normalizedStatus === 'completed';
+                            console.log('📝 Status check - normalized:', normalizedStatus, 'isCompleted:', isCompleted);
+
+                            // Immediately refresh the display to show the new button state
+                            console.log('🔄 Immediately refreshing display with updated data...');
+                            displayReports(allReports);
                         }
 
-                        loadReports(); // Refresh the reports list
+                        // Also refresh from server to ensure data consistency (with small delay)
+                        console.log('🔄 Refreshing from server for data consistency...');
+                        setTimeout(() => {
+                            loadReports();
+                        }, 500); // Small delay to ensure server has processed the update
 
                         // Dispatch custom event for other pages
                         window.dispatchEvent(new CustomEvent('reportUpdated', { detail: { reportId, formData, updatedReport } }));
@@ -1306,6 +1350,13 @@
                 } catch (error) {
                     console.error('Error updating report:', error);
                     showNotification('Network error. Please try again.', 'error');
+                } finally {
+                    // Restore button state
+                    const saveButton = form.querySelector('button[type="submit"]');
+                    if (saveButton) {
+                        saveButton.textContent = '💾 Save Changes';
+                        saveButton.disabled = false;
+                    }
                 }
             });
         }

@@ -513,7 +513,44 @@
     let updateTimeout = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
-      if (!localStorage.getItem('token')) {
+      // Check for authentication token
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+
+      console.log('🔍 Dashboard authentication check:', {
+        hasToken: !!token,
+        hasUser: !!user,
+        tokenLength: token ? token.length : 0
+      });
+
+      if (!token || !user) {
+        console.log('❌ No authentication token or user data found, redirecting to login');
+        // Clear any invalid data
+        localStorage.clear();
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // Validate token format
+      try {
+        const tokenParts = token.split('.');
+        if (tokenParts.length !== 3) {
+          throw new Error('Invalid token format');
+        }
+
+        const payload = JSON.parse(atob(tokenParts[1]));
+        console.log('🔍 Token payload:', payload);
+
+        // Check if token is expired
+        if (payload.exp && payload.exp < Date.now() / 1000) {
+          throw new Error('Token expired');
+        }
+
+        console.log('✅ Token validation successful');
+      } catch (tokenError) {
+        console.error('❌ Token validation failed:', tokenError);
+        // Clear invalid data
+        localStorage.clear();
         window.location.href = 'index.html';
         return;
       }
