@@ -21,7 +21,7 @@ db.get("SELECT * FROM users WHERE staff_id = ?", ["admin"], (err, row) => {
     console.error('❌ Error querying database:', err.message);
     return;
   }
-  
+
   if (row) {
     console.log('✅ Admin user found:');
     console.log('   Staff ID:', row.staff_id);
@@ -32,13 +32,13 @@ db.get("SELECT * FROM users WHERE staff_id = ?", ["admin"], (err, row) => {
   } else {
     console.log('❌ Admin user not found!');
     console.log('🔍 Checking all users in database...');
-    
+
     db.all("SELECT staff_id, role, email FROM users", (err, rows) => {
       if (err) {
         console.error('❌ Error querying all users:', err.message);
         return;
       }
-      
+
       console.log('📋 All users in database:');
       rows.forEach(user => {
         console.log(`   - ${user.staff_id} (${user.role}) - ${user.email}`);

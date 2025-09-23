@@ -80,20 +80,20 @@ document.addEventListener('DOMContentLoaded', () => {
         hasToken: !!token,
         tokenPreview: token ? token.substring(0, 20) + '...' : 'None'
     });
-    
+
     if (!token) {
         console.log('❌ No token found, redirecting to login');
         window.location.href = 'index.html';
         return;
     }
-    
+
     const adminCheck = isAdmin();
     console.log('🔍 Admin role check:', {
         isAdmin: adminCheck,
         userData: JSON.parse(localStorage.getItem('user') || '{}'),
         tokenPayload: token ? JSON.parse(atob(token.split('.')[1] || 'e30=')) : null
     });
-    
+
     if (!adminCheck) {
         console.log('❌ User is not admin, redirecting to regular dashboard');
         window.location.href = 'dashboard.html';
@@ -131,25 +131,25 @@ document.addEventListener('DOMContentLoaded', () => {
 function isAdmin() {
     const user = JSON.parse(localStorage.getItem('user'));
     console.log('🔍 isAdmin() check - user data:', user);
-    
+
     if (user && user.role === 'admin') {
         console.log('✅ Admin role found in user data');
         return true;
     }
-    
+
     try {
         const token = localStorage.getItem('token');
         if (!token) {
             console.log('❌ No token found');
             return false;
         }
-        
+
         const payload = JSON.parse(atob(token.split('.')[1]));
         console.log('🔍 Token payload:', payload);
-        
+
         const isAdminRole = payload.role === 'admin';
         console.log('🔍 Admin role from token:', isAdminRole);
-        
+
         return isAdminRole;
     } catch (error) {
         console.log('❌ Error parsing token:', error);
