@@ -24,7 +24,7 @@ const config = {
 };
 
 // Detect environment
-const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port === '5500';
+const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port === '5501';
 const isRailway = window.location.hostname.includes('railway.app') || window.location.hostname.includes('up.railway.app');
 const isNetlify = window.location.hostname.includes('netlify.app') || window.location.hostname.includes('netlify.com');
 const isRender = window.location.hostname.includes('onrender.com');
