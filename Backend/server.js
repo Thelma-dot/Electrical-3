@@ -23,9 +23,11 @@ async function startServer() {
           'http://localhost:3000',
           'http://localhost:8080',
           'http://127.0.0.1:3000',
-          'http://127.0.0.1:8080'
+          'http://127.0.0.1:8080',
+          'null' // Allow null origin for file:// protocol
         ],
-        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
         credentials: true
       }
     });
