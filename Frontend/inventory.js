@@ -1306,7 +1306,6 @@ function viewInventory(inventoryId) {
             </div>
             
             <div style="text-align: center; margin-top: 20px;">
-                <button onclick="exportInventoryToWord('${inventoryId}')" style="background: #0055aa; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-right: 10px;">⬇️ Export to Word</button>
                 <button onclick="this.closest('.modal').remove()" style="background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
                     ❌ Close
                 </button>
@@ -1325,6 +1324,7 @@ function viewInventory(inventoryId) {
 }
 
 // Export inventory details to Word
+// removed exportInventoryToWord
 function exportInventoryToWord(inventoryId) {
     try {
     const row = document.querySelector(`tr[data-inventory-id="${inventoryId}"]`);
@@ -1356,19 +1356,9 @@ function exportInventoryToWord(inventoryId) {
             `<p style="text-align:center;color:#666;margin-top:24px;">Generated on ${new Date().toLocaleString()}</p>` +
             `</body></html>`;
 
-        const blob = new Blob([html], { type: 'application/msword' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        const fileName = `inventory_${safe(serialNumber).replace(/[^a-z0-9\-]+/gi,'_')}.doc`;
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        // Export removed
     } catch (e) {
-        console.error('Failed to export inventory to Word:', e);
-        alert('Export failed.');
+        console.error('Export to Word is disabled');
     }
 }
 
@@ -1382,4 +1372,4 @@ window.cancelEdit = cancelEdit;
 window.deleteInventory = deleteInventory;
 window.exportToExcel = exportToExcel;
 window.viewInventory = viewInventory;
-window.exportInventoryToWord = exportInventoryToWord;
+// window.exportInventoryToWord = exportInventoryToWord;

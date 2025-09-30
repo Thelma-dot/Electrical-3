@@ -1261,7 +1261,6 @@
               </div>
               
               <div class="modal-footer" style="display: flex; gap: 15px; justify-content: center; margin-top: 20px; border-top: 2px solid #ecf0f1; padding-top: 20px;">
-                <button onclick="exportToolboxToWord('${getToolboxId(toolbox)}')" class="btn-primary" style="background: #0055aa; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">⬇️ Export to Word</button>
                 <button onclick="closeToolboxViewModal()" class="btn-secondary" style="background: #2c3e50; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
                   ❌ Close
                 </button>
@@ -1292,11 +1291,11 @@
     // Export toolbox details to Word
     function exportToolboxToWord(toolboxId) {
       try {
-      const toolbox = allToolboxes.find(t => getToolboxId(t) === toolboxId);
-      if (!toolbox) {
+        const toolbox = allToolboxes.find(t => getToolboxId(t) === toolboxId);
+        if (!toolbox) {
           alert('Toolbox not found.');
-        return;
-      }
+          return;
+        }
 
         const safe = (v) => (v == null ? 'N/A' : String(v));
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Toolbox ${safe(toolbox.work_activity)}</title></head><body>` +
@@ -1318,7 +1317,7 @@
         const blob = new Blob([html], { type: 'application/msword' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        const fileName = `toolbox_${safe(toolbox.work_activity).replace(/[^a-z0-9\-]+/gi,'_')}.doc`;
+        const fileName = `toolbox_${safe(toolbox.work_activity).replace(/[^a-z0-9\-]+/gi, '_')}.doc`;
         a.href = url;
         a.download = fileName;
         document.body.appendChild(a);
