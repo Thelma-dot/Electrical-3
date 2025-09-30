@@ -1306,9 +1306,6 @@ function viewInventory(inventoryId) {
             </div>
             
             <div style="text-align: center; margin-top: 20px;">
-                <button onclick="printInventoryDetails('${inventoryId}')" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-right: 10px;">
-                    🖨️ Print
-                </button>
                 <button onclick="this.closest('.modal').remove()" style="background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
                     ❌ Close
                 </button>
@@ -1326,110 +1323,6 @@ function viewInventory(inventoryId) {
     });
 }
 
-// Print inventory details
-function printInventoryDetails(inventoryId) {
-    console.log('🖨️ Printing inventory details for ID:', inventoryId);
-
-    // Get the inventory data from the table row
-    const row = document.querySelector(`tr[data-inventory-id="${inventoryId}"]`);
-    if (!row) {
-        console.error('Inventory row not found for printing:', inventoryId);
-        alert('Inventory item not found for printing.');
-        return;
-    }
-
-    // Extract data from the row (same method as viewInventory)
-    const productType = row.querySelector('[data-field="product_type"]').textContent;
-    const status = row.querySelector('[data-field="status"]').textContent;
-    const size = row.querySelector('[data-field="size"]').textContent;
-    const serialNumber = row.querySelector('[data-field="serial_number"]').textContent;
-    const date = row.querySelector('[data-field="date"]').textContent;
-    const location = row.querySelector('[data-field="location"]').textContent;
-    const issuedBy = row.querySelector('[data-field="issued_by"]').textContent;
-
-    // Create print-friendly HTML
-    const printContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Inventory Details - Print</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #0055aa; padding-bottom: 10px; }
-                .header h1 { color: #0055aa; margin: 0; }
-                .details { margin: 20px 0; }
-                .detail-row { margin: 15px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-                .label { font-weight: bold; color: #0055aa; }
-                .value { margin-left: 10px; }
-                .footer { text-align: center; margin-top: 40px; color: #666; font-size: 12px; }
-                @media print {
-                    body { margin: 0; }
-                    .no-print { display: none; }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>🛠️ Inventory Details Report</h1>
-                <p>Generated on: ${new Date().toLocaleString()}</p>
-            </div>
-            
-            <div class="details">
-                <div class="detail-row">
-                    <span class="label">Product Type:</span>
-                    <span class="value">${productType}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Status:</span>
-                    <span class="value">${status}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Size:</span>
-                    <span class="value">${size}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Serial Number:</span>
-                    <span class="value">${serialNumber}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Date:</span>
-                    <span class="value">${date}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Location:</span>
-                    <span class="value">${location}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Issued By:</span>
-                    <span class="value">${issuedBy}</span>
-                </div>
-            </div>
-            
-            <div class="footer">
-                <p>Electrical Management System - Inventory Report</p>
-            </div>
-        </body>
-        </html>
-    `;
-
-    // Use the same method as reports and toolbox - open new window and auto-print
-    try {
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(printContent);
-        printWindow.document.close();
-        printWindow.focus();
-
-        // Wait for content to load then print (same as reports and toolbox)
-        setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-        }, 500);
-
-    } catch (error) {
-        console.error('Print error:', error);
-        alert('Print failed. Please try again.');
-    }
-}
 
 // Make functions globally accessible for HTML onclick handlers
 window.showAddModal = showAddModal;
@@ -1440,4 +1333,3 @@ window.cancelEdit = cancelEdit;
 window.deleteInventory = deleteInventory;
 window.exportToExcel = exportToExcel;
 window.viewInventory = viewInventory;
-window.printInventoryDetails = printInventoryDetails;
