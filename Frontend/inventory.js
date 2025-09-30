@@ -1306,6 +1306,7 @@ function viewInventory(inventoryId) {
             </div>
             
             <div style="text-align: center; margin-top: 20px;">
+                <button onclick="exportInventoryToWord('${inventoryId}')" style="background: #0055aa; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-right: 10px;">⬇️ Export to Word</button>
                 <button onclick="this.closest('.modal').remove()" style="background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
                     ❌ Close
                 </button>
@@ -1323,6 +1324,54 @@ function viewInventory(inventoryId) {
     });
 }
 
+// Export inventory details to Word
+function exportInventoryToWord(inventoryId) {
+    try {
+    const row = document.querySelector(`tr[data-inventory-id="${inventoryId}"]`);
+    if (!row) {
+            alert('Inventory item not found.');
+        return;
+    }
+        const get = (selector) => (row.querySelector(selector)?.textContent || 'N/A');
+        const productType = get('[data-field="product_type"]');
+        const status = get('[data-field="status"]');
+        const size = get('[data-field="size"]');
+        const serialNumber = get('[data-field="serial_number"]');
+        const date = get('[data-field="date"]');
+        const location = get('[data-field="location"]');
+        const issuedBy = get('[data-field="issued_by"]');
+
+        const safe = (v) => (v == null ? 'N/A' : String(v));
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Inventory ${safe(serialNumber)}</title></head><body>` +
+            `<h1 style="text-align:center;">Inventory Details</h1>` +
+            `<table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;">` +
+            `<tr><td style="font-weight:bold;border:1px solid #ddd;padding:8px;width:180px;">Product Type</td><td style="border:1px solid #ddd;padding:8px;">${safe(productType)}</td></tr>` +
+            `<tr><td style="font-weight:bold;border:1px solid #ddd;padding:8px;">Status</td><td style="border:1px solid #ddd;padding:8px;">${safe(status)}</td></tr>` +
+            `<tr><td style="font-weight:bold;border:1px solid #ddd;padding:8px;">Size</td><td style="border:1px solid #ddd;padding:8px;">${safe(size)}</td></tr>` +
+            `<tr><td style="font-weight:bold;border:1px solid #ddd;padding:8px;">Serial Number</td><td style="border:1px solid #ddd;padding:8px;">${safe(serialNumber)}</td></tr>` +
+            `<tr><td style="font-weight:bold;border:1px solid #ddd;padding:8px;">Date</td><td style="border:1px solid #ddd;padding:8px;">${safe(date)}</td></tr>` +
+            `<tr><td style="font-weight:bold;border:1px solid #ddd;padding:8px;">Location</td><td style="border:1px solid #ddd;padding:8px;">${safe(location)}</td></tr>` +
+            `<tr><td style="font-weight:bold;border:1px solid #ddd;padding:8px;">Issued By</td><td style="border:1px solid #ddd;padding:8px;">${safe(issuedBy)}</td></tr>` +
+            `</table>` +
+            `<p style="text-align:center;color:#666;margin-top:24px;">Generated on ${new Date().toLocaleString()}</p>` +
+            `</body></html>`;
+
+        const blob = new Blob([html], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const fileName = `inventory_${safe(serialNumber).replace(/[^a-z0-9\-]+/gi,'_')}.doc`;
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (e) {
+        console.error('Failed to export inventory to Word:', e);
+        alert('Export failed.');
+    }
+}
+
 
 // Make functions globally accessible for HTML onclick handlers
 window.showAddModal = showAddModal;
@@ -1333,3 +1382,4 @@ window.cancelEdit = cancelEdit;
 window.deleteInventory = deleteInventory;
 window.exportToExcel = exportToExcel;
 window.viewInventory = viewInventory;
+window.exportInventoryToWord = exportInventoryToWord;

@@ -1261,6 +1261,7 @@
               </div>
               
               <div class="modal-footer" style="display: flex; gap: 15px; justify-content: center; margin-top: 20px; border-top: 2px solid #ecf0f1; padding-top: 20px;">
+                <button onclick="exportToolboxToWord('${getToolboxId(toolbox)}')" class="btn-primary" style="background: #0055aa; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">⬇️ Export to Word</button>
                 <button onclick="closeToolboxViewModal()" class="btn-secondary" style="background: #2c3e50; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
                   ❌ Close
                 </button>
@@ -1288,7 +1289,47 @@
       }
     }
 
-    // Removed print toolbox functionality
+    // Export toolbox details to Word
+    function exportToolboxToWord(toolboxId) {
+      try {
+      const toolbox = allToolboxes.find(t => getToolboxId(t) === toolboxId);
+      if (!toolbox) {
+          alert('Toolbox not found.');
+        return;
+      }
+
+        const safe = (v) => (v == null ? 'N/A' : String(v));
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Toolbox ${safe(toolbox.work_activity)}</title></head><body>` +
+          `<h1 style=\"text-align:center;\">Toolbox Details</h1>` +
+          `<table style=\"width:100%;border-collapse:collapse;font-family:Arial,sans-serif;\">` +
+          `<tr><td style=\"font-weight:bold;border:1px solid #ddd;padding:8px;width:180px;\">Work Activity</td><td style=\"border:1px solid #ddd;padding:8px;\">${safe(toolbox.work_activity || toolbox.workActivity)}</td></tr>` +
+          `<tr><td style=\"font-weight:bold;border:1px solid #ddd;padding:8px;\">Date</td><td style=\"border:1px solid #ddd;padding:8px;\">${safe(toolbox.date)}</td></tr>` +
+          `<tr><td style=\"font-weight:bold;border:1px solid #ddd;padding:8px;\">Work Location</td><td style=\"border:1px solid #ddd;padding:8px;\">${safe(toolbox.work_location || toolbox.workLocation)}</td></tr>` +
+          `<tr><td style=\"font-weight:bold;border:1px solid #ddd;padding:8px;\">Name/Company</td><td style=\"border:1px solid #ddd;padding:8px;\">${safe(toolbox.name_company || toolbox.nameCompany)}</td></tr>` +
+          `<tr><td style=\"font-weight:bold;border:1px solid #ddd;padding:8px;\">Tools Used</td><td style=\"border:1px solid #ddd;padding:8px;\">${safe(toolbox.tools_used || toolbox.toolsUsed)}</td></tr>` +
+          `<tr><td style=\"font-weight:bold;border:1px solid #ddd;padding:8px;\">Prepared By</td><td style=\"border:1px solid #ddd;padding:8px;\">${safe(toolbox.prepared_by || toolbox.preparedBy)}</td></tr>` +
+          `<tr><td style=\"font-weight:bold;border:1px solid #ddd;padding:8px;\">Verified By</td><td style=\"border:1px solid #ddd;padding:8px;\">${safe(toolbox.verified_by || toolbox.verifiedBy)}</td></tr>` +
+          `<tr><td style=\"font-weight:bold;border:1px solid #ddd;padding:8px;\">Status</td><td style=\"border:1px solid #ddd;padding:8px;\">${safe(toolbox.status)}</td></tr>` +
+          `<tr><td style=\"font-weight:bold;border:1px solid #ddd;padding:8px;\">Remarks</td><td style=\"border:1px solid #ddd;padding:8px;\">${safe(toolbox.remarks)}</td></tr>` +
+          `</table>` +
+          `<p style=\"text-align:center;color:#666;margin-top:24px;\">Generated on ${new Date().toLocaleString()}</p>` +
+          `</body></html>`;
+
+        const blob = new Blob([html], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const fileName = `toolbox_${safe(toolbox.work_activity).replace(/[^a-z0-9\-]+/gi,'_')}.doc`;
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        console.error('Failed to export toolbox to Word:', e);
+        alert('Export failed.');
+      }
+    }
 
   </script>
 
