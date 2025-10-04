@@ -599,7 +599,9 @@
     // Initialize Socket.IO connection for real-time updates
     function initializeSocketConnection() {
       try {
-        socket = io('http://localhost:5000');
+        // Use the configured Socket.IO URL from appConfig
+        const socketUrl = window.appConfig ? window.appConfig.getSocketUrl() : 'https://electrical-3-2.onrender.com';
+        socket = io(socketUrl);
 
         socket.on('connect', () => {
           console.log('🔌 Connected to server for real-time updates');
@@ -702,15 +704,17 @@
         const showCompleted = showCompletedToggle ? showCompletedToggle.checked : false;
 
         // Choose the appropriate endpoint based on toggle state
-        const tasksEndpoint = showCompleted ? 'http://localhost:5000/api/tasks/my/completed' : 'http://localhost:5000/api/tasks/my';
+        const tasksEndpoint = showCompleted ? 
+          (window.appConfig ? window.appConfig.getApiUrl('/tasks/my/completed') : 'https://electrical-3-2.onrender.com/api/tasks/my/completed') : 
+          (window.appConfig ? window.appConfig.getApiUrl('/tasks/my') : 'https://electrical-3-2.onrender.com/api/tasks/my');
 
         const [summary, inventoryResponse, myTasks, chartData, toolboxList, inventorySummary] = await Promise.all([
-          fetch('http://localhost:5000/api/reports/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()).catch(() => ({ total: 0, in_progress: 0, completed: 0 })),
-          fetch('http://localhost:5000/api/inventory', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : { data: [] }).catch(() => ({ data: [] })),
+          fetch(window.appConfig ? window.appConfig.getApiUrl('/reports/summary') : 'https://electrical-3-2.onrender.com/api/reports/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()).catch(() => ({ total: 0, in_progress: 0, completed: 0 })),
+          fetch(window.appConfig ? window.appConfig.getApiUrl('/inventory') : 'https://electrical-3-2.onrender.com/api/inventory', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : { data: [] }).catch(() => ({ data: [] })),
           fetch(tasksEndpoint, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []).catch(() => []),
-          fetch('http://localhost:5000/api/reports/chart-data', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()).catch(() => []),
-          fetch('http://localhost:5000/api/toolbox', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []).catch(() => []),
-          fetch('http://localhost:5000/api/inventory/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : null).catch(() => null)
+          fetch(window.appConfig ? window.appConfig.getApiUrl('/reports/chart-data') : 'https://electrical-3-2.onrender.com/api/reports/chart-data', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()).catch(() => []),
+          fetch(window.appConfig ? window.appConfig.getApiUrl('/toolbox') : 'https://electrical-3-2.onrender.com/api/toolbox', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []).catch(() => []),
+          fetch(window.appConfig ? window.appConfig.getApiUrl('/inventory/summary') : 'https://electrical-3-2.onrender.com/api/inventory/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : null).catch(() => null)
         ]);
 
         // Extract inventory list from response (handle both paginated and direct array formats)
@@ -1209,10 +1213,10 @@
 
         // Fetch latest inventory count and summary
         const [inventoryResponse, summaryResponse] = await Promise.all([
-          fetch('http://localhost:5000/api/inventory', {
+          fetch(window.appConfig ? window.appConfig.getApiUrl('/inventory') : 'https://electrical-3-2.onrender.com/api/inventory', {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
           }),
-          fetch('http://localhost:5000/api/inventory/summary', {
+          fetch(window.appConfig ? window.appConfig.getApiUrl('/inventory/summary') : 'https://electrical-3-2.onrender.com/api/inventory/summary', {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
           })
         ]);
@@ -1288,7 +1292,7 @@
         console.log('🛠️ Updating toolbox count in real-time...');
 
         // Fetch latest toolbox count
-        const response = await fetch('http://localhost:5000/api/toolbox', {
+        const response = await fetch(window.appConfig ? window.appConfig.getApiUrl('/toolbox') : 'https://electrical-3-2.onrender.com/api/toolbox', {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
 
@@ -1329,7 +1333,8 @@
         console.log('📄 Updating reports count in real-time...');
 
         // Fetch latest reports summary
-        const response = await fetch('http://localhost:5000/api/reports/summary', {
+        const apiUrl = window.appConfig ? window.appConfig.getApiUrl('/reports/summary') : 'https://electrical-3-2.onrender.com/api/reports/summary';
+        const response = await fetch(apiUrl, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
 
