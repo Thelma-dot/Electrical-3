@@ -1327,11 +1327,11 @@ function viewInventory(inventoryId) {
 // removed exportInventoryToWord
 function exportInventoryToWord(inventoryId) {
     try {
-    const row = document.querySelector(`tr[data-inventory-id="${inventoryId}"]`);
-    if (!row) {
+        const row = document.querySelector(`tr[data-inventory-id="${inventoryId}"]`);
+        if (!row) {
             alert('Inventory item not found.');
-        return;
-    }
+            return;
+        }
         const get = (selector) => (row.querySelector(selector)?.textContent || 'N/A');
         const productType = get('[data-field="product_type"]');
         const status = get('[data-field="status"]');

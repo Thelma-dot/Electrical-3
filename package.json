@@ -1,0 +1,25 @@
+{
+    "name": "electrical-management-system",
+    "version": "1.0.0",
+    "description": "Electrical Management System with Real-time Dashboard",
+    "main": "Backend/server.js",
+    "scripts": {
+        "start": "cd Backend && npm start",
+        "dev": "cd Backend && npm run dev",
+        "build": "echo 'No build step required for this project'",
+        "heroku-postbuild": "cd Backend && npm install"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=8.0.0"
+    },
+    "keywords": [
+        "electrical",
+        "management",
+        "dashboard",
+        "reports",
+        "inventory"
+    ],
+    "author": "Your Name",
+    "license": "MIT"
+}

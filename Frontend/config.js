@@ -6,20 +6,20 @@ const config = {
     socketUrl: 'http://localhost:5000'
   },
   production: {
-    apiBaseUrl: 'https://electrical-management-system.onrender.com/api',
-    socketUrl: 'https://electrical-management-system.onrender.com'
+    apiBaseUrl: 'https://electrical-3-2.onrender.com/api',
+    socketUrl: 'https://electrical-3-2.onrender.com'
   },
   railway: {
     apiBaseUrl: 'https://electrical-3-production.up.railway.app/api',
     socketUrl: 'https://electrical-3-production.up.railway.app'
   },
   netlify: {
-    apiBaseUrl: 'https://electrical-management-system.onrender.com/api',
-    socketUrl: 'https://electrical-management-system.onrender.com'
+    apiBaseUrl: 'https://electrical-3-2.onrender.com/api',
+    socketUrl: 'https://electrical-3-2.onrender.com'
   },
   render: {
-    apiBaseUrl: 'https://electrical-management-system.onrender.com/api',
-    socketUrl: 'https://electrical-management-system.onrender.com'
+    apiBaseUrl: 'https://electrical-3-2.onrender.com/api',
+    socketUrl: 'https://electrical-3-2.onrender.com'
   }
 };
 

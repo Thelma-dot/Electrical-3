@@ -156,6 +156,11 @@ async function generateReport() {
         }));
         console.log('📡 Report generated event dispatched');
 
+        // Trigger dashboard update event for real-time updates
+        window.dispatchEvent(new CustomEvent('dashboardUpdate', {
+            detail: { type: 'report_created', report: newReport }
+        }));
+
         // Also trigger a storage event manually to ensure cross-tab synchronization
         console.log('📡 About to dispatch storage event with reports:', existingReports.length);
         window.dispatchEvent(new StorageEvent('storage', {
@@ -279,6 +284,11 @@ async function updateReport() {
                 detail: { report: updatedReport }
             }));
             console.log('📡 Report updated event dispatched');
+
+            // Trigger dashboard update event for real-time updates
+            window.dispatchEvent(new CustomEvent('dashboardUpdate', {
+                detail: { type: 'report_updated', report: updatedReport }
+            }));
 
             // Also trigger a storage event manually to ensure cross-tab synchronization
             window.dispatchEvent(new StorageEvent('storage', {

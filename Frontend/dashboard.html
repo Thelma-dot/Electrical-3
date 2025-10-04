@@ -389,11 +389,11 @@
           </div>
         </div>
         <div class="card">
-          <h3>In Progress</h3>
+          <h3>Reports In Progress</h3>
           <p id="inProgressCount">0</p>
         </div>
         <div class="card">
-          <h3>Completed Tasks</h3>
+          <h3>Reports Completed</h3>
           <p id="completedCount">0</p>
         </div>
 
@@ -576,6 +576,14 @@
 
       // Real-time event listeners enabled
 
+      // Listen for dashboard update events from other pages
+      window.addEventListener('dashboardUpdate', (event) => {
+        console.log('📊 Dashboard received update event:', event.detail);
+        if (event.detail.type === 'report_created' || event.detail.type === 'report_updated') {
+          updateReportsCountInRealTime();
+        }
+      });
+
       // Add event listener for "Show Completed Tasks" toggle
       const showCompletedToggle = document.getElementById('showCompletedTasks');
       if (showCompletedToggle) {
@@ -659,6 +667,22 @@
           updateToolboxCountInRealTime();
         });
 
+        // Listen for report updates
+        socket.on('report:created', (data) => {
+          console.log('📄 Report created:', data);
+          updateReportsCountInRealTime();
+        });
+
+        socket.on('report:updated', (data) => {
+          console.log('📄 Report updated:', data);
+          updateReportsCountInRealTime();
+        });
+
+        socket.on('report:deleted', (data) => {
+          console.log('📄 Report deleted:', data);
+          updateReportsCountInRealTime();
+        });
+
       } catch (error) {
         console.error('❌ Error initializing Socket.IO:', error);
       }
@@ -681,7 +705,7 @@
         const tasksEndpoint = showCompleted ? 'http://localhost:5000/api/tasks/my/completed' : 'http://localhost:5000/api/tasks/my';
 
         const [summary, inventoryResponse, myTasks, chartData, toolboxList, inventorySummary] = await Promise.all([
-          fetch('http://localhost:5000/api/reports/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()).catch(() => ({ total: 0 })),
+          fetch('http://localhost:5000/api/reports/summary', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()).catch(() => ({ total: 0, in_progress: 0, completed: 0 })),
           fetch('http://localhost:5000/api/inventory', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : { data: [] }).catch(() => ({ data: [] })),
           fetch(tasksEndpoint, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.ok ? r.json() : []).catch(() => []),
           fetch('http://localhost:5000/api/reports/chart-data', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()).catch(() => []),
@@ -698,8 +722,8 @@
         // Compute inventory stats - count the number of inventory items
         const inventoryTotal = safeInventoryList.length;
         const toolboxTotal = Array.isArray(toolboxList) ? toolboxList.length : 0;
-        const tasksInProgress = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'in_progress' || (t.status || '').toLowerCase() === 'in progress').length;
-        const tasksCompleted = (myTasks || []).filter(t => (t.status || '').toLowerCase() === 'completed').length;
+        const reportsInProgress = summary.in_progress || 0;
+        const reportsCompleted = summary.completed || 0;
 
         // Create fallback inventory summary if the endpoint fails
         let finalInventorySummary = inventorySummary;
@@ -744,8 +768,8 @@
           reports: summary.total || 0,
           toolbox: toolboxTotal,
           inventory: inventoryTotal || 0, // Ensure inventory is never undefined
-          inProgress: tasksInProgress,
-          completed: tasksCompleted,
+          inProgress: reportsInProgress,
+          completed: reportsCompleted,
           monthlyData: chartData || [],
           inventorySummary: finalInventorySummary || {}
         };
@@ -967,7 +991,7 @@
         systemBarChartInstance = new Chart(systemBarCtx, {
           type: 'bar',
           data: {
-            labels: ['Reports', 'Toolbox', 'Inventory', 'In Progress', 'Completed'],
+            labels: ['Reports', 'Toolbox', 'Inventory', 'Reports In Progress', 'Reports Completed'],
             datasets: [{
               label: 'Count',
               data: [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed],
@@ -1296,6 +1320,79 @@
         }
       } catch (error) {
         console.error('❌ Error updating toolbox count:', error);
+      }
+    }
+
+    // Real-time reports count update function
+    async function updateReportsCountInRealTime() {
+      try {
+        console.log('📄 Updating reports count in real-time...');
+
+        // Fetch latest reports summary
+        const response = await fetch('http://localhost:5000/api/reports/summary', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        if (response.ok) {
+          const summary = await response.json();
+          const reportsTotal = summary.total || 0;
+          const reportsInProgress = summary.in_progress || 0;
+          const reportsCompleted = summary.completed || 0;
+
+          // Update dashboard stats
+          const reportsCountElement = document.getElementById('reportsCount');
+          const inProgressCountElement = document.getElementById('inProgressCount');
+          const completedCountElement = document.getElementById('completedCount');
+
+          if (reportsCountElement) {
+            reportsCountElement.textContent = reportsTotal;
+            // Add visual feedback
+            reportsCountElement.style.color = '#e74c3c';
+            reportsCountElement.style.fontWeight = 'bold';
+            setTimeout(() => {
+              reportsCountElement.style.color = '';
+              reportsCountElement.style.fontWeight = '';
+            }, 2000);
+          }
+
+          if (inProgressCountElement) {
+            inProgressCountElement.textContent = reportsInProgress;
+            // Add visual feedback
+            inProgressCountElement.style.color = '#f39c12';
+            inProgressCountElement.style.fontWeight = 'bold';
+            setTimeout(() => {
+              inProgressCountElement.style.color = '';
+              inProgressCountElement.style.fontWeight = '';
+            }, 2000);
+          }
+
+          if (completedCountElement) {
+            completedCountElement.textContent = reportsCompleted;
+            // Add visual feedback
+            completedCountElement.style.color = '#27ae60';
+            completedCountElement.style.fontWeight = 'bold';
+            setTimeout(() => {
+              completedCountElement.style.color = '';
+              completedCountElement.style.fontWeight = '';
+            }, 2000);
+          }
+
+          // Update system overview chart
+          if (systemBarChartInstance) {
+            systemBarChartInstance.data.datasets[0].data[0] = reportsTotal; // Index 0 for reports (first position)
+            systemBarChartInstance.data.datasets[0].data[3] = reportsInProgress; // Index 3 for in progress (fourth position)
+            systemBarChartInstance.data.datasets[0].data[4] = reportsCompleted; // Index 4 for completed (fifth position)
+            systemBarChartInstance.update('active');
+          }
+
+          console.log('✅ Reports count updated in real-time', {
+            total: reportsTotal,
+            inProgress: reportsInProgress,
+            completed: reportsCompleted
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error updating reports count:', error);
       }
     }
 
