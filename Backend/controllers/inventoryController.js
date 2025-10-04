@@ -401,9 +401,9 @@ exports.getAllUsersInventory = async (req, res) => {
   try {
     // Check if user is admin (you may need to implement this check based on your auth system)
     // For now, we'll allow any authenticated user to access this endpoint
-    
+
     const allInventory = await Inventory.findAll();
-    
+
     res.json(allInventory);
   } catch (err) {
     console.error('Error getting all users inventory:', err);

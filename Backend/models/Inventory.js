@@ -4,14 +4,14 @@ class Inventory {
   static async create(inventory) {
     try {
       const { userId, productType, status, size, serialNumber, date, location, issuedBy } = inventory;
-      
+
       console.log('🔍 Creating inventory with data:', { userId, productType, status, size, serialNumber, date, location, issuedBy });
-      
+
       const result = await run(
         'INSERT INTO inventory (user_id, product_type, status, size, serial_number, date, location, issued_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         [userId, productType, status, size, serialNumber, date, location, issuedBy]
       );
-      
+
       console.log('✅ Inventory created successfully with ID:', result.id);
       return result.id;
     } catch (error) {
