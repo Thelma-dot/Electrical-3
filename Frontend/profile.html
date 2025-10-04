@@ -248,7 +248,8 @@
       }
 
       try {
-        const response = await fetch('http://localhost:5000/api/auth/profile', {
+        const apiUrl = window.appConfig ? window.appConfig.getApiUrl('/auth/profile') : 'https://electrical-3-2.onrender.com/api/auth/profile';
+        const response = await fetch(apiUrl, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -317,7 +318,8 @@
       };
 
       try {
-        const response = await fetch('http://localhost:5000/api/auth/profile', {
+        const apiUrl = window.appConfig ? window.appConfig.getApiUrl('/auth/profile') : 'https://electrical-3-2.onrender.com/api/auth/profile';
+        const response = await fetch(apiUrl, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
