@@ -22,6 +22,7 @@ async function startServer() {
           'https://electrical-3-2.onrender.com',
           'https://electrical-management-system.onrender.com',
           'https://electrical-3.netlify.app',
+          'https://gphaelectricalmanagementsystem.netlify.app',
           'http://localhost:5501',
           'http://localhost:3000',
           'http://localhost:8080',
