@@ -35,6 +35,8 @@ app.use(
       const allowedOrigins = [
         process.env.FRONTEND_URL || "https://electrical-3.netlify.app",
         "https://electrical-3.netlify.app",
+        "https://electrical-3-2.onrender.com",
+        "https://electrical-management-system.onrender.com",
         "http://localhost:5501",
         "http://localhost:3000",
         "http://localhost:8080",

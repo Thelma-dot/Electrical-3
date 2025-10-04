@@ -19,6 +19,9 @@ async function startServer() {
       cors: {
         origin: [
           process.env.FRONTEND_URL || 'http://127.0.0.1:5501',
+          'https://electrical-3-2.onrender.com',
+          'https://electrical-management-system.onrender.com',
+          'https://electrical-3.netlify.app',
           'http://localhost:5501',
           'http://localhost:3000',
           'http://localhost:8080',
@@ -160,13 +163,13 @@ async function startServer() {
       });
     });
 
-    http.listen(PORT, () => {
+    http.listen(PORT, '0.0.0.0', () => {
       console.log("🚀 SQLite Server started successfully!");
       console.log(`📍 Port: ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
       console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || "http://127.0.0.1:5500"}`);
       console.log(`💾 Database: SQLite (electrical_management.db)`);
-      console.log(`📊 Health Check: http://localhost:${PORT}/health`);
+      console.log(`📊 Health Check: http://0.0.0.0:${PORT}/health`);
       console.log('🔌 Socket.IO enabled for real-time updates');
     });
   } catch (error) {
