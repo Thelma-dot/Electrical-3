@@ -237,7 +237,10 @@
     document.addEventListener('DOMContentLoaded', async () => {
       // Load user profile
       const user = JSON.parse(localStorage.getItem('user'));
+      console.log('Profile page loaded, user data from localStorage:', user);
+      
       if (!user) {
+        console.log('No user data found, redirecting to login');
         window.location.href = 'index.html';
         return;
       }
@@ -258,6 +261,12 @@
         if (!response.ok) throw new Error('Failed to load profile');
 
         const profile = await response.json();
+        console.log('Profile loaded from backend:', profile);
+        
+        // Update localStorage with fresh profile data
+        localStorage.setItem('user', JSON.stringify(profile));
+        console.log('Profile data saved to localStorage');
+        
         displayProfile(profile);
 
         // Update user greeting with fresh profile data
