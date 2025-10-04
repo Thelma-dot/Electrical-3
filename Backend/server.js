@@ -178,12 +178,19 @@ async function startServer() {
   }
 }
 
-// For production deployment, export the app
-// For local development, start the server
-if (process.env.NODE_ENV === 'production') {
-  // Export for production deployment
-  module.exports = app;
-} else {
-  // Start server locally
-  startServer();
-}
+// Always start the server for both development and production
+startServer().catch(error => {
+  console.error("❌ Failed to start server:", error);
+  process.exit(1);
+});
+
+// Keep the process alive
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  // Don't exit, just log the error
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit, just log the error
+});
