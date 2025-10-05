@@ -2,18 +2,29 @@ const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 require('dotenv').config({ path: require('path').join(__dirname, '..', 'config.env') });
 
-// PostgreSQL connection configuration
-const pool = new Pool({
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'electrical_management',
-  password: process.env.DB_PASSWORD || 'password',
-  port: process.env.DB_PORT || 5432,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
+// PostgreSQL connection configuration (supports Render's DATABASE_URL)
+const useConnectionString = !!process.env.DATABASE_URL;
+const pool = new Pool(
+  useConnectionString
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+      }
+    : {
+        user: process.env.DB_USER || 'postgres',
+        host: process.env.DB_HOST || 'localhost',
+        database: process.env.DB_NAME || 'electrical_management',
+        password: process.env.DB_PASSWORD || 'password',
+        port: process.env.DB_PORT || 5432,
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+      }
+);
 
 // Test connection
 pool.on('connect', () => {
