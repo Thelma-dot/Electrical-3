@@ -771,12 +771,27 @@ function updateAdminCharts(data) {
             adminBarChartInstance = new Chart(barCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Reports', 'Toolbox', 'Inventory', 'In Progress', 'Completed'],
+                    labels: ['Reports', 'Toolbox', 'Inventory', 'Reports In Progress', 'Reports Completed'],
                     datasets: [{
                         label: 'Count',
                         data: [data.reports, data.toolbox, data.inventory, data.inProgress, data.completed],
-                        backgroundColor: ['#e74c3c', '#9b59b6', '#3498db', '#f39c12', '#2ecc71'],
-                        borderWidth: 0
+                        backgroundColor: [
+                            'rgba(231, 76, 60, 0.8)',   // Reports - Red
+                            'rgba(155, 89, 182, 0.8)',  // Toolbox - Purple
+                            'rgba(52, 152, 219, 0.8)',  // Inventory - Blue
+                            'rgba(243, 156, 18, 0.8)',  // In Progress - Orange
+                            'rgba(46, 204, 113, 0.8)'   // Completed - Green
+                        ],
+                        borderColor: [
+                            'rgba(231, 76, 60, 1)',
+                            'rgba(155, 89, 182, 1)',
+                            'rgba(52, 152, 219, 1)',
+                            'rgba(243, 156, 18, 1)',
+                            'rgba(46, 204, 113, 1)'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        borderSkipped: false
                     }]
                 },
                 options: {
@@ -785,12 +800,55 @@ function updateAdminCharts(data) {
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#3498db',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            displayColors: true
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            top: 20,
+                            bottom: 20,
+                            left: 20,
+                            right: 20
                         }
                     },
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                maxTicksLimit: 6,
+                                color: '#7f8c8d',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#7f8c8d',
+                                font: {
+                                    size: 12
+                                }
+                            }
                         }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
                     }
                 }
             });
@@ -826,14 +884,14 @@ function updateAdminCharts(data) {
                 }
             }
 
-            // Calculate performance metrics
-            const totalTasks = data.inProgress + data.completed;
-            const completionRate = totalTasks > 0 ? (data.completed / totalTasks) * 100 : 0;
+            // Calculate performance metrics based on reports
+            const totalReports = data.inProgress + data.completed;
+            const completionRate = totalReports > 0 ? (data.completed / totalReports) * 100 : 0;
 
             adminRevenueChartInstance = new Chart(revenueCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Completed', 'In Progress'],
+                    labels: ['Reports Completed', 'Reports In Progress'],
                     datasets: [{
                         data: [data.completed, data.inProgress],
                         backgroundColor: ['#2ecc71', '#f39c12'],
@@ -858,15 +916,15 @@ function updateAdminCharts(data) {
             if (performanceArrow && performanceText) {
                 if (completionRate >= 80) {
                     performanceArrow.textContent = '↗️';
-                    performanceText.textContent = 'Excellent';
+                    performanceText.textContent = `Excellent (${completionRate.toFixed(1)}%)`;
                     performanceText.className = 'performance-text excellent';
                 } else if (completionRate >= 60) {
                     performanceArrow.textContent = '➡️';
-                    performanceText.textContent = 'Good';
+                    performanceText.textContent = `Good (${completionRate.toFixed(1)}%)`;
                     performanceText.className = 'performance-text good';
                 } else {
                     performanceArrow.textContent = '↘️';
-                    performanceText.textContent = 'Needs Improvement';
+                    performanceText.textContent = `Needs Improvement (${completionRate.toFixed(1)}%)`;
                     performanceText.className = 'performance-text needs-improvement';
                 }
             }

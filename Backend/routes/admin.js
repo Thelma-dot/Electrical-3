@@ -303,16 +303,23 @@ router.get("/dashboard", authenticateToken, requireAdmin, async (req, res) => {
             all("SELECT COUNT(*) as count FROM toolbox")
         ]);
 
-        // Get task status counts
-        const taskStatusResult = await all(`
-            SELECT status, COUNT(*) as count 
-            FROM tasks 
-            GROUP BY status
+        // Get report status counts (normalize case/spacing for consistency)
+        const reportStatusResult = await all(`
+            SELECT LOWER(status) as status, COUNT(*) as count 
+            FROM reports 
+            GROUP BY LOWER(status)
         `);
 
-        // Get completed vs in-progress tasks
-        const completedTasks = taskStatusResult.find(t => t.status === 'completed')?.count || 0;
-        const inProgressTasks = taskStatusResult.find(t => t.status === 'in_progress')?.count || 0;
+        // Map to consistent keys
+        const statusCounts = reportStatusResult.reduce((acc, row) => {
+            const key = (row.status || '').trim(); // e.g., 'completed', 'in progress', 'pending'
+            acc[key] = row.count || 0;
+            return acc;
+        }, {});
+
+        // Get completed vs in-progress reports using normalized keys
+        const completedReports = statusCounts['completed'] || 0;
+        const inProgressReports = statusCounts['in progress'] || 0;
 
         // Get today's login count from login logs
         const todayLoginsResult = await all(`
@@ -325,8 +332,8 @@ router.get("/dashboard", authenticateToken, requireAdmin, async (req, res) => {
             reports: reportsResult[0]?.count || 0,
             inventory: inventoryResult[0]?.count || 0,
             toolbox: toolboxResult[0]?.count || 0,
-            inProgress: inProgressTasks,
-            completed: completedTasks,
+            inProgress: inProgressReports,
+            completed: completedReports,
             totalUsers: usersResult[0]?.count || 0,
             todayLogins: todayLoginsResult[0]?.count || 0
         };
